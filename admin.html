@@ -9,32 +9,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body {
-  font-family: Arial;
-  background: #111;
-  color: white;
-  text-align: center;
-}
-
-input {
-  padding: 10px;
-  margin: 6px;
-  width: 260px;
-  border-radius: 6px;
-  border: none;
-}
-
-button {
-  padding: 10px 20px;
-  background: #00c853;
-  border: none;
-  color: white;
-  cursor: pointer;
-  border-radius: 6px;
-  margin: 5px;
-}
-
-#panel { display: none; }
+body{font-family:Arial;background:#111;color:white;text-align:center;}
+input,button{padding:10px;margin:6px;width:260px;border:none;border-radius:6px;}
+button{background:#00c853;color:white;cursor:pointer;}
+#panel{display:none;}
 </style>
 </head>
 
@@ -42,37 +20,33 @@ button {
 
 <h1>🎛️ Admin Panel</h1>
 
-<!-- LOGIN -->
 <div id="loginBox">
-  <input id="email" placeholder="Email"><br>
-  <input id="password" type="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<button onclick="login()">Login</button>
 </div>
 
-<!-- PANEL -->
 <div id="panel">
 
-  <h2>🎧 Upload Beats</h2>
+<h2>🎧 Add Beat</h2>
 
-  <input id="title" placeholder="Beat Title"><br>
-  <input id="price" placeholder="Price"><br>
-  <input id="file" placeholder="MP3 Link"><br>
-  <input id="image" placeholder="Cover Image URL"><br>
-  <input id="buyLink" placeholder="Buy Link"><br>
+<input id="title" placeholder="Title"><br>
+<input id="price" placeholder="Price"><br>
+<input id="image" placeholder="Beat Image URL"><br>
+<input id="previewFile" placeholder="Preview MP3"><br>
+<input id="fullFile" placeholder="Full MP3"><br>
+<input id="buyLink" placeholder="PayPal Link"><br>
 
-  <button onclick="addBeat()">Add Beat</button>
+<button onclick="addBeat()">Add Beat</button>
 
-  <hr>
+<hr>
 
-  <h2>🎨 Site Settings</h2>
+<h2>🎨 Site Background</h2>
+<input id="bg" placeholder="Background Image URL"><br>
+<button onclick="saveBG()">Save Background</button>
 
-  <input id="font" placeholder="Font (Arial, Courier...)"><br>
-  <input id="background" placeholder="Background Image URL"><br>
-
-  <button onclick="saveSettings()">Save Settings</button>
-
-  <br><br>
-  <button onclick="logout()">Logout</button>
+<br><br>
+<button onclick="logout()">Logout</button>
 
 </div>
 
@@ -92,50 +66,43 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* LOGIN */
-function login() {
-  auth.signInWithEmailAndPassword(email.value, password.value)
-    .then(() => {
-      loginBox.style.display = "none";
-      panel.style.display = "block";
-    })
-    .catch(() => alert("Login failed ❌"));
+function login(){
+auth.signInWithEmailAndPassword(email.value,password.value)
+.then(()=>{loginBox.style.display="none";panel.style.display="block";})
+.catch(()=>alert("Login failed"));
 }
 
 /* LOGOUT */
-function logout() {
-  auth.signOut().then(() => location.reload());
-}
-
-/* KEEP SESSION */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loginBox.style.display = "none";
-    panel.style.display = "block";
-  }
-});
+function logout(){auth.signOut().then(()=>location.reload());}
 
 /* ADD BEAT */
-function addBeat() {
-  db.collection("beats").add({
-    title: title.value,
-    price: price.value,
-    file: file.value,
-    image: image.value,
-    buyLink: buyLink.value
-  });
-
-  alert("Beat added 🎧");
+function addBeat(){
+db.collection("beats").add({
+title:title.value,
+price:price.value,
+image:image.value,
+previewFile:previewFile.value,
+fullFile:fullFile.value,
+buyLink:buyLink.value
+});
+alert("Beat added 🎧");
 }
 
-/* SAVE SETTINGS */
-function saveSettings() {
-  db.collection("settings").doc("site").set({
-    font: font.value,
-    background: background.value
-  });
-
-  alert("Site updated 🎨");
+/* SAVE BACKGROUND */
+function saveBG(){
+db.collection("settings").doc("site").set({
+background:bg.value
+});
+alert("Background updated 🎨");
 }
+
+/* SESSION */
+auth.onAuthStateChanged(user=>{
+if(user){
+loginBox.style.display="none";
+panel.style.display="block";
+}
+});
 </script>
 
 </body>
