@@ -1,39 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Junior Beats Store</title>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
   <style>
     body {
-      background: #111;
-      color: white;
+      margin: 0;
       font-family: Arial;
+      background: #0f0f0f;
+      color: white;
       text-align: center;
     }
 
-    .beat {
-      background: #222;
-      margin: 20px auto;
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 350px;
+    h1 {
+      margin-top: 20px;
     }
 
-    img {
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .beat {
+      background: #1e1e1e;
+      width: 280px;
+      margin: 15px;
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    .beat img {
       width: 100%;
       border-radius: 10px;
     }
 
     button {
+      margin-top: 10px;
       padding: 10px;
-      background: #00c853;
+      width: 100%;
       border: none;
+      background: #00c853;
       color: white;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: 8px;
     }
   </style>
 </head>
@@ -43,9 +59,10 @@
 <h1>🔥 Junior Beats Store</h1>
 <p>by Jayan Reid</p>
 
-<div id="beat-container"></div>
+<div class="container" id="beat-container"></div>
 
 <script>
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
     authDomain: "junior-beats-store.firebaseapp.com",
@@ -65,23 +82,21 @@
       container.innerHTML = "";
 
       snapshot.forEach(doc => {
-        let beat = doc.data();
+        const beat = doc.data();
 
         container.innerHTML += `
           <div class="beat">
 
-            <img src="${beat.image}" alt="cover">
+            <img src="${beat.image || ''}" alt="cover">
 
-            <h2>${beat.title}</h2>
-            <p>${beat.price}</p>
+            <h3>${beat.title || 'No Title'}</h3>
+            <p>${beat.price || ''}</p>
 
-            <audio controls>
-              <source src="${beat.file}" type="audio/mpeg">
+            <audio controls style="width:100%;">
+              <source src="${beat.file || ''}" type="audio/mpeg">
             </audio>
 
-            <br><br>
-
-            <button onclick="window.location.href='${beat.buyLink}'">
+            <button onclick="window.open('${beat.buyLink || '#'}', '_blank')">
               Buy Now
             </button>
 
