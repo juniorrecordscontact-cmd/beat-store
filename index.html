@@ -1,19 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Junior Beats Store</title>
-  <link rel="stylesheet" href="style.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+    }
+
+    .beat {
+      background: #222;
+      margin: 20px;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    button {
+      padding: 10px;
+      background: #00c853;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
 </head>
+
 <body>
 
-  <h1>🔥 Junior Beats Store</h1>
-  <p>by Jayan Reid</p>
-  <p>Premium beats for artists 🎧</p>
-  <p>All beats are tagged. Purchased version will be untagged.</p>
+<h1>🔥 Junior Beats Store</h1>
+<p>by Jayan Reid</p>
 
-  <div id="beat-container"></div>
+<div id="beat-container"></div>
 
-  <script src="script.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+    authDomain: "junior-beats-store.firebaseapp.com",
+    projectId: "junior-beats-store",
+    storageBucket: "junior-beats-store.firebasestorage.app",
+    messagingSenderId: "781170149321",
+    appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const container = document.getElementById("beat-container");
+
+  function loadBeats() {
+    db.collection("beats").get().then(snapshot => {
+      container.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        let beat = doc.data();
+
+        container.innerHTML += `
+          <div class="beat">
+            <h2>${beat.title}</h2>
+            <p>${beat.price}</p>
+
+            <audio controls>
+              <source src="${beat.file}" type="audio/mpeg">
+            </audio>
+
+            <br><br>
+
+            <button onclick="window.location.href='${beat.buyLink}'">
+              Buy Now
+            </button>
+          </div>
+        `;
+      });
+    });
+  }
+
+  loadBeats();
+</script>
+
 </body>
 </html>
