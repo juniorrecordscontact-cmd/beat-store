@@ -2,42 +2,88 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel (Stable)</title>
+<title>FULL CONTROL ADMIN</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:260px;border:none;border-radius:6px;}
+body{background:#111;color:white;font-family:Arial;text-align:center;}
+.section{border-top:1px solid #333;margin-top:20px;padding-top:20px;}
+input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
 button{background:#00c853;color:white;cursor:pointer;}
 #panel{display:none;}
+.log{font-size:12px;color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1>Admin Panel</h1>
+<h1>🎛 FULL STORE CONTROL PANEL</h1>
 
 <div id="loginBox">
-<input id="email" placeholder="Email"><br>
-<input id="password" type="password" placeholder="Password"><br>
-<button onclick="login()">Login</button>
+<h2>Login</h2>
+<input id="email" placeholder="email"><br>
+<input id="password" type="password" placeholder="password"><br>
+<button onclick="login()">LOGIN</button>
 </div>
 
 <div id="panel">
 
-<h2>Add Beat</h2>
+<!-- STORE SETTINGS -->
+<div class="section">
+<h2>🏪 Store Settings</h2>
+
+<input id="storeName" placeholder="Store Name"><br>
+
+<p>🌆 Background Image</p>
+<input type="file" id="bgFile"><br>
+
+<p>🔤 Font</p>
+<input id="font" placeholder="Arial / Courier / etc"><br>
+
+<button onclick="saveSettings()">SAVE SITE SETTINGS</button>
+<p id="settingsStatus"></p>
+</div>
+
+<!-- UPLOAD BEAT -->
+<div class="section">
+<h2>🎧 Upload Beat</h2>
 
 <input id="title" placeholder="Beat Title"><br>
-<input id="image" placeholder="Cover Image URL"><br>
-<input id="preview" placeholder="Preview MP3 URL"><br>
+
+<p>Cover Image</p>
+<input type="file" id="imageFile"><br>
+
+<p>Preview (Watermarked MP3)</p>
+<input type="file" id="previewFile"><br>
+
+<p>MP3 File</p>
+<input type="file" id="mp3File"><br>
+
+<p>WAV File</p>
+<input type="file" id="wavFile"><br>
+
 <input id="buyLink" placeholder="PayPal Link"><br>
 
-<button onclick="addBeat()">Upload Beat</button>
+<input id="mp3" placeholder="MP3 Price"><br>
+<input id="wav" placeholder="WAV Price"><br>
+<input id="exclusive" placeholder="Exclusive Price"><br>
+
+<button onclick="uploadBeat()">UPLOAD BEAT</button>
 
 <p id="status"></p>
+<pre id="log"></pre>
+</div>
+
+<!-- DELETE -->
+<div class="section">
+<h2>🗑 Delete Beat</h2>
+<input id="deleteId" placeholder="Beat ID"><br>
+<button onclick="deleteBeat()">DELETE</button>
+</div>
 
 </div>
 
@@ -55,6 +101,11 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
+
+function log(msg){
+logBox.innerHTML += msg + "<br>";
+}
 
 /* LOGIN */
 function login(){
@@ -66,22 +117,76 @@ panel.style.display="block";
 .catch(e=>alert(e.message));
 }
 
-/* ADD BEAT */
-function addBeat(){
-
-if(!title.value || !image.value || !preview.value || !buyLink.value){
-status.innerText="Missing fields ❌";
-return;
+/* UPLOAD FILE */
+async function upload(file,path){
+const ref = storage.ref(path+"/"+Date.now()+"_"+file.name);
+await ref.put(file);
+return await ref.getDownloadURL();
 }
 
-db.collection("beats").add({
+/* UPLOAD BEAT */
+async function uploadBeat(){
+
+status.innerText="Uploading...";
+logBox.innerHTML="";
+
+try{
+
+const img=imageFile.files[0];
+const prev=previewFile.files[0];
+const mp3=mp3File.files[0];
+const wav=wavFile.files[0];
+
+const imgURL=await upload(img,"images");
+const prevURL=await upload(prev,"preview");
+const mp3URL=await upload(mp3,"mp3");
+const wavURL=await upload(wav,"wav");
+
+await db.collection("beats").add({
 title:title.value,
-image:image.value,
-previewFile:preview.value,
-buyLink:buyLink.value
+image:imgURL,
+previewFile:prevURL,
+mp3File:mp3URL,
+wavFile:wavURL,
+buyLink:buyLink.value,
+licenses:{
+mp3:mp3.value,
+wav:wav.value,
+exclusive:exclusive.value
+},
+createdAt:Date.now()
 });
 
-status.innerText="Uploaded ✔";
+status.innerText="UPLOAD COMPLETE ✔";
+
+}catch(e){
+status.innerText="ERROR: "+e.message;
+}
+
+}
+
+/* SETTINGS */
+async function saveSettings(){
+
+let bgURL="";
+
+if(bgFile.files[0]){
+bgURL = await upload(bgFile.files[0],"backgrounds");
+}
+
+await db.collection("settings").doc("site").set({
+storeName:storeName.value,
+background:bgURL,
+font:font.value
+});
+
+settingsStatus.innerText="SETTINGS SAVED ✔";
+}
+
+/* DELETE */
+function deleteBeat(){
+db.collection("beats").doc(deleteId.value).delete();
+alert("Deleted");
 }
 </script>
 
