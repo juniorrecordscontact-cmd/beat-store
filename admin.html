@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - Junior Beats</title>
+<title>Admin Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
@@ -13,13 +14,11 @@ body {
   background: #111;
   color: white;
   text-align: center;
-  margin: 0;
 }
 
 input {
-  display: block;
-  margin: 10px auto;
   padding: 10px;
+  margin: 8px;
   width: 260px;
   border-radius: 6px;
   border: none;
@@ -32,43 +31,36 @@ button {
   color: white;
   cursor: pointer;
   border-radius: 6px;
-  margin-top: 10px;
 }
 
-#panel {
-  display: none;
-  margin-top: 30px;
-}
-
-#loginBox {
-  margin-top: 100px;
-}
+#panel { display: none; }
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ Admin Panel</h1>
+<h1>🎛️ Admin Login</h1>
 
-<!-- LOGIN -->
 <div id="loginBox">
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
+  <input id="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Password"><br>
   <button onclick="login()">Login</button>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="panel">
 
   <h2>Upload Beats 🎧</h2>
 
-  <input id="title" placeholder="Beat Title">
-  <input id="price" placeholder="Price">
-  <input id="file" placeholder="MP3 Link">
-  <input id="image" placeholder="Cover Image URL">
-  <input id="buyLink" placeholder="Buy Link">
+  <input id="title" placeholder="Beat Title"><br>
+  <input id="price" placeholder="Price"><br>
+  <input id="file" placeholder="MP3 Link"><br>
+  <input id="image" placeholder="Cover Image URL"><br>
+  <input id="buyLink" placeholder="Buy Link"><br>
 
   <button onclick="addBeat()">Add Beat</button>
+
+  <br><br>
+  <button onclick="logout()">Logout</button>
 
 </div>
 
@@ -83,22 +75,39 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* 🔐 LOGIN SYSTEM */
+/* LOGIN */
 function login() {
-  const user = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-
-  if (user === "ADMIN" && pass === "1234") {
+  auth.signInWithEmailAndPassword(
+    email.value,
+    password.value
+  ).then(() => {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("panel").style.display = "block";
-  } else {
-    alert("Wrong login ❌");
-  }
+  }).catch(err => {
+    alert("Login failed ❌");
+  });
 }
 
-/* ➕ ADD BEAT */
+/* LOGOUT */
+function logout() {
+  auth.signOut().then(() => {
+    location.reload();
+  });
+}
+
+/* KEEP USER LOGGED IN */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+  }
+});
+
+/* ADD BEAT */
 function addBeat() {
   db.collection("beats").add({
     title: title.value,
@@ -108,13 +117,7 @@ function addBeat() {
     buyLink: buyLink.value
   });
 
-  alert("Beat uploaded 🎧");
-
-  title.value = "";
-  price.value = "";
-  file.value = "";
-  image.value = "";
-  buyLink.value = "";
+  alert("Beat added 🎧");
 }
 </script>
 
