@@ -2,63 +2,46 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>SAFE ADMIN PANEL</title>
+<title>Admin (Stable Base)</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-button{padding:10px;margin:5px;width:250px;border:none;border-radius:6px;background:#00c853;color:white;cursor:pointer;}
-input{padding:10px;margin:5px;width:250px;}
+input,button{padding:10px;margin:5px;width:260px;}
+button{background:#00c853;color:white;border:none;cursor:pointer;}
 #panel{display:none;}
-.log{font-size:12px;color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1>ADMIN (SAFE MODE)</h1>
+<h1>Admin Panel (BASE)</h1>
 
 <div id="loginBox">
 <input id="email" placeholder="email"><br>
 <input id="password" type="password" placeholder="password"><br>
-<button id="loginBtn">LOGIN</button>
+<button onclick="login()">Login</button>
 </div>
 
 <div id="panel">
 
-<h2>UPLOAD TEST</h2>
+<h2>Add Beat</h2>
 
-<input id="title" placeholder="title"><br>
+<input id="title" placeholder="Title"><br>
+<input id="image" placeholder="Image URL"><br>
+<input id="preview" placeholder="Preview MP3 URL"><br>
+<input id="buyLink" placeholder="PayPal Link"><br>
 
-<input type="file" id="imageFile"><br>
-<input type="file" id="previewFile"><br>
-<input type="file" id="mp3File"><br>
-<input type="file" id="wavFile"><br>
-
-<input id="buyLink" placeholder="paypal link"><br>
-
-<button id="uploadBtn">UPLOAD BEAT</button>
+<button onclick="addBeat()">Upload Beat</button>
 
 <p id="status"></p>
-<pre id="log"></pre>
 
 </div>
 
 <script>
-/* SAFE LOG */
-function log(msg){
-document.getElementById("log").innerText += msg + "\n";
-}
-
-let auth, db, storage;
-
-/* INIT SAFELY */
-try{
-
 const firebaseConfig = {
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
@@ -70,83 +53,30 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 
 firebase.initializeApp(firebaseConfig);
 
-auth = firebase.auth();
-db = firebase.firestore();
-storage = firebase.storage();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-log("Firebase OK");
-
-}catch(e){
-alert("Firebase FAILED: " + e.message);
-console.error(e);
-}
-
-/* BUTTON BINDING (IMPORTANT FIX) */
-document.getElementById("loginBtn").onclick = async function(){
-
-try{
-await auth.signInWithEmailAndPassword(
-email.value,
-password.value
-);
-
+/* LOGIN */
+function login(){
+auth.signInWithEmailAndPassword(email.value,password.value)
+.then(()=>{
 loginBox.style.display="none";
 panel.style.display="block";
-
-log("LOGIN SUCCESS");
-
-}catch(e){
-log("LOGIN ERROR: " + e.message);
-}
-};
-
-document.getElementById("uploadBtn").onclick = async function(){
-
-try{
-
-status.innerText="Uploading...";
-
-const img=imageFile.files[0];
-const prev=previewFile.files[0];
-const mp3=mp3File.files[0];
-const wav=wavFile.files[0];
-
-if(!img||!prev||!mp3||!wav){
-status.innerText="Missing files";
-return;
+})
+.catch(e=>alert(e.message));
 }
 
-/* STORAGE SAFE UPLOAD */
-async function upload(file,path){
-const ref = storage.ref(path+"/"+Date.now()+"_"+file.name);
-await ref.put(file);
-return await ref.getDownloadURL();
-}
-
-const imgURL = await upload(img,"images");
-const prevURL = await upload(prev,"preview");
-const mp3URL = await upload(mp3,"mp3");
-const wavURL = await upload(wav,"wav");
-
-await db.collection("beats").add({
+/* ADD BEAT */
+function addBeat(){
+db.collection("beats").add({
 title:title.value,
-image:imgURL,
-previewFile:prevURL,
-mp3File:mp3URL,
-wavFile:wavURL,
+image:image.value,
+previewFile:preview.value,
 buyLink:buyLink.value
 });
 
-status.innerText="UPLOAD SUCCESS";
-
-}catch(e){
-status.innerText="ERROR: " + e.message;
-log(e.message);
-console.error(e);
+status.innerText="Uploaded ✔";
 }
-
-};
-
 </script>
 
 </body>
