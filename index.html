@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Junior Beats Store</title>
+<title>Beat Store</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -35,22 +35,14 @@ background-size:cover;
 background-position:center;
 }
 
-.overlay{
-position:absolute;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-}
+.overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
 
-.info{
-position:absolute;
-bottom:10px;
-width:100%;
-}
+.info{position:absolute;bottom:10px;width:100%;}
 
 button{
-padding:8px;
+padding:6px;
 width:80%;
+margin:3px;
 border:none;
 background:#00c853;
 color:white;
@@ -68,21 +60,21 @@ cursor:pointer;
 
 <script>
 const firebaseConfig = {
-apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
-authDomain: "junior-beats-store.firebaseapp.com",
-projectId: "junior-beats-store",
-storageBucket: "junior-beats-store.firebasestorage.app",
-messagingSenderId: "781170149321",
-appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain:"junior-beats-store.firebaseapp.com",
+projectId:"junior-beats-store",
+storageBucket:"junior-beats-store.firebasestorage.app",
+messagingSenderId:"781170149321",
+appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* LOAD SETTINGS */
+/* SETTINGS */
 function loadSettings(){
-db.collection("settings").doc("site").get().then(doc=>{
-let s=doc.data();
+db.collection("settings").doc("site").get().then(d=>{
+let s=d.data();
 if(s?.background){
 document.body.style.backgroundImage=`url('${s.background}')`;
 }
@@ -92,14 +84,18 @@ document.body.style.fontFamily=s.font;
 });
 }
 
+/* BUY */
+function buy(type,b){
+let price=b.licenses?.[type];
+window.open(b.buyLink+"?amount="+price,"_blank");
+}
+
 /* LOAD BEATS */
 function load(){
 db.collection("beats").get().then(snap=>{
 box.innerHTML="";
-
 snap.forEach(doc=>{
 let b=doc.data();
-
 let img=b.image || "https://images.unsplash.com/photo-1521335629791-ce4aec67dd49";
 
 box.innerHTML+=`
@@ -108,15 +104,14 @@ box.innerHTML+=`
 
 <div class="info">
 <h3>${b.title}</h3>
-<p>${b.price}</p>
 
 <audio controls style="width:90%">
 <source src="${b.previewFile}" type="audio/mpeg">
 </audio>
 
-<button onclick="window.open('${b.buyLink}','_blank')">
-Buy Now
-</button>
+<button onclick="buy('mp3',${JSON.stringify(b)})">MP3</button>
+<button onclick="buy('wav',${JSON.stringify(b)})">WAV</button>
+<button onclick="buy('exclusive',${JSON.stringify(b)})">Exclusive</button>
 </div>
 </div>`;
 });
