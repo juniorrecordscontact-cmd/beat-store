@@ -10,54 +10,90 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:260px;border:none;border-radius:6px;}
-button{background:#00c853;color:white;cursor:pointer;}
+body{
+  font-family:Arial;
+  background:#111;
+  color:white;
+  text-align:center;
+}
+input,button{
+  padding:10px;
+  margin:6px;
+  width:280px;
+  border:none;
+  border-radius:6px;
+}
+button{
+  background:#00c853;
+  color:white;
+  cursor:pointer;
+}
+.section{
+  border-top:1px solid #333;
+  margin-top:20px;
+  padding-top:20px;
+}
 #panel{display:none;}
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ Admin Panel</h1>
+<h1>🎛️ FULL ADMIN CONTROL PANEL</h1>
 
+<!-- LOGIN -->
 <div id="loginBox">
-<input id="email" placeholder="Email"><br>
+<input id="email" placeholder="Admin Email"><br>
 <input id="password" type="password" placeholder="Password"><br>
 <button onclick="login()">Login</button>
 </div>
 
 <div id="panel">
 
-<h2>🎧 Upload Beat</h2>
+<!-- ================= BEAT UPLOAD ================= -->
+<div class="section">
+<h2>🎧 Upload New Beat</h2>
 
-<input id="title" placeholder="Title"><br>
+<input id="title" placeholder="Beat Title (e.g. Sad Piano Type Beat)"><br>
 
+<p>🎨 Cover Image (this is the background of the beat)</p>
 <input type="file" id="imageFile"><br>
+
+<p>🎧 Preview File (WATERMARKED version users hear)</p>
 <input type="file" id="previewFile"><br>
+
+<p>🎵 MP3 Lease File (what MP3 buyers receive)</p>
 <input type="file" id="mp3File"><br>
+
+<p>💎 WAV Lease File (what WAV buyers receive)</p>
 <input type="file" id="wavFile"><br>
 
-<input id="buyLink" placeholder="PayPal Link"><br>
+<input id="buyLink" placeholder="PayPal Link (your payment link)"><br>
 
-<input id="mp3" placeholder="MP3 Price"><br>
-<input id="wav" placeholder="WAV Price"><br>
-<input id="exclusive" placeholder="Exclusive Price"><br>
+<h3>💰 Pricing</h3>
+<input id="mp3" placeholder="MP3 Price (example: 25)"><br>
+<input id="wav" placeholder="WAV Price (example: 50)"><br>
+<input id="exclusive" placeholder="Exclusive Price (example: 150)"><br>
 
-<button onclick="addBeat()">UPLOAD</button>
+<button onclick="addBeat()">UPLOAD BEAT</button>
 
 <p id="status"></p>
+</div>
 
-<hr>
+<!-- ================= SITE SETTINGS ================= -->
+<div class="section">
+<h2>🎨 Website Design Control</h2>
 
-<h2>🎨 Site Settings</h2>
+<p>🌆 Background Image (URL)</p>
+<input id="bg" placeholder="Paste image URL for site background"><br>
 
-<input id="bg" placeholder="Background Image URL"><br>
-<input id="font" placeholder="Font (Arial, Courier, etc)"><br>
+<p>🔤 Font (example: Arial, Courier, Georgia)</p>
+<input id="font" placeholder="Font name"><br>
 
-<button onclick="saveSettings()">Save Settings</button>
+<button onclick="saveSettings()">SAVE DESIGN</button>
 
 <p id="status2"></p>
+</div>
 
 </div>
 
@@ -89,7 +125,7 @@ panel.style.display="block";
 
 /* UPLOAD HELPER */
 async function uploadFile(folder,file){
-const ref = storage.ref(folder + "/" + Date.now() + "_" + file.name);
+const ref = storage.ref(folder+"/"+Date.now()+"_"+file.name);
 await ref.put(file);
 return await ref.getDownloadURL();
 }
@@ -98,22 +134,34 @@ return await ref.getDownloadURL();
 async function addBeat(){
 try{
 
-status.innerText = "Uploading...";
+status.innerText="Uploading...";
 
-const image = imageFile.files[0];
-const preview = previewFile.files[0];
-const mp3 = mp3File.files[0];
-const wav = wavFile.files[0];
+const image=imageFile.files[0];
+const preview=previewFile.files[0];
+const mp3=mp3File.files[0];
+const wav=wavFile.files[0];
 
-if(!image || !preview || !mp3 || !wav){
-status.innerText = "Missing files ❌";
+if(!image){
+status.innerText="Missing COVER IMAGE";
+return;
+}
+if(!preview){
+status.innerText="Missing PREVIEW FILE";
+return;
+}
+if(!mp3){
+status.innerText="Missing MP3 FILE";
+return;
+}
+if(!wav){
+status.innerText="Missing WAV FILE";
 return;
 }
 
-const imgURL = await uploadFile("images", image);
-const prevURL = await uploadFile("preview", preview);
-const mp3URL = await uploadFile("mp3", mp3);
-const wavURL = await uploadFile("wav", wav);
+const imgURL=await uploadFile("images",image);
+const prevURL=await uploadFile("preview",preview);
+const mp3URL=await uploadFile("mp3",mp3);
+const wavURL=await uploadFile("wav",wav);
 
 await db.collection("beats").add({
 title:title.value,
@@ -130,20 +178,20 @@ exclusive:exclusive.value
 }
 });
 
-status.innerText = "UPLOAD SUCCESS ✅";
+status.innerText="UPLOAD SUCCESS ✅";
 
 }catch(e){
-status.innerText = "ERROR: " + e.message;
+status.innerText="ERROR: "+e.message;
 }
 }
 
-/* SAVE SETTINGS */
+/* SAVE DESIGN */
 function saveSettings(){
 db.collection("settings").doc("site").set({
-background: bg.value,
-font: font.value
+background:bg.value,
+font:font.value
 });
-status2.innerText = "Saved 🎨";
+status2.innerText="Design Saved 🎨";
 }
 </script>
 
