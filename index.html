@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Beat Store</title>
+<title>Junior Beats Store</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -76,27 +76,26 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* LOAD SETTINGS */
+/* SETTINGS */
 function loadSettings(){
 db.collection("settings").doc("site").get().then(doc=>{
-let s = doc.data();
+let s=doc.data();
 if(!s) return;
 
 if(s.background){
-document.body.style.backgroundImage = `url('${s.background}')`;
+document.body.style.backgroundImage=`url('${s.background}')`;
 }
-
 if(s.font){
-document.body.style.fontFamily = s.font;
+document.body.style.fontFamily=s.font;
 }
 });
 }
 
 /* BUY */
 function buyBeat(b){
-const choice = prompt(
+const choice=prompt(
 `1 = MP3 ($${b.licenses.mp3})
 2 = WAV ($${b.licenses.wav})
 3 = EXCLUSIVE ($${b.licenses.exclusive})`
@@ -118,11 +117,11 @@ db.collection("beats").get().then(snap=>{
 box.innerHTML="";
 
 snap.forEach(doc=>{
-let b = doc.data();
+let b=doc.data();
 
-if(b.exclusive === true) return;
+if(b.exclusive===true) return;
 
-box.innerHTML += `
+box.innerHTML+=`
 <div class="beat" style="background-image:url('${b.image}')">
 <div class="overlay"></div>
 
@@ -133,13 +132,11 @@ box.innerHTML += `
 <source src="${b.previewFile}">
 </audio>
 
-<p style="font-size:12px">
+<p>
 MP3: $${b.licenses.mp3} | WAV: $${b.licenses.wav} | EXCL: $${b.licenses.exclusive}
 </p>
 
-<button onclick='buyBeat(${JSON.stringify(b)})'>
-BUY
-</button>
+<button onclick='buyBeat(${JSON.stringify(b)})'>BUY</button>
 
 </div>
 </div>`;
