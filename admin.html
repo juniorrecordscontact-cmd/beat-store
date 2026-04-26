@@ -14,8 +14,6 @@ body{font-family:Arial;background:#111;color:white;text-align:center;}
 input,button{padding:10px;margin:5px;width:260px;border:none;border-radius:6px;}
 button{background:#00c853;color:white;cursor:pointer;}
 #panel{display:none;}
-.beatBox{background:#222;padding:10px;margin:10px auto;width:320px;border-radius:10px;}
-.deleteBtn{background:#ff5252;}
 </style>
 </head>
 
@@ -35,34 +33,31 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <input id="title" placeholder="Title"><br>
 
-<label>🎨 Cover Image</label><br>
 <input type="file" id="imageFile"><br>
-
-<label>🎧 Preview (Watermarked)</label><br>
 <input type="file" id="previewFile"><br>
-
-<label>🎵 MP3 Lease File</label><br>
 <input type="file" id="mp3File"><br>
-
-<label>💎 WAV Lease File</label><br>
 <input type="file" id="wavFile"><br>
 
 <input id="buyLink" placeholder="PayPal Link"><br>
 
-<h3>💰 Pricing</h3>
 <input id="mp3" placeholder="MP3 Price"><br>
 <input id="wav" placeholder="WAV Price"><br>
 <input id="exclusive" placeholder="Exclusive Price"><br>
 
-<button onclick="addBeat()">Upload Beat</button>
+<button onclick="addBeat()">UPLOAD</button>
+
+<p id="status"></p>
 
 <hr>
 
-<h2>📦 Your Beats</h2>
-<div id="list"></div>
+<h2>🎨 Site Settings</h2>
 
-<br>
-<button onclick="logout()">Logout</button>
+<input id="bg" placeholder="Background Image URL"><br>
+<input id="font" placeholder="Font (Arial, Courier, etc)"><br>
+
+<button onclick="saveSettings()">Save Settings</button>
+
+<p id="status2"></p>
 
 </div>
 
@@ -85,22 +80,25 @@ const storage = firebase.storage();
 /* LOGIN */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{loginBox.style.display="none";panel.style.display="block";loadBeats();})
-.catch(()=>alert("Login failed"));
+.then(()=>{
+loginBox.style.display="none";
+panel.style.display="block";
+})
+.catch(e=>alert(e.message));
 }
 
-/* LOGOUT */
-function logout(){auth.signOut().then(()=>location.reload());}
-
 /* UPLOAD HELPER */
-async function uploadFile(folder,file,id){
-const ref = storage.ref(folder+"/"+id+"_"+file.name);
+async function uploadFile(folder,file){
+const ref = storage.ref(folder + "/" + Date.now() + "_" + file.name);
 await ref.put(file);
 return await ref.getDownloadURL();
 }
 
 /* ADD BEAT */
 async function addBeat(){
+try{
+
+status.innerText = "Uploading...";
 
 const image = imageFile.files[0];
 const preview = previewFile.files[0];
@@ -108,17 +106,14 @@ const mp3 = mp3File.files[0];
 const wav = wavFile.files[0];
 
 if(!image || !preview || !mp3 || !wav){
-return alert("Upload ALL files");
+status.innerText = "Missing files ❌";
+return;
 }
 
-try{
-
-const id = Date.now();
-
-const imgURL = await uploadFile("images",image,id);
-const prevURL = await uploadFile("preview",preview,id);
-const mp3URL = await uploadFile("mp3",mp3,id);
-const wavURL = await uploadFile("wav",wav,id);
+const imgURL = await uploadFile("images", image);
+const prevURL = await uploadFile("preview", preview);
+const mp3URL = await uploadFile("mp3", mp3);
+const wavURL = await uploadFile("wav", wav);
 
 await db.collection("beats").add({
 title:title.value,
@@ -135,42 +130,21 @@ exclusive:exclusive.value
 }
 });
 
-alert("Beat uploaded 🔥");
-loadBeats();
+status.innerText = "UPLOAD SUCCESS ✅";
 
 }catch(e){
-alert("Upload failed: "+e);
+status.innerText = "ERROR: " + e.message;
 }
 }
 
-/* DELETE */
-function deleteBeat(id){
-db.collection("beats").doc(id).delete().then(loadBeats);
-}
-
-/* LOAD */
-function loadBeats(){
-db.collection("beats").get().then(snap=>{
-list.innerHTML="";
-snap.forEach(doc=>{
-let b=doc.data();
-list.innerHTML+=`
-<div class="beatBox">
-<b>${b.title}</b><br>
-<button class="deleteBtn" onclick="deleteBeat('${doc.id}')">Delete</button>
-</div>`;
+/* SAVE SETTINGS */
+function saveSettings(){
+db.collection("settings").doc("site").set({
+background: bg.value,
+font: font.value
 });
-});
+status2.innerText = "Saved 🎨";
 }
-
-/* SESSION */
-auth.onAuthStateChanged(u=>{
-if(u){
-loginBox.style.display="none";
-panel.style.display="block";
-loadBeats();
-}
-});
 </script>
 
 </body>
