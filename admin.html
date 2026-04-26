@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - Junior Beats</title>
+<title>Admin Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -13,28 +13,18 @@ body {
   background: #111;
   color: white;
   text-align: center;
-  margin: 0;
-}
-
-h1 {
-  margin-top: 20px;
-}
-
-.box {
-  margin-top: 40px;
 }
 
 input {
-  display: block;
-  margin: 10px auto;
   padding: 10px;
-  width: 280px;
+  margin: 8px;
+  width: 260px;
   border-radius: 6px;
   border: none;
 }
 
 button {
-  padding: 12px 25px;
+  padding: 10px 20px;
   background: #00c853;
   border: none;
   color: white;
@@ -42,21 +32,34 @@ button {
   border-radius: 6px;
   margin-top: 10px;
 }
+
+#panel {
+  display: none;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ Admin Panel</h1>
-<p>Add beats to your store</p>
+<h1>🎛️ Admin Login</h1>
 
-<div class="box">
+<!-- LOGIN -->
+<div id="login">
+  <input id="user" placeholder="Username"><br>
+  <input id="pass" placeholder="Password" type="password"><br>
+  <button onclick="login()">Login</button>
+</div>
 
-  <input id="title" placeholder="Beat Title">
-  <input id="price" placeholder="Price (e.g $25)">
-  <input id="file" placeholder="MP3 Link">
-  <input id="image" placeholder="Cover Image URL">
-  <input id="buyLink" placeholder="PayPal / Buy Link">
+<!-- ADMIN PANEL -->
+<div id="panel">
+
+  <h2>Upload Beats</h2>
+
+  <input id="title" placeholder="Beat Title"><br>
+  <input id="price" placeholder="Price"><br>
+  <input id="file" placeholder="MP3 Link"><br>
+  <input id="image" placeholder="Cover Image URL"><br>
+  <input id="buyLink" placeholder="Buy Link"><br>
 
   <button onclick="addBeat()">Add Beat</button>
 
@@ -75,23 +78,36 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+/* 🔐 SIMPLE LOGIN */
+function login() {
+  const user = document.getElementById("user").value;
+  const pass = document.getElementById("pass").value;
+
+  if (user === "ADMIN" && pass === "1234") {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+  } else {
+    alert("Wrong login ❌");
+  }
+}
+
+/* ➕ ADD BEAT */
 function addBeat() {
   db.collection("beats").add({
-    title: document.getElementById("title").value,
-    price: document.getElementById("price").value,
-    file: document.getElementById("file").value,
-    image: document.getElementById("image").value,
-    buyLink: document.getElementById("buyLink").value
+    title: title.value,
+    price: price.value,
+    file: file.value,
+    image: image.value,
+    buyLink: buyLink.value
   });
 
-  alert("Beat added successfully 🎧");
+  alert("Beat added 🎧");
 
-  // clear inputs
-  document.getElementById("title").value = "";
-  document.getElementById("price").value = "";
-  document.getElementById("file").value = "";
-  document.getElementById("image").value = "";
-  document.getElementById("buyLink").value = "";
+  title.value = "";
+  price.value = "";
+  file.value = "";
+  image.value = "";
+  buyLink.value = "";
 }
 </script>
 
