@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel</title>
+<title>Admin Panel - Junior Beats</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -13,11 +13,13 @@ body {
   background: #111;
   color: white;
   text-align: center;
+  margin: 0;
 }
 
 input {
+  display: block;
+  margin: 10px auto;
   padding: 10px;
-  margin: 8px;
   width: 260px;
   border-radius: 6px;
   border: none;
@@ -35,31 +37,36 @@ button {
 
 #panel {
   display: none;
+  margin-top: 30px;
+}
+
+#loginBox {
+  margin-top: 100px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ Admin Login</h1>
+<h1>🎛️ Admin Panel</h1>
 
 <!-- LOGIN -->
-<div id="login">
-  <input id="user" placeholder="Username"><br>
-  <input id="pass" placeholder="Password" type="password"><br>
+<div id="loginBox">
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
 <!-- ADMIN PANEL -->
 <div id="panel">
 
-  <h2>Upload Beats</h2>
+  <h2>Upload Beats 🎧</h2>
 
-  <input id="title" placeholder="Beat Title"><br>
-  <input id="price" placeholder="Price"><br>
-  <input id="file" placeholder="MP3 Link"><br>
-  <input id="image" placeholder="Cover Image URL"><br>
-  <input id="buyLink" placeholder="Buy Link"><br>
+  <input id="title" placeholder="Beat Title">
+  <input id="price" placeholder="Price">
+  <input id="file" placeholder="MP3 Link">
+  <input id="image" placeholder="Cover Image URL">
+  <input id="buyLink" placeholder="Buy Link">
 
   <button onclick="addBeat()">Add Beat</button>
 
@@ -78,13 +85,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* 🔐 SIMPLE LOGIN */
+/* 🔐 LOGIN SYSTEM */
 function login() {
-  const user = document.getElementById("user").value;
-  const pass = document.getElementById("pass").value;
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
 
   if (user === "ADMIN" && pass === "1234") {
-    document.getElementById("login").style.display = "none";
+    document.getElementById("loginBox").style.display = "none";
     document.getElementById("panel").style.display = "block";
   } else {
     alert("Wrong login ❌");
@@ -101,7 +108,7 @@ function addBeat() {
     buyLink: buyLink.value
   });
 
-  alert("Beat added 🎧");
+  alert("Beat uploaded 🎧");
 
   title.value = "";
   price.value = "";
