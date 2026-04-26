@@ -16,11 +16,8 @@ body {
   text-align: center;
 }
 
-h1 {
-  margin: 20px;
-}
+h1 { margin: 20px; }
 
-/* GRID */
 .container {
   display: flex;
   flex-wrap: wrap;
@@ -29,7 +26,6 @@ h1 {
   padding: 20px;
 }
 
-/* BEAT CARD */
 .beat {
   width: 280px;
   height: 280px;
@@ -40,7 +36,6 @@ h1 {
   background-position: center;
 }
 
-/* DARK OVERLAY */
 .overlay {
   position: absolute;
   width: 100%;
@@ -48,14 +43,12 @@ h1 {
   background: rgba(0,0,0,0.55);
 }
 
-/* TEXT */
 .info {
   position: absolute;
   bottom: 15px;
   width: 100%;
 }
 
-/* PLAY BUTTON */
 button {
   margin-top: 8px;
   padding: 10px;
@@ -65,16 +58,6 @@ button {
   color: white;
   cursor: pointer;
   border-radius: 8px;
-}
-
-/* TITLE */
-h3 {
-  margin: 0;
-}
-
-/* PRICE */
-p {
-  margin: 5px 0;
 }
 </style>
 </head>
@@ -110,8 +93,6 @@ function loadBeats() {
 
       const div = document.createElement("div");
       div.className = "beat";
-
-      // background image
       div.style.backgroundImage = `url('${beat.image}')`;
 
       div.innerHTML = `
