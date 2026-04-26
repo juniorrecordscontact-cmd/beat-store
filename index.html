@@ -9,8 +9,8 @@
 
 <style>
 body{font-family:Arial;background:#0b0b0b;color:white;text-align:center;}
-.beat{margin:20px;padding:10px;border:1px solid #333;}
-img{width:200px;}
+.beat{margin:20px;padding:15px;border:1px solid #333;border-radius:10px;}
+img{width:220px;border-radius:10px;}
 button{padding:8px;background:#00c853;border:none;color:white;cursor:pointer;}
 </style>
 </head>
@@ -37,6 +37,7 @@ const db = firebase.firestore();
 function load(){
 db.collection("beats").get().then(snap=>{
 box.innerHTML="";
+
 snap.forEach(doc=>{
 let b = doc.data();
 
@@ -44,10 +45,12 @@ box.innerHTML += `
 <div class="beat">
 <h3>${b.title}</h3>
 <img src="${b.image}">
-<br>
+<br><br>
 <audio controls src="${b.previewFile}"></audio>
-<br>
-<button onclick="window.open('${b.buyLink}','_blank')">BUY</button>
+<br><br>
+<button onclick="window.open('${b.buyLink}','_blank')">
+BUY
+</button>
 </div>`;
 });
 });
