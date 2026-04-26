@@ -8,53 +8,54 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0b0b0b;
-  color: white;
-  text-align: center;
+body{
+margin:0;
+font-family:Arial;
+color:white;
+text-align:center;
+background:#0b0b0b;
+background-size:cover;
 }
 
-.container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px;
+.container{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+padding:20px;
 }
 
-.beat {
-  width: 280px;
-  height: 280px;
-  border-radius: 15px;
-  overflow: hidden;
-  position: relative;
-  background-size: cover;
-  background-position: center;
+.beat{
+width:280px;
+height:280px;
+border-radius:15px;
+overflow:hidden;
+position:relative;
+background-size:cover;
+background-position:center;
 }
 
-.overlay {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.55);
+.overlay{
+position:absolute;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
 }
 
-.info {
-  position: absolute;
-  bottom: 15px;
-  width: 100%;
+.info{
+position:absolute;
+bottom:10px;
+width:100%;
 }
 
-button {
-  padding: 10px;
-  width: 80%;
-  border: none;
-  background: #00c853;
-  color: white;
-  cursor: pointer;
-  border-radius: 8px;
+button{
+padding:8px;
+width:80%;
+border:none;
+background:#00c853;
+color:white;
+border-radius:8px;
+cursor:pointer;
 }
 </style>
 </head>
@@ -63,73 +64,65 @@ button {
 
 <h1>🔥 Junior Beats Store</h1>
 
-<div class="container" id="beat-container"></div>
+<div class="container" id="box"></div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
-  authDomain: "junior-beats-store.firebaseapp.com",
-  projectId: "junior-beats-store",
-  storageBucket: "junior-beats-store.firebasestorage.app",
-  messagingSenderId: "781170149321",
-  appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain: "junior-beats-store.firebaseapp.com",
+projectId: "junior-beats-store",
+storageBucket: "junior-beats-store.firebasestorage.app",
+messagingSenderId: "781170149321",
+appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
-const container = document.getElementById("beat-container");
 
-function loadSettings() {
-  db.collection("settings").doc("site").get().then(doc => {
-    const data = doc.data();
-    if (!data) return;
-
-    if (data.font) document.body.style.fontFamily = data.font;
-
-    if (data.background) {
-      document.body.style.backgroundImage = `url('${data.background}')`;
-      document.body.style.backgroundSize = "cover";
-    }
-  });
+/* LOAD BACKGROUND */
+function loadBG(){
+db.collection("settings").doc("site").get().then(doc=>{
+const data=doc.data();
+if(data && data.background){
+document.body.style.backgroundImage=`url('${data.background}')`;
+}
+});
 }
 
-function loadBeats() {
-  db.collection("beats").get().then(snapshot => {
-    container.innerHTML = "";
+/* LOAD BEATS */
+function load(){
+db.collection("beats").get().then(snap=>{
+box.innerHTML="";
 
-    snapshot.forEach(doc => {
-      const beat = doc.data();
+snap.forEach(doc=>{
+let b=doc.data();
 
-      const div = document.createElement("div");
-      div.className = "beat";
-      div.style.backgroundImage =
-        `url('${beat.image || "https://images.unsplash.com/photo-1521335629791-ce4aec67dd49"}')`;
+let img=b.image || "https://images.unsplash.com/photo-1521335629791-ce4aec67dd49";
 
-      div.innerHTML = `
-        <div class="overlay"></div>
+box.innerHTML+=`
+<div class="beat" style="background-image:url('${img}')">
+<div class="overlay"></div>
 
-        <div class="info">
-          <h3>${beat.title}</h3>
-          <p>${beat.price}</p>
+<div class="info">
+<h3>${b.title}</h3>
+<p>${b.price}</p>
 
-          <audio controls style="width:90%;">
-            <source src="${beat.file}" type="audio/mpeg">
-          </audio>
+<audio controls style="width:90%">
+<source src="${b.previewFile}" type="audio/mpeg">
+</audio>
 
-          <button onclick="window.open('${beat.buyLink}', '_blank')">
-            Buy Now
-          </button>
-        </div>
-      `;
-
-      container.appendChild(div);
-    });
-  });
+<button onclick="window.open('${b.buyLink}','_blank')">
+Buy Now
+</button>
+</div>
+</div>`;
+});
+});
 }
 
-loadSettings();
-loadBeats();
+loadBG();
+load();
 </script>
 
 </body>
