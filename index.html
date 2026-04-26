@@ -14,6 +14,7 @@ font-family:Arial;
 background:#0b0b0b;
 color:white;
 text-align:center;
+background-size:cover;
 }
 
 .container{
@@ -77,31 +78,41 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+/* LOAD SETTINGS */
+function loadSettings(){
+db.collection("settings").doc("site").get().then(doc=>{
+let s = doc.data();
+if(!s) return;
+
+if(s.background){
+document.body.style.backgroundImage = `url('${s.background}')`;
+}
+
+if(s.font){
+document.body.style.fontFamily = s.font;
+}
+});
+}
+
 /* BUY */
 function buyBeat(b){
-
 const choice = prompt(
 `1 = MP3 ($${b.licenses.mp3})
 2 = WAV ($${b.licenses.wav})
 3 = EXCLUSIVE ($${b.licenses.exclusive})`
 );
 
-let type="";
 let price=0;
 
-if(choice==="1"){type="mp3";price=b.licenses.mp3;}
-else if(choice==="2"){type="wav";price=b.licenses.wav;}
-else if(choice==="3"){type="exclusive";price=b.licenses.exclusive;}
+if(choice==="1") price=b.licenses.mp3;
+else if(choice==="2") price=b.licenses.wav;
+else if(choice==="3") price=b.licenses.exclusive;
 else return;
 
-if(type==="exclusive"){
-alert("⚠️ Exclusive purchase removes this beat permanently.");
+window.open(b.buyLink+"?amount="+price,"_blank");
 }
 
-window.open(b.buyLink+"?type="+type+"&amount="+price,"_blank");
-}
-
-/* LOAD */
+/* LOAD BEATS */
 function load(){
 db.collection("beats").get().then(snap=>{
 box.innerHTML="";
@@ -136,6 +147,7 @@ BUY
 });
 }
 
+loadSettings();
 load();
 </script>
 
