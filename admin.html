@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin (Stable Base)</title>
+<title>Admin Panel (Stable)</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -10,19 +10,19 @@
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:260px;}
-button{background:#00c853;color:white;border:none;cursor:pointer;}
+input,button{padding:10px;margin:5px;width:260px;border:none;border-radius:6px;}
+button{background:#00c853;color:white;cursor:pointer;}
 #panel{display:none;}
 </style>
 </head>
 
 <body>
 
-<h1>Admin Panel (BASE)</h1>
+<h1>Admin Panel</h1>
 
 <div id="loginBox">
-<input id="email" placeholder="email"><br>
-<input id="password" type="password" placeholder="password"><br>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
 <button onclick="login()">Login</button>
 </div>
 
@@ -30,8 +30,8 @@ button{background:#00c853;color:white;border:none;cursor:pointer;}
 
 <h2>Add Beat</h2>
 
-<input id="title" placeholder="Title"><br>
-<input id="image" placeholder="Image URL"><br>
+<input id="title" placeholder="Beat Title"><br>
+<input id="image" placeholder="Cover Image URL"><br>
 <input id="preview" placeholder="Preview MP3 URL"><br>
 <input id="buyLink" placeholder="PayPal Link"><br>
 
@@ -68,6 +68,12 @@ panel.style.display="block";
 
 /* ADD BEAT */
 function addBeat(){
+
+if(!title.value || !image.value || !preview.value || !buyLink.value){
+status.innerText="Missing fields ❌";
+return;
+}
+
 db.collection("beats").add({
 title:title.value,
 image:image.value,
