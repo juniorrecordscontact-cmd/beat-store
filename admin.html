@@ -1,75 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin - Junior Beats</title>
+<meta charset="UTF-8">
+<title>Admin Panel - Junior Beats</title>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #111;
-      color: white;
-      text-align: center;
-    }
+<style>
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  text-align: center;
+  margin: 0;
+}
 
-    input {
-      padding: 10px;
-      margin: 6px;
-      width: 260px;
-      border-radius: 6px;
-      border: none;
-    }
+h1 {
+  margin-top: 20px;
+}
 
-    button {
-      padding: 10px 20px;
-      background: #00c853;
-      border: none;
-      color: white;
-      cursor: pointer;
-      margin-top: 10px;
-      border-radius: 6px;
-    }
-  </style>
+.box {
+  margin-top: 40px;
+}
+
+input {
+  display: block;
+  margin: 10px auto;
+  padding: 10px;
+  width: 280px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  padding: 12px 25px;
+  background: #00c853;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+</style>
 </head>
 
 <body>
 
 <h1>🎛️ Admin Panel</h1>
+<p>Add beats to your store</p>
 
-<input id="title" placeholder="Beat Name"><br>
-<input id="price" placeholder="Price"><br>
-<input id="file" placeholder="MP3 Link"><br>
-<input id="image" placeholder="Cover Image URL"><br>
-<input id="buyLink" placeholder="PayPal Link"><br>
+<div class="box">
 
-<button onclick="addBeat()">Add Beat</button>
+  <input id="title" placeholder="Beat Title">
+  <input id="price" placeholder="Price (e.g $25)">
+  <input id="file" placeholder="MP3 Link">
+  <input id="image" placeholder="Cover Image URL">
+  <input id="buyLink" placeholder="PayPal / Buy Link">
+
+  <button onclick="addBeat()">Add Beat</button>
+
+</div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
-    authDomain: "junior-beats-store.firebaseapp.com",
-    projectId: "junior-beats-store",
-    storageBucket: "junior-beats-store.firebasestorage.app",
-    messagingSenderId: "781170149321",
-    appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+  authDomain: "junior-beats-store.firebaseapp.com",
+  projectId: "junior-beats-store",
+  storageBucket: "junior-beats-store.firebasestorage.app",
+  messagingSenderId: "781170149321",
+  appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+};
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-  function addBeat() {
-    db.collection("beats").add({
-      title: title.value,
-      price: price.value,
-      file: file.value,
-      image: image.value,
-      buyLink: buyLink.value
-    });
+function addBeat() {
+  db.collection("beats").add({
+    title: document.getElementById("title").value,
+    price: document.getElementById("price").value,
+    file: document.getElementById("file").value,
+    image: document.getElementById("image").value,
+    buyLink: document.getElementById("buyLink").value
+  });
 
-    alert("Beat added successfully 🎧");
-  }
+  alert("Beat added successfully 🎧");
+
+  // clear inputs
+  document.getElementById("title").value = "";
+  document.getElementById("price").value = "";
+  document.getElementById("file").value = "";
+  document.getElementById("image").value = "";
+  document.getElementById("buyLink").value = "";
+}
 </script>
 
 </body>
