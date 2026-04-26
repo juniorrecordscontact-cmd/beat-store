@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel</title>
+<title>Admin Control Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -10,15 +10,27 @@
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:6px;width:260px;border:none;border-radius:6px;}
+input,button{padding:10px;margin:5px;width:260px;border:none;border-radius:6px;}
 button{background:#00c853;color:white;cursor:pointer;}
 #panel{display:none;}
+
+.beatBox{
+background:#222;
+padding:10px;
+margin:10px auto;
+width:320px;
+border-radius:10px;
+}
+.smallBtn{
+background:#ff5252;
+margin-top:5px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ Admin Panel</h1>
+<h1>🎛️ FULL ADMIN CONTROL</h1>
 
 <div id="loginBox">
 <input id="email" placeholder="Email"><br>
@@ -28,36 +40,44 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <div id="panel">
 
-<h2>🎧 Add Beat</h2>
+<h2>🎧 Add / Edit Beat</h2>
 
 <input id="title" placeholder="Title"><br>
 <input id="price" placeholder="Price"><br>
-<input id="image" placeholder="Beat Image URL"><br>
+<input id="image" placeholder="Image URL"><br>
 <input id="previewFile" placeholder="Preview MP3"><br>
 <input id="fullFile" placeholder="Full MP3"><br>
-<input id="buyLink" placeholder="PayPal Link"><br>
+<input id="buyLink" placeholder="Buy Link"><br>
 
 <button onclick="addBeat()">Add Beat</button>
 
 <hr>
 
-<h2>🎨 Site Background</h2>
-<input id="bg" placeholder="Background Image URL"><br>
-<button onclick="saveBG()">Save Background</button>
+<h2>🎨 Site Controls</h2>
 
-<br><br>
+<input id="font" placeholder="Font (Arial, Courier...)"><br>
+<input id="bg" placeholder="Background Image URL"><br>
+
+<button onclick="saveSettings()">Save Site Settings</button>
+
+<hr>
+
+<h2>📦 Your Beats (Delete Control)</h2>
+<div id="list"></div>
+
+<br>
 <button onclick="logout()">Logout</button>
 
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
-  authDomain: "junior-beats-store.firebaseapp.com",
-  projectId: "junior-beats-store",
-  storageBucket: "junior-beats-store.firebasestorage.app",
-  messagingSenderId: "781170149321",
-  appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain: "junior-beats-store.firebaseapp.com",
+projectId: "junior-beats-store",
+storageBucket: "junior-beats-store.firebasestorage.app",
+messagingSenderId: "781170149321",
+appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -68,7 +88,7 @@ const db = firebase.firestore();
 /* LOGIN */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{loginBox.style.display="none";panel.style.display="block";})
+.then(()=>{loginBox.style.display="none";panel.style.display="block";loadBeats();})
 .catch(()=>alert("Login failed"));
 }
 
@@ -86,14 +106,44 @@ fullFile:fullFile.value,
 buyLink:buyLink.value
 });
 alert("Beat added 🎧");
+loadBeats();
 }
 
-/* SAVE BACKGROUND */
-function saveBG(){
+/* DELETE BEAT */
+function deleteBeat(id){
+db.collection("beats").doc(id).delete().then(()=>{
+loadBeats();
+});
+}
+
+/* LOAD BEATS */
+function loadBeats(){
+db.collection("beats").get().then(snap=>{
+list.innerHTML="";
+
+snap.forEach(doc=>{
+let b=doc.data();
+
+list.innerHTML+=`
+<div class="beatBox">
+<b>${b.title}</b><br>
+${b.price}<br><br>
+
+<button class="smallBtn" onclick="deleteBeat('${doc.id}')">
+Delete
+</button>
+</div>`;
+});
+});
+}
+
+/* SITE SETTINGS */
+function saveSettings(){
 db.collection("settings").doc("site").set({
+font:font.value,
 background:bg.value
 });
-alert("Background updated 🎨");
+alert("Site updated 🎨");
 }
 
 /* SESSION */
@@ -101,6 +151,7 @@ auth.onAuthStateChanged(user=>{
 if(user){
 loginBox.style.display="none";
 panel.style.display="block";
+loadBeats();
 }
 });
 </script>
