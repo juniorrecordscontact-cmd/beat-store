@@ -1,64 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin Panel - Junior Beats</title>
+  <title>Admin - Junior Beats</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #111;
+      color: white;
+      text-align: center;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 250px;
+    }
+
+    button {
+      padding: 10px;
+      background: #00c853;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .box {
+      margin-top: 50px;
+    }
+  </style>
 </head>
 
-<body style="font-family: Arial; background:#111; color:white; text-align:center;">
+<body>
 
-  <div id="loginBox">
-    <h1>Admin Login 🔐</h1>
+<h1>Admin Panel 🎛️</h1>
 
-    <input id="user" placeholder="Username"><br><br>
-    <input id="pass" type="password" placeholder="Password"><br><br>
+<div class="box">
 
-    <button onclick="login()">Login</button>
+  <input id="title" placeholder="Beat Name"><br>
+  <input id="price" placeholder="Price"><br>
+  <input id="file" placeholder="MP3 Link"><br>
+  <input id="buyLink" placeholder="PayPal Link"><br>
 
-    <p id="error" style="color:red;"></p>
-  </div>
+  <button onclick="addBeat()">Add Beat</button>
 
-  <div id="adminPanel" style="display:none;">
-    <h1>Admin Panel 🎛️</h1>
+</div>
 
-    <input id="title" placeholder="Beat Name"><br><br>
-    <input id="price" placeholder="Price"><br><br>
-    <input id="file" placeholder="MP3 Link"><br><br>
-    <input id="link" placeholder="PayPal Link"><br><br>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+    authDomain: "junior-beats-store.firebaseapp.com",
+    projectId: "junior-beats-store",
+    storageBucket: "junior-beats-store.firebasestorage.app",
+    messagingSenderId: "781170149321",
+    appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+  };
 
-    <button onclick="addBeat()">Add Beat</button>
-  </div>
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-  <script>
-    const ADMIN_USER = "ADMIN";
-    const ADMIN_PASS = "1234"; // change later if you want
+  function addBeat() {
+    db.collection("beats").add({
+      title: document.getElementById("title").value,
+      price: document.getElementById("price").value,
+      file: document.getElementById("file").value,
+      buyLink: document.getElementById("buyLink").value
+    });
 
-    function login() {
-      let u = document.getElementById("user").value;
-      let p = document.getElementById("pass").value;
-
-      if (u === ADMIN_USER && p === ADMIN_PASS) {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("adminPanel").style.display = "block";
-      } else {
-        document.getElementById("error").innerText = "Wrong login ❌";
-      }
-    }
-
-    function addBeat() {
-      let beats = JSON.parse(localStorage.getItem("beats")) || [];
-
-      beats.push({
-        title: document.getElementById("title").value,
-        price: document.getElementById("price").value,
-        file: document.getElementById("file").value,
-        buyLink: document.getElementById("link").value
-      });
-
-      localStorage.setItem("beats", JSON.stringify(beats));
-
-      alert("Beat added!");
-    }
-  </script>
+    alert("Beat added!");
+  }
+</script>
 
 </body>
 </html>
