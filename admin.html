@@ -41,8 +41,11 @@ button{background:#00c853;color:white;cursor:pointer;}
 <label>🎧 Preview (Watermarked)</label><br>
 <input type="file" id="previewFile"><br>
 
-<label>💎 Full File</label><br>
-<input type="file" id="fullFile"><br>
+<label>🎵 MP3 Lease File</label><br>
+<input type="file" id="mp3File"><br>
+
+<label>💎 WAV Lease File</label><br>
+<input type="file" id="wavFile"><br>
 
 <input id="buyLink" placeholder="PayPal Link"><br>
 
@@ -89,41 +92,42 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 /* LOGOUT */
 function logout(){auth.signOut().then(()=>location.reload());}
 
-/* UPLOAD SYSTEM */
+/* UPLOAD HELPER */
+async function uploadFile(folder,file,id){
+const ref = storage.ref(folder+"/"+id+"_"+file.name);
+await ref.put(file);
+return await ref.getDownloadURL();
+}
+
+/* ADD BEAT */
 async function addBeat(){
 
 const image = imageFile.files[0];
 const preview = previewFile.files[0];
-const full = fullFile.files[0];
+const mp3 = mp3File.files[0];
+const wav = wavFile.files[0];
 
-if(!image || !preview || !full){
+if(!image || !preview || !mp3 || !wav){
 return alert("Upload ALL files");
 }
 
 try{
 
-// unique names
 const id = Date.now();
 
-const imgRef = storage.ref("images/"+id+"_"+image.name);
-await imgRef.put(image);
-const imgURL = await imgRef.getDownloadURL();
+const imgURL = await uploadFile("images",image,id);
+const prevURL = await uploadFile("preview",preview,id);
+const mp3URL = await uploadFile("mp3",mp3,id);
+const wavURL = await uploadFile("wav",wav,id);
 
-const prevRef = storage.ref("previews/"+id+"_"+preview.name);
-await prevRef.put(preview);
-const prevURL = await prevRef.getDownloadURL();
-
-const fullRef = storage.ref("full/"+id+"_"+full.name);
-await fullRef.put(full);
-const fullURL = await fullRef.getDownloadURL();
-
-// save beat
 await db.collection("beats").add({
 title:title.value,
 image:imgURL,
 previewFile:prevURL,
-fullFile:fullURL,
+mp3File:mp3URL,
+wavFile:wavURL,
 buyLink:buyLink.value,
+exclusive:false,
 licenses:{
 mp3:mp3.value,
 wav:wav.value,
