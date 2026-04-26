@@ -2,49 +2,85 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Beat Store</title>
+<title>Junior Beats</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;}
-.container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;padding:20px;}
+body{
+margin:0;
+font-family:Arial;
+background:#111;
+color:white;
+text-align:center;
+background-size:cover;
+background-position:center;
+}
+
+header{
+padding:20px;
+font-size:28px;
+font-weight:bold;
+}
+
+.container{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+padding:20px;
+}
 
 .beat{
 width:280px;
 height:320px;
-background-size:cover;
-position:relative;
 border-radius:12px;
 overflow:hidden;
+position:relative;
+background-size:cover;
+background-position:center;
 }
 
 .overlay{
-position:absolute;width:100%;height:100%;
+position:absolute;
+width:100%;
+height:100%;
 background:rgba(0,0,0,0.6);
 }
 
 .content{
-position:absolute;bottom:10px;width:100%;
+position:absolute;
+bottom:10px;
+width:100%;
 }
 
 button{
-padding:8px;width:80%;
+padding:8px;
+width:80%;
 background:#00c853;
 border:none;
 color:white;
 cursor:pointer;
+border-radius:6px;
 }
+
+small{color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1 id="storeTitle">Loading...</h1>
+<header id="storeName">Loading Junior Beats...</header>
+
+<small id="debug"></small>
+
 <div class="container" id="box"></div>
 
 <script>
+/* =========================
+   FIREBASE INIT
+========================= */
 const firebaseConfig = {
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
@@ -55,46 +91,80 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-const db=firebase.firestore();
+/* =========================
+   SAFE STATE HANDLING
+========================= */
+let storeLoaded = false;
 
-/* SETTINGS */
-db.collection("settings").doc("site").get().then(doc=>{
-let s=doc.data();
+function setDebug(msg){
+document.getElementById("debug").innerText = msg;
+}
 
-if(s){
-storeTitle.innerText=s.storeName || "Beat Store";
+/* =========================
+   LOAD SETTINGS (SAFE)
+========================= */
+async function loadSettings(){
+try{
+const doc = await db.collection("settings").doc("site").get();
+
+if(doc.exists){
+const s = doc.data();
+
+document.getElementById("storeName").innerText =
+s.storeName || "Junior Beats";
 
 if(s.background){
-document.body.style.backgroundImage=`url('${s.background}')`;
+document.body.style.backgroundImage = `url('${s.background}')`;
 }
 
 if(s.font){
-document.body.style.fontFamily=s.font;
+document.body.style.fontFamily = s.font;
 }
-}
-});
 
-/* LOAD BEATS */
-db.collection("beats").get().then(snap=>{
+setDebug("Settings loaded ✔");
+}else{
+setDebug("No settings found — using defaults");
+}
+}catch(e){
+setDebug("Settings error: "+e.message);
+}
+}
+
+/* =========================
+   LOAD BEATS (SAFE)
+========================= */
+async function loadBeats(){
+try{
+const snap = await db.collection("beats").get();
+
+const box = document.getElementById("box");
+box.innerHTML = "";
+
+if(snap.empty){
+setDebug("No beats found in database");
+return;
+}
+
 snap.forEach(doc=>{
-let b=doc.data();
+const b = doc.data();
 
-box.innerHTML+=`
-<div class="beat" style="background-image:url('${b.image}')">
+box.innerHTML += `
+<div class="beat" style="background-image:url('${b.image || ""}')">
 <div class="overlay"></div>
 
 <div class="content">
-<h3>${b.title}</h3>
+<h3>${b.title || "Untitled"}</h3>
 
 <audio controls style="width:90%">
-<source src="${b.previewFile}">
+<source src="${b.previewFile || ""}">
 </audio>
 
 <p>
-MP3 $${b.prices?.mp3 || ""} |
-WAV $${b.prices?.wav || ""} |
-EX $${b.prices?.exclusive || ""}
+MP3 $${b.prices?.mp3 || "0"} |
+WAV $${b.prices?.wav || "0"} |
+EX $${b.prices?.exclusive || "0"}
 </p>
 
 <button onclick="window.open('${b.buyLink}','_blank')">
@@ -104,7 +174,25 @@ BUY
 </div>
 </div>`;
 });
-});
+
+setDebug("Beats loaded ✔");
+
+}catch(e){
+setDebug("Beat load error: "+e.message);
+}
+}
+
+/* =========================
+   INIT EVERYTHING PROPERLY
+========================= */
+async function init(){
+setDebug("Loading Firebase data...");
+await loadSettings();
+await loadBeats();
+storeLoaded = true;
+}
+
+init();
 </script>
 
 </body>
