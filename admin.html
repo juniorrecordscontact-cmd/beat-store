@@ -18,7 +18,7 @@ body {
 
 input {
   padding: 10px;
-  margin: 8px;
+  margin: 6px;
   width: 260px;
   border-radius: 6px;
   border: none;
@@ -31,6 +31,7 @@ button {
   color: white;
   cursor: pointer;
   border-radius: 6px;
+  margin: 5px;
 }
 
 #panel { display: none; }
@@ -39,17 +40,19 @@ button {
 
 <body>
 
-<h1>🎛️ Admin Login</h1>
+<h1>🎛️ Admin Panel</h1>
 
+<!-- LOGIN -->
 <div id="loginBox">
   <input id="email" placeholder="Email"><br>
   <input id="password" type="password" placeholder="Password"><br>
   <button onclick="login()">Login</button>
 </div>
 
+<!-- PANEL -->
 <div id="panel">
 
-  <h2>Upload Beats 🎧</h2>
+  <h2>🎧 Upload Beats</h2>
 
   <input id="title" placeholder="Beat Title"><br>
   <input id="price" placeholder="Price"><br>
@@ -58,6 +61,15 @@ button {
   <input id="buyLink" placeholder="Buy Link"><br>
 
   <button onclick="addBeat()">Add Beat</button>
+
+  <hr>
+
+  <h2>🎨 Site Settings</h2>
+
+  <input id="font" placeholder="Font (Arial, Courier...)"><br>
+  <input id="background" placeholder="Background Image URL"><br>
+
+  <button onclick="saveSettings()">Save Settings</button>
 
   <br><br>
   <button onclick="logout()">Logout</button>
@@ -81,29 +93,24 @@ const db = firebase.firestore();
 
 /* LOGIN */
 function login() {
-  auth.signInWithEmailAndPassword(
-    email.value,
-    password.value
-  ).then(() => {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("panel").style.display = "block";
-  }).catch(err => {
-    alert("Login failed ❌");
-  });
+  auth.signInWithEmailAndPassword(email.value, password.value)
+    .then(() => {
+      loginBox.style.display = "none";
+      panel.style.display = "block";
+    })
+    .catch(() => alert("Login failed ❌"));
 }
 
 /* LOGOUT */
 function logout() {
-  auth.signOut().then(() => {
-    location.reload();
-  });
+  auth.signOut().then(() => location.reload());
 }
 
-/* KEEP USER LOGGED IN */
+/* KEEP SESSION */
 auth.onAuthStateChanged(user => {
   if (user) {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("panel").style.display = "block";
+    loginBox.style.display = "none";
+    panel.style.display = "block";
   }
 });
 
@@ -118,6 +125,16 @@ function addBeat() {
   });
 
   alert("Beat added 🎧");
+}
+
+/* SAVE SETTINGS */
+function saveSettings() {
+  db.collection("settings").doc("site").set({
+    font: font.value,
+    background: background.value
+  });
+
+  alert("Site updated 🎨");
 }
 </script>
 
