@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Control Panel</title>
+<title>Admin Panel</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -13,24 +13,14 @@ body{font-family:Arial;background:#111;color:white;text-align:center;}
 input,button{padding:10px;margin:5px;width:260px;border:none;border-radius:6px;}
 button{background:#00c853;color:white;cursor:pointer;}
 #panel{display:none;}
-
-.beatBox{
-background:#222;
-padding:10px;
-margin:10px auto;
-width:320px;
-border-radius:10px;
-}
-.smallBtn{
-background:#ff5252;
-margin-top:5px;
-}
+.beatBox{background:#222;padding:10px;margin:10px auto;width:320px;border-radius:10px;}
+.deleteBtn{background:#ff5252;}
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ FULL ADMIN CONTROL</h1>
+<h1>🎛️ Admin Panel</h1>
 
 <div id="loginBox">
 <input id="email" placeholder="Email"><br>
@@ -40,29 +30,33 @@ margin-top:5px;
 
 <div id="panel">
 
-<h2>🎧 Add / Edit Beat</h2>
+<h2>🎧 Add Beat</h2>
 
 <input id="title" placeholder="Title"><br>
-<input id="price" placeholder="Price"><br>
-<input id="image" placeholder="Image URL"><br>
+<input id="image" placeholder="Cover Image URL"><br>
 <input id="previewFile" placeholder="Preview MP3"><br>
 <input id="fullFile" placeholder="Full MP3"><br>
-<input id="buyLink" placeholder="Buy Link"><br>
+<input id="buyLink" placeholder="PayPal Link"><br>
+
+<h3>💰 Pricing</h3>
+<input id="mp3" placeholder="MP3 Price"><br>
+<input id="wav" placeholder="WAV Price"><br>
+<input id="exclusive" placeholder="Exclusive Price"><br>
 
 <button onclick="addBeat()">Add Beat</button>
 
 <hr>
 
-<h2>🎨 Site Controls</h2>
+<h2>🎨 Site Settings</h2>
 
-<input id="font" placeholder="Font (Arial, Courier...)"><br>
+<input id="font" placeholder="Font"><br>
 <input id="bg" placeholder="Background Image URL"><br>
 
-<button onclick="saveSettings()">Save Site Settings</button>
+<button onclick="saveSettings()">Save Settings</button>
 
 <hr>
 
-<h2>📦 Your Beats (Delete Control)</h2>
+<h2>📦 Beats</h2>
 <div id="list"></div>
 
 <br>
@@ -99,60 +93,53 @@ function logout(){auth.signOut().then(()=>location.reload());}
 function addBeat(){
 db.collection("beats").add({
 title:title.value,
-price:price.value,
 image:image.value,
 previewFile:previewFile.value,
 fullFile:fullFile.value,
-buyLink:buyLink.value
+buyLink:buyLink.value,
+licenses:{
+mp3:mp3.value,
+wav:wav.value,
+exclusive:exclusive.value
+}
 });
 alert("Beat added 🎧");
 loadBeats();
 }
 
-/* DELETE BEAT */
+/* DELETE */
 function deleteBeat(id){
-db.collection("beats").doc(id).delete().then(()=>{
+db.collection("beats").doc(id).delete();
 loadBeats();
-});
 }
 
-/* LOAD BEATS */
+/* LOAD */
 function loadBeats(){
 db.collection("beats").get().then(snap=>{
 list.innerHTML="";
-
 snap.forEach(doc=>{
 let b=doc.data();
 
 list.innerHTML+=`
 <div class="beatBox">
 <b>${b.title}</b><br>
-${b.price}<br><br>
-
-<button class="smallBtn" onclick="deleteBeat('${doc.id}')">
-Delete
-</button>
+<button class="deleteBtn" onclick="deleteBeat('${doc.id}')">Delete</button>
 </div>`;
 });
 });
 }
 
-/* SITE SETTINGS */
+/* SETTINGS */
 function saveSettings(){
 db.collection("settings").doc("site").set({
 font:font.value,
 background:bg.value
 });
-alert("Site updated 🎨");
 }
 
 /* SESSION */
-auth.onAuthStateChanged(user=>{
-if(user){
-loginBox.style.display="none";
-panel.style.display="block";
-loadBeats();
-}
+auth.onAuthStateChanged(u=>{
+if(u){loginBox.style.display="none";panel.style.display="block";loadBeats();}
 });
 </script>
 
