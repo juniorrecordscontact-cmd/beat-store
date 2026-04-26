@@ -80,6 +80,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+const PAYPAL_LINK = "https://www.paypal.me/jayanreid07";
+
 const container = document.getElementById("beat-container");
 
 function loadBeats() {
@@ -88,10 +90,6 @@ function loadBeats() {
 
     snapshot.forEach(doc => {
       const beat = doc.data();
-
-      const buyLink = beat.buyLink && beat.buyLink.startsWith("http")
-        ? beat.buyLink
-        : "https://www.paypal.me/jayanreid07";
 
       const image = beat.image || "https://images.unsplash.com/photo-1521335629791-ce4aec67dd49";
 
@@ -110,7 +108,7 @@ function loadBeats() {
             <source src="${beat.file || ""}" type="audio/mpeg">
           </audio>
 
-          <button onclick="window.open('${buyLink}', '_blank')">
+          <button onclick="window.open('${PAYPAL_LINK}', '_blank')">
             Buy Now
           </button>
         </div>
