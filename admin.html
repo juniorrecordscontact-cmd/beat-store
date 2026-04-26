@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - FULL CONTROL</title>
+<title>SAFE ADMIN PANEL</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -11,55 +11,54 @@
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:300px;border:none;border-radius:6px;}
-button{background:#00c853;color:white;cursor:pointer;}
+button{padding:10px;margin:5px;width:250px;border:none;border-radius:6px;background:#00c853;color:white;cursor:pointer;}
+input{padding:10px;margin:5px;width:250px;}
 #panel{display:none;}
-.log{font-size:12px;color:#ccc;margin-top:10px;}
+.log{font-size:12px;color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1>🎛️ Admin Panel (DEBUG MODE)</h1>
+<h1>ADMIN (SAFE MODE)</h1>
 
 <div id="loginBox">
-<input id="email" placeholder="Email"><br>
-<input id="password" type="password" placeholder="Password"><br>
-<button onclick="login()">Login</button>
+<input id="email" placeholder="email"><br>
+<input id="password" type="password" placeholder="password"><br>
+<button id="loginBtn">LOGIN</button>
 </div>
 
 <div id="panel">
 
-<h2>UPLOAD BEAT</h2>
+<h2>UPLOAD TEST</h2>
 
-<input id="title" placeholder="Beat Title"><br>
+<input id="title" placeholder="title"><br>
 
-<p>Cover Image</p>
 <input type="file" id="imageFile"><br>
-
-<p>Preview (Watermarked)</p>
 <input type="file" id="previewFile"><br>
-
-<p>MP3 Lease</p>
 <input type="file" id="mp3File"><br>
-
-<p>WAV Lease</p>
 <input type="file" id="wavFile"><br>
 
-<input id="buyLink" placeholder="PayPal Link"><br>
+<input id="buyLink" placeholder="paypal link"><br>
 
-<input id="mp3" placeholder="MP3 Price"><br>
-<input id="wav" placeholder="WAV Price"><br>
-<input id="exclusive" placeholder="Exclusive Price"><br>
-
-<button onclick="addBeat()">UPLOAD</button>
+<button id="uploadBtn">UPLOAD BEAT</button>
 
 <p id="status"></p>
-<div id="debug" class="log"></div>
+<pre id="log"></pre>
 
 </div>
 
 <script>
+/* SAFE LOG */
+function log(msg){
+document.getElementById("log").innerText += msg + "\n";
+}
+
+let auth, db, storage;
+
+/* INIT SAFELY */
+try{
+
 const firebaseConfig = {
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
@@ -71,79 +70,63 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 
 firebase.initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
+auth = firebase.auth();
+db = firebase.firestore();
+storage = firebase.storage();
 
-function log(msg){
-debug.innerHTML += msg + "<br>";
+log("Firebase OK");
+
+}catch(e){
+alert("Firebase FAILED: " + e.message);
+console.error(e);
 }
 
-/* LOGIN */
-function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{
+/* BUTTON BINDING (IMPORTANT FIX) */
+document.getElementById("loginBtn").onclick = async function(){
+
+try{
+await auth.signInWithEmailAndPassword(
+email.value,
+password.value
+);
+
 loginBox.style.display="none";
 panel.style.display="block";
-})
-.catch(e=>{
-alert(e.message);
-log("LOGIN ERROR: "+e.message);
-});
+
+log("LOGIN SUCCESS");
+
+}catch(e){
+log("LOGIN ERROR: " + e.message);
 }
+};
 
-/* SAFE UPLOAD */
-async function upload(folder,file){
-
-if(!file){
-throw new Error("Missing file in " + folder);
-}
-
-log("Uploading "+folder+"...");
-
-const ref = storage.ref(folder+"/"+Date.now()+"_"+file.name);
-
-await ref.put(file);
-
-const url = await ref.getDownloadURL();
-
-log(folder+" uploaded ✅");
-
-return url;
-}
-
-/* MAIN FUNCTION */
-async function addBeat(){
-
-debug.innerHTML = "";
-status.innerText = "Starting...";
+document.getElementById("uploadBtn").onclick = async function(){
 
 try{
 
-/* VALIDATION */
-if(!title.value) throw new Error("Missing title");
-if(!buyLink.value) throw new Error("Missing PayPal link");
+status.innerText="Uploading...";
 
-const image = imageFile.files[0];
-const preview = previewFile.files[0];
-const mp3 = mp3File.files[0];
-const wav = wavFile.files[0];
+const img=imageFile.files[0];
+const prev=previewFile.files[0];
+const mp3=mp3File.files[0];
+const wav=wavFile.files[0];
 
-if(!image) throw new Error("Missing IMAGE");
-if(!preview) throw new Error("Missing PREVIEW");
-if(!mp3) throw new Error("Missing MP3");
-if(!wav) throw new Error("Missing WAV");
+if(!img||!prev||!mp3||!wav){
+status.innerText="Missing files";
+return;
+}
 
-/* UPLOAD FILES */
-status.innerText = "Uploading files...";
+/* STORAGE SAFE UPLOAD */
+async function upload(file,path){
+const ref = storage.ref(path+"/"+Date.now()+"_"+file.name);
+await ref.put(file);
+return await ref.getDownloadURL();
+}
 
-const imgURL = await upload("images", image);
-const prevURL = await upload("preview", preview);
-const mp3URL = await upload("mp3", mp3);
-const wavURL = await upload("wav", wav);
-
-/* SAVE DATABASE */
-status.innerText = "Saving to database...";
+const imgURL = await upload(img,"images");
+const prevURL = await upload(prev,"preview");
+const mp3URL = await upload(mp3,"mp3");
+const wavURL = await upload(wav,"wav");
 
 await db.collection("beats").add({
 title:title.value,
@@ -151,27 +134,19 @@ image:imgURL,
 previewFile:prevURL,
 mp3File:mp3URL,
 wavFile:wavURL,
-buyLink:buyLink.value,
-exclusive:false,
-createdAt:Date.now(),
-licenses:{
-mp3:mp3.value,
-wav:wav.value,
-exclusive:exclusive.value
-}
+buyLink:buyLink.value
 });
 
-status.innerText = "SUCCESS ✅";
+status.innerText="UPLOAD SUCCESS";
 
 }catch(e){
-
+status.innerText="ERROR: " + e.message;
+log(e.message);
 console.error(e);
-status.innerText = "FAILED ❌";
-log("ERROR: "+e.message);
-
 }
 
-}
+};
+
 </script>
 
 </body>
