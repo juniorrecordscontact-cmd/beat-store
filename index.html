@@ -79,28 +79,37 @@ const db = firebase.firestore();
 
 /* BUY */
 function buyBeat(b){
+
 const choice = prompt(
 `1 = MP3 ($${b.licenses.mp3})
 2 = WAV ($${b.licenses.wav})
 3 = EXCLUSIVE ($${b.licenses.exclusive})`
 );
 
-let price = 0;
+let type="";
+let price=0;
 
-if(choice==="1") price=b.licenses.mp3;
-else if(choice==="2") price=b.licenses.wav;
-else if(choice==="3") price=b.licenses.exclusive;
+if(choice==="1"){type="mp3";price=b.licenses.mp3;}
+else if(choice==="2"){type="wav";price=b.licenses.wav;}
+else if(choice==="3"){type="exclusive";price=b.licenses.exclusive;}
 else return;
 
-window.open(b.buyLink+"?amount="+price,"_blank");
+if(type==="exclusive"){
+alert("⚠️ Exclusive purchase removes this beat permanently.");
+}
+
+window.open(b.buyLink+"?type="+type+"&amount="+price,"_blank");
 }
 
 /* LOAD */
 function load(){
 db.collection("beats").get().then(snap=>{
 box.innerHTML="";
+
 snap.forEach(doc=>{
 let b = doc.data();
+
+if(b.exclusive === true) return;
 
 box.innerHTML += `
 <div class="beat" style="background-image:url('${b.image}')">
@@ -117,7 +126,9 @@ box.innerHTML += `
 MP3: $${b.licenses.mp3} | WAV: $${b.licenses.wav} | EXCL: $${b.licenses.exclusive}
 </p>
 
-<button onclick='buyBeat(${JSON.stringify(b)})'>BUY</button>
+<button onclick='buyBeat(${JSON.stringify(b)})'>
+BUY
+</button>
 
 </div>
 </div>`;
