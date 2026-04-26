@@ -35,12 +35,21 @@ background-size:cover;
 background-position:center;
 }
 
-.overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
+.overlay{
+position:absolute;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+}
 
-.info{position:absolute;bottom:10px;width:100%;}
+.info{
+position:absolute;
+bottom:10px;
+width:100%;
+}
 
 button{
-padding:6px;
+padding:8px;
 width:80%;
 margin:3px;
 border:none;
@@ -71,29 +80,33 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-/* SETTINGS */
-function loadSettings(){
-db.collection("settings").doc("site").get().then(d=>{
-let s=d.data();
-if(s?.background){
-document.body.style.backgroundImage=`url('${s.background}')`;
-}
-if(s?.font){
-document.body.style.fontFamily=s.font;
-}
-});
+/* BUY SYSTEM */
+function buyBeat(b){
+
+const choice = prompt(
+`Choose license:
+
+1 = MP3 ($${b.licenses.mp3})
+2 = WAV ($${b.licenses.wav})
+3 = EXCLUSIVE (MP3 + WAV) ($${b.licenses.exclusive})`
+);
+
+let type="";
+let price=0;
+
+if(choice==="1"){type="mp3";price=b.licenses.mp3;}
+else if(choice==="2"){type="wav";price=b.licenses.wav;}
+else if(choice==="3"){type="exclusive";price=b.licenses.exclusive;}
+else{return alert("Invalid choice");}
+
+window.open(b.buyLink+"?type="+type+"&amount="+price,"_blank");
 }
 
-/* BUY */
-function buy(type,b){
-let price=b.licenses?.[type];
-window.open(b.buyLink+"?amount="+price,"_blank");
-}
-
-/* LOAD BEATS */
+/* LOAD */
 function load(){
 db.collection("beats").get().then(snap=>{
 box.innerHTML="";
+
 snap.forEach(doc=>{
 let b=doc.data();
 let img=b.image || "https://images.unsplash.com/photo-1521335629791-ce4aec67dd49";
@@ -109,16 +122,20 @@ box.innerHTML+=`
 <source src="${b.previewFile}" type="audio/mpeg">
 </audio>
 
-<button onclick="buy('mp3',${JSON.stringify(b)})">MP3</button>
-<button onclick="buy('wav',${JSON.stringify(b)})">WAV</button>
-<button onclick="buy('exclusive',${JSON.stringify(b)})">Exclusive</button>
+<div style="font-size:12px">
+MP3: $${b.licenses.mp3} | WAV: $${b.licenses.wav} | EXCL: $${b.licenses.exclusive}
+</div>
+
+<button onclick='buyBeat(${JSON.stringify(b)})'>
+BUY
+</button>
+
 </div>
 </div>`;
 });
 });
 }
 
-loadSettings();
 load();
 </script>
 
