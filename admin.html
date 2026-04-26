@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
@@ -30,12 +31,19 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <div id="panel">
 
-<h2>🎧 Add Beat</h2>
+<h2>🎧 Upload Beat</h2>
 
 <input id="title" placeholder="Title"><br>
-<input id="image" placeholder="Cover Image URL"><br>
-<input id="previewFile" placeholder="Preview MP3"><br>
-<input id="fullFile" placeholder="Full MP3"><br>
+
+<label>🎨 Cover Image</label><br>
+<input type="file" id="imageFile"><br>
+
+<label>🎧 Preview (Watermarked)</label><br>
+<input type="file" id="previewFile"><br>
+
+<label>💎 Full File</label><br>
+<input type="file" id="fullFile"><br>
+
 <input id="buyLink" placeholder="PayPal Link"><br>
 
 <h3>💰 Pricing</h3>
@@ -43,20 +51,11 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="wav" placeholder="WAV Price"><br>
 <input id="exclusive" placeholder="Exclusive Price"><br>
 
-<button onclick="addBeat()">Add Beat</button>
+<button onclick="addBeat()">Upload Beat</button>
 
 <hr>
 
-<h2>🎨 Site Settings</h2>
-
-<input id="bg" placeholder="Background Image URL"><br>
-<input id="font" placeholder="Font (Arial, Courier, etc)"><br>
-
-<button onclick="saveSettings()">Save Settings</button>
-
-<hr>
-
-<h2>📦 Beats</h2>
+<h2>📦 Your Beats</h2>
 <div id="list"></div>
 
 <br>
@@ -78,6 +77,7 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 /* LOGIN */
 function login(){
@@ -89,13 +89,40 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 /* LOGOUT */
 function logout(){auth.signOut().then(()=>location.reload());}
 
-/* ADD BEAT */
-function addBeat(){
-db.collection("beats").add({
+/* UPLOAD SYSTEM */
+async function addBeat(){
+
+const image = imageFile.files[0];
+const preview = previewFile.files[0];
+const full = fullFile.files[0];
+
+if(!image || !preview || !full){
+return alert("Upload ALL files");
+}
+
+try{
+
+// unique names
+const id = Date.now();
+
+const imgRef = storage.ref("images/"+id+"_"+image.name);
+await imgRef.put(image);
+const imgURL = await imgRef.getDownloadURL();
+
+const prevRef = storage.ref("previews/"+id+"_"+preview.name);
+await prevRef.put(preview);
+const prevURL = await prevRef.getDownloadURL();
+
+const fullRef = storage.ref("full/"+id+"_"+full.name);
+await fullRef.put(full);
+const fullURL = await fullRef.getDownloadURL();
+
+// save beat
+await db.collection("beats").add({
 title:title.value,
-image:image.value,
-previewFile:previewFile.value,
-fullFile:fullFile.value,
+image:imgURL,
+previewFile:prevURL,
+fullFile:fullURL,
 buyLink:buyLink.value,
 licenses:{
 mp3:mp3.value,
@@ -103,23 +130,26 @@ wav:wav.value,
 exclusive:exclusive.value
 }
 });
-alert("Beat added 🎧");
+
+alert("Beat uploaded 🔥");
 loadBeats();
+
+}catch(e){
+alert("Upload failed: "+e);
+}
 }
 
 /* DELETE */
 function deleteBeat(id){
-db.collection("beats").doc(id).delete();
-loadBeats();
+db.collection("beats").doc(id).delete().then(loadBeats);
 }
 
-/* LOAD BEATS */
+/* LOAD */
 function loadBeats(){
 db.collection("beats").get().then(snap=>{
 list.innerHTML="";
 snap.forEach(doc=>{
 let b=doc.data();
-
 list.innerHTML+=`
 <div class="beatBox">
 <b>${b.title}</b><br>
@@ -129,18 +159,13 @@ list.innerHTML+=`
 });
 }
 
-/* SAVE SETTINGS (FIXED) */
-function saveSettings(){
-db.collection("settings").doc("site").set({
-background:bg.value,
-font:font.value
-});
-alert("Settings saved 🎨");
-}
-
 /* SESSION */
 auth.onAuthStateChanged(u=>{
-if(u){loginBox.style.display="none";panel.style.display="block";loadBeats();}
+if(u){
+loginBox.style.display="none";
+panel.style.display="block";
+loadBeats();
+}
 });
 </script>
 
