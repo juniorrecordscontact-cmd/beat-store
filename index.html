@@ -11,9 +11,9 @@
 body{
 margin:0;
 font-family:Arial;
+background:#0b0b0b;
 color:white;
 text-align:center;
-background:#0b0b0b;
 background-size:cover;
 }
 
@@ -77,15 +77,17 @@ appId: "1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
 
-/* LOAD BACKGROUND */
-function loadBG(){
+/* LOAD SETTINGS */
+function loadSettings(){
 db.collection("settings").doc("site").get().then(doc=>{
-const data=doc.data();
-if(data && data.background){
-document.body.style.backgroundImage=`url('${data.background}')`;
+let s=doc.data();
+if(s?.background){
+document.body.style.backgroundImage=`url('${s.background}')`;
+}
+if(s?.font){
+document.body.style.fontFamily=s.font;
 }
 });
 }
@@ -121,7 +123,7 @@ Buy Now
 });
 }
 
-loadBG();
+loadSettings();
 load();
 </script>
 
