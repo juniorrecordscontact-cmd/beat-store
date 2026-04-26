@@ -2,31 +2,31 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>FULL CONTROL ADMIN</title>
+<title>FULL CONTROL ADMIN SYSTEM</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <style>
-body{background:#111;color:white;font-family:Arial;text-align:center;}
-.section{border-top:1px solid #333;margin-top:20px;padding-top:20px;}
-input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
+body{font-family:Arial;background:#111;color:white;text-align:center;}
+input,button,textarea{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
 button{background:#00c853;color:white;cursor:pointer;}
+.section{border-top:1px solid #333;margin-top:25px;padding-top:20px;}
 #panel{display:none;}
-.log{font-size:12px;color:#aaa;}
+.small{font-size:12px;color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1>🎛 FULL STORE CONTROL PANEL</h1>
+<h1>🎛 FULL ADMIN CONTROL SYSTEM</h1>
 
+<!-- LOGIN -->
 <div id="loginBox">
-<h2>Login</h2>
-<input id="email" placeholder="email"><br>
-<input id="password" type="password" placeholder="password"><br>
+<h3>Admin Login</h3>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
 <button onclick="login()">LOGIN</button>
 </div>
 
@@ -37,52 +37,58 @@ button{background:#00c853;color:white;cursor:pointer;}
 <h2>🏪 Store Settings</h2>
 
 <input id="storeName" placeholder="Store Name"><br>
-
-<p>🌆 Background Image</p>
-<input type="file" id="bgFile"><br>
-
-<p>🔤 Font</p>
-<input id="font" placeholder="Arial / Courier / etc"><br>
+<input id="font" placeholder="Font (Arial, Courier, etc)"><br>
+<input id="background" placeholder="Background Image URL"><br>
 
 <button onclick="saveSettings()">SAVE SITE SETTINGS</button>
 <p id="settingsStatus"></p>
 </div>
 
-<!-- UPLOAD BEAT -->
+<!-- ADD BEAT -->
 <div class="section">
-<h2>🎧 Upload Beat</h2>
+<h2>🎧 Add Beat</h2>
 
 <input id="title" placeholder="Beat Title"><br>
 
-<p>Cover Image</p>
-<input type="file" id="imageFile"><br>
-
-<p>Preview (Watermarked MP3)</p>
-<input type="file" id="previewFile"><br>
-
-<p>MP3 File</p>
-<input type="file" id="mp3File"><br>
-
-<p>WAV File</p>
-<input type="file" id="wavFile"><br>
+<input id="image" placeholder="Cover Image URL"><br>
+<input id="preview" placeholder="Preview MP3 URL (watermarked)"><br>
+<input id="mp3" placeholder="MP3 Download URL"><br>
+<input id="wav" placeholder="WAV Download URL"><br>
 
 <input id="buyLink" placeholder="PayPal Link"><br>
 
-<input id="mp3" placeholder="MP3 Price"><br>
-<input id="wav" placeholder="WAV Price"><br>
-<input id="exclusive" placeholder="Exclusive Price"><br>
+<input id="mp3Price" placeholder="MP3 Price"><br>
+<input id="wavPrice" placeholder="WAV Price"><br>
+<input id="exclusivePrice" placeholder="Exclusive Price"><br>
 
-<button onclick="uploadBeat()">UPLOAD BEAT</button>
+<button onclick="addBeat()">ADD BEAT</button>
 
 <p id="status"></p>
-<pre id="log"></pre>
 </div>
 
-<!-- DELETE -->
+<!-- EDIT BEATS -->
+<div class="section">
+<h2>✏ Edit Beat Price</h2>
+
+<input id="editId" placeholder="Beat ID"><br>
+<input id="newMp3" placeholder="New MP3 Price"><br>
+<input id="newWav" placeholder="New WAV Price"><br>
+
+<button onclick="updatePrice()">UPDATE PRICE</button>
+</div>
+
+<!-- DELETE BEATS -->
 <div class="section">
 <h2>🗑 Delete Beat</h2>
+
 <input id="deleteId" placeholder="Beat ID"><br>
-<button onclick="deleteBeat()">DELETE</button>
+<button onclick="deleteBeat()">DELETE BEAT</button>
+</div>
+
+<!-- DEBUG -->
+<div class="section">
+<h2>📊 System Logs</h2>
+<pre id="log" class="small"></pre>
 </div>
 
 </div>
@@ -101,11 +107,6 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
-
-function log(msg){
-logBox.innerHTML += msg + "<br>";
-}
 
 /* LOGIN */
 function login(){
@@ -117,76 +118,59 @@ panel.style.display="block";
 .catch(e=>alert(e.message));
 }
 
-/* UPLOAD FILE */
-async function upload(file,path){
-const ref = storage.ref(path+"/"+Date.now()+"_"+file.name);
-await ref.put(file);
-return await ref.getDownloadURL();
+/* ADD BEAT */
+function addBeat(){
+
+if(!title.value || !image.value || !preview.value || !mp3.value || !wav.value){
+status.innerText="Missing fields ❌";
+return;
 }
 
-/* UPLOAD BEAT */
-async function uploadBeat(){
-
-status.innerText="Uploading...";
-logBox.innerHTML="";
-
-try{
-
-const img=imageFile.files[0];
-const prev=previewFile.files[0];
-const mp3=mp3File.files[0];
-const wav=wavFile.files[0];
-
-const imgURL=await upload(img,"images");
-const prevURL=await upload(prev,"preview");
-const mp3URL=await upload(mp3,"mp3");
-const wavURL=await upload(wav,"wav");
-
-await db.collection("beats").add({
+db.collection("beats").add({
 title:title.value,
-image:imgURL,
-previewFile:prevURL,
-mp3File:mp3URL,
-wavFile:wavURL,
+image:image.value,
+previewFile:preview.value,
+mp3File:mp3.value,
+wavFile:wav.value,
 buyLink:buyLink.value,
-licenses:{
-mp3:mp3.value,
-wav:wav.value,
-exclusive:exclusive.value
+prices:{
+mp3:mp3Price.value,
+wav:wavPrice.value,
+exclusive:exclusivePrice.value
 },
 createdAt:Date.now()
 });
 
-status.innerText="UPLOAD COMPLETE ✔";
-
-}catch(e){
-status.innerText="ERROR: "+e.message;
+status.innerText="BEAT ADDED ✔";
 }
 
-}
+/* UPDATE PRICE */
+function updatePrice(){
 
-/* SETTINGS */
-async function saveSettings(){
-
-let bgURL="";
-
-if(bgFile.files[0]){
-bgURL = await upload(bgFile.files[0],"backgrounds");
-}
-
-await db.collection("settings").doc("site").set({
-storeName:storeName.value,
-background:bgURL,
-font:font.value
+db.collection("beats").doc(editId.value).update({
+"prices.mp3":newMp3.value,
+"prices.wav":newWav.value
 });
 
-settingsStatus.innerText="SETTINGS SAVED ✔";
+alert("UPDATED ✔");
 }
 
 /* DELETE */
 function deleteBeat(){
 db.collection("beats").doc(deleteId.value).delete();
-alert("Deleted");
+alert("DELETED ✔");
+}
+
+/* SAVE SETTINGS */
+function saveSettings(){
+
+db.collection("settings").doc("site").set({
+storeName:storeName.value,
+font:font.value,
+background:background.value
+});
+
+settingsStatus.innerText="SETTINGS SAVED ✔";
 }
 </script>
 
