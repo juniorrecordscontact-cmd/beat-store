@@ -35,7 +35,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="title" placeholder="Title"><br>
 <input id="image" placeholder="Cover Image URL"><br>
 <input id="previewFile" placeholder="Preview MP3"><br>
-<input id="fullFile" placeholder="Full MP3/WAV Base"><br>
+<input id="fullFile" placeholder="Full MP3"><br>
 <input id="buyLink" placeholder="PayPal Link"><br>
 
 <h3>💰 Pricing</h3>
@@ -44,6 +44,15 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="exclusive" placeholder="Exclusive Price"><br>
 
 <button onclick="addBeat()">Add Beat</button>
+
+<hr>
+
+<h2>🎨 Site Settings</h2>
+
+<input id="bg" placeholder="Background Image URL"><br>
+<input id="font" placeholder="Font (Arial, Courier, etc)"><br>
+
+<button onclick="saveSettings()">Save Settings</button>
 
 <hr>
 
@@ -104,7 +113,7 @@ db.collection("beats").doc(id).delete();
 loadBeats();
 }
 
-/* LOAD */
+/* LOAD BEATS */
 function loadBeats(){
 db.collection("beats").get().then(snap=>{
 list.innerHTML="";
@@ -118,6 +127,15 @@ list.innerHTML+=`
 </div>`;
 });
 });
+}
+
+/* SAVE SETTINGS (FIXED) */
+function saveSettings(){
+db.collection("settings").doc("site").set({
+background:bg.value,
+font:font.value
+});
+alert("Settings saved 🎨");
 }
 
 /* SESSION */
