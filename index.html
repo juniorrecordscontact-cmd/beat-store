@@ -2,68 +2,23 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Junior Beats Store</title>
+<title>Beat Store</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#0b0b0b;
-color:white;
-text-align:center;
-background-size:cover;
-}
-
-.container{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-gap:20px;
-padding:20px;
-}
-
-.beat{
-width:280px;
-height:280px;
-border-radius:15px;
-overflow:hidden;
-position:relative;
-background-size:cover;
-background-position:center;
-}
-
-.overlay{
-position:absolute;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-}
-
-.info{
-position:absolute;
-bottom:10px;
-width:100%;
-}
-
-button{
-padding:8px;
-width:80%;
-border:none;
-background:#00c853;
-color:white;
-border-radius:8px;
-cursor:pointer;
-}
+body{font-family:Arial;background:#0b0b0b;color:white;text-align:center;}
+.beat{margin:20px;padding:10px;border:1px solid #333;}
+img{width:200px;}
+button{padding:8px;background:#00c853;border:none;color:white;cursor:pointer;}
 </style>
 </head>
 
 <body>
 
-<h1>🔥 Junior Beats Store</h1>
-<div class="container" id="box"></div>
+<h1>Beat Store</h1>
+<div id="box"></div>
 
 <script>
 const firebaseConfig = {
@@ -76,75 +31,28 @@ appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
 
-/* SETTINGS */
-function loadSettings(){
-db.collection("settings").doc("site").get().then(doc=>{
-let s=doc.data();
-if(!s) return;
+const db = firebase.firestore();
 
-if(s.background){
-document.body.style.backgroundImage=`url('${s.background}')`;
-}
-if(s.font){
-document.body.style.fontFamily=s.font;
-}
-});
-}
-
-/* BUY */
-function buyBeat(b){
-const choice=prompt(
-`1 = MP3 ($${b.licenses.mp3})
-2 = WAV ($${b.licenses.wav})
-3 = EXCLUSIVE ($${b.licenses.exclusive})`
-);
-
-let price=0;
-
-if(choice==="1") price=b.licenses.mp3;
-else if(choice==="2") price=b.licenses.wav;
-else if(choice==="3") price=b.licenses.exclusive;
-else return;
-
-window.open(b.buyLink+"?amount="+price,"_blank");
-}
-
-/* LOAD BEATS */
 function load(){
 db.collection("beats").get().then(snap=>{
 box.innerHTML="";
-
 snap.forEach(doc=>{
-let b=doc.data();
+let b = doc.data();
 
-if(b.exclusive===true) return;
-
-box.innerHTML+=`
-<div class="beat" style="background-image:url('${b.image}')">
-<div class="overlay"></div>
-
-<div class="info">
+box.innerHTML += `
+<div class="beat">
 <h3>${b.title}</h3>
-
-<audio controls style="width:90%">
-<source src="${b.previewFile}">
-</audio>
-
-<p>
-MP3: $${b.licenses.mp3} | WAV: $${b.licenses.wav} | EXCL: $${b.licenses.exclusive}
-</p>
-
-<button onclick='buyBeat(${JSON.stringify(b)})'>BUY</button>
-
-</div>
+<img src="${b.image}">
+<br>
+<audio controls src="${b.previewFile}"></audio>
+<br>
+<button onclick="window.open('${b.buyLink}','_blank')">BUY</button>
 </div>`;
 });
 });
 }
 
-loadSettings();
 load();
 </script>
 
