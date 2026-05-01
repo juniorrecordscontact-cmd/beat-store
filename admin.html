@@ -30,14 +30,14 @@ button{background:#00c853;color:white;cursor:pointer;}
 <div id="panel">
 
 <div class="section">
-<h2>Settings</h2>
+<h2>🏪 Settings</h2>
 <input id="storeName" placeholder="Store Name"><br>
 <input id="background" placeholder="Background URL"><br>
 <button onclick="saveSettings()">SAVE</button>
 </div>
 
 <div class="section">
-<h2>Add Beat</h2>
+<h2>🎧 Upload Beat</h2>
 
 <input id="title" placeholder="Title"><br>
 <input id="image" placeholder="Image URL"><br>
@@ -46,7 +46,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="buyLink" placeholder="PayPal Link"><br>
 <input id="price" placeholder="Price"><br>
 
-<button onclick="addBeat()">UPLOAD BEAT</button>
+<button onclick="addBeat()">UPLOAD</button>
 <p id="status"></p>
 </div>
 
@@ -60,7 +60,6 @@ projectId:"junior-beats-store"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth=firebase.auth();
 const db=firebase.firestore();
 
@@ -81,8 +80,6 @@ function saveSettings(){
 db.collection("settings").doc("site").set({
 storeName:get("storeName").value,
 background:get("background").value
-}).then(()=>{
-alert("Saved ✔");
 }).catch(e=>alert(e.message));
 }
 
@@ -96,11 +93,9 @@ wavFile:get("wav").value,
 buyLink:get("buyLink").value,
 price:get("price").value,
 createdAt:Date.now()
-}).then(()=>{
-get("status").innerText="Uploaded ✔";
-}).catch(e=>{
-get("status").innerText=e.message;
-});
+})
+.then(()=>get("status").innerText="Uploaded ✔")
+.catch(e=>get("status").innerText=e.message);
 }
 </script>
 
