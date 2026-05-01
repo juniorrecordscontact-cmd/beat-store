@@ -8,13 +8,60 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;}
+body{
+margin:0;
+font-family:Arial;
+background:#111;
+color:white;
+text-align:center;
+}
+
 h1{padding:20px;}
-.container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;}
-.beat{width:280px;height:320px;background-size:cover;position:relative;border-radius:12px;overflow:hidden;}
-.overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
-.content{position:absolute;bottom:10px;width:100%;}
-button{padding:8px;width:80%;background:#00c853;border:none;color:white;cursor:pointer;}
+
+.container{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+padding:20px;
+}
+
+.beat{
+width:280px;
+height:320px;
+border-radius:12px;
+overflow:hidden;
+position:relative;
+background-size:cover;
+background-position:center;
+}
+
+.overlay{
+position:absolute;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+}
+
+.content{
+position:absolute;
+bottom:10px;
+width:100%;
+}
+
+button{
+padding:8px;
+width:80%;
+background:#00c853;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+.error{
+color:red;
+margin-top:20px;
+}
 </style>
 </head>
 
@@ -23,8 +70,11 @@ button{padding:8px;width:80%;background:#00c853;border:none;color:white;cursor:p
 <h1 id="title">Junior Beats</h1>
 
 <div class="container" id="box"></div>
+<p id="errorBox" class="error"></p>
 
 <script>
+
+// 🔥 INIT FIREBASE
 firebase.initializeApp({
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
@@ -32,20 +82,25 @@ projectId:"junior-beats-store"
 });
 
 const db = firebase.firestore();
+
 const box = document.getElementById("box");
+const errorBox = document.getElementById("errorBox");
 
-/* SETTINGS */
-db.collection("settings").doc("site").get().then(doc=>{
-if(doc.exists){
-let s = doc.data();
-if(s.storeName) title.innerText = s.storeName;
-if(s.background) document.body.style.backgroundImage = `url('${s.background}')`;
-if(s.font) document.body.style.fontFamily = s.font;
+// 🧠 SAFE VALUE HANDLER
+function safe(v, fallback=""){
+return v !== undefined && v !== null ? v : fallback;
 }
-});
 
-/* BUY SYSTEM */
+// 💰 SAFE PRICE
+function safePrice(v){
+let num = parseFloat(v);
+return isNaN(num) ? 0 : num;
+}
+
+// 🚀 BUY SYSTEM
 function buyBeat(id, title, price, link){
+
+try{
 
 const email = prompt("Enter your email for license delivery:");
 
@@ -58,51 +113,112 @@ db.collection("purchases").add({
 beatId: id,
 email: email,
 beatTitle: title,
-amount: price,
+amount: safePrice(price),
 status: "pending",
 createdAt: Date.now()
 }).then(()=>{
-
 window.open(link, "_blank");
 alert("Redirecting to payment...");
 });
+
+}catch(e){
+console.error(e);
+alert("Purchase error");
 }
 
-/* LOAD BEATS */
-db.collection("beats").get().then(snap=>{
-snap.forEach(doc=>{
+}
+
+// 🎨 LOAD SETTINGS
+function loadSettings(){
+db.collection("settings").doc("site").get()
+.then(doc=>{
+if(doc.exists){
+let s = doc.data();
+
+if(s.storeName){
+document.getElementById("title").innerText = s.storeName;
+}
+
+if(s.background){
+document.body.style.backgroundImage = `url('${s.background}')`;
+}
+
+if(s.font){
+document.body.style.fontFamily = s.font;
+}
+}
+})
+.catch(err=>{
+console.error(err);
+});
+}
+
+// 🎧 LOAD BEATS
+function loadBeats(){
+
+db.collection("beats").get()
+.then(snapshot=>{
+
+box.innerHTML = "";
+
+snapshot.forEach(doc=>{
+
 let b = doc.data();
+let id = doc.id;
 
-box.innerHTML += `
-<div class="beat" style="
-background-image:url('${b.image}');
-background-color:${b.bgColor};
-">
+// SAFE VALUES
+let title = safe(b.title, "Untitled");
+let image = safe(b.image, "");
+let bgColor = safe(b.bgColor, "#000");
+let preview = safe(b.previewFile, "");
+let price = safePrice(b.price);
+let link = safe(b.buyLink, "#");
 
+// BUILD CARD
+let div = document.createElement("div");
+div.className = "beat";
+
+div.style.backgroundImage = image ? `url('${image}')` : "none";
+div.style.backgroundColor = bgColor;
+
+// HTML CONTENT
+div.innerHTML = `
 <div class="overlay"></div>
 
 <div class="content">
-<h3>${b.title}</h3>
+<h3>${title}</h3>
 
 <audio controls style="width:90%">
-<source src="${b.previewFile}">
+<source src="${preview}">
 </audio>
 
-<p>$${b.price}</p>
+<p>$${price}</p>
 
-<button onclick="buyBeat(
-'${doc.id}',
-'${b.title}',
-${b.price},
-'${b.buyLink}'
-)">
-BUY
-</button>
-
+<button>BUY</button>
 </div>
-</div>`;
+`;
+
+// BUTTON EVENT (SAFE)
+div.querySelector("button").onclick = function(){
+buyBeat(id, title, price, link);
+};
+
+box.appendChild(div);
+
 });
+
+})
+.catch(err=>{
+console.error(err);
+errorBox.innerText = "Error loading beats: " + err.message;
 });
+
+}
+
+// 🚀 INIT
+loadSettings();
+loadBeats();
+
 </script>
 
 </body>
