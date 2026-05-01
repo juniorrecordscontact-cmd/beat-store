@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Junior Beats Admin</title>
+<title>Junior Beats Admin PRO</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -12,37 +12,35 @@
 body{font-family:Arial;background:#111;color:white;text-align:center;}
 input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
 button{background:#00c853;color:white;cursor:pointer;}
-.section{border-top:1px solid #333;margin-top:25px;padding-top:20px;}
+.section{margin-top:25px;}
+.beatRow{border:1px solid #333;margin:10px;padding:10px;}
+.selected{border:2px solid #00c853;}
 #panel{display:none;}
-.small{font-size:12px;color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1>🎛 Junior Beats Admin</h1>
+<h1>🎛 Junior Beats Admin PRO</h1>
 
 <div id="loginBox">
 <input id="email" placeholder="Email"><br>
 <input id="password" type="password" placeholder="Password"><br>
-<button id="loginBtn">LOGIN</button>
+<button onclick="login()">LOGIN</button>
 </div>
 
 <div id="panel">
 
 <div class="section">
 <h2>🏪 Store Settings</h2>
-
 <input id="storeName" placeholder="Store Name"><br>
-<input id="font" placeholder="Font"><br>
 <input id="background" placeholder="Background URL"><br>
-
-<button id="saveSettingsBtn">SAVE SETTINGS</button>
-<p id="settingsStatus"></p>
+<input id="font" placeholder="Font"><br>
+<button onclick="saveSettings()">SAVE SETTINGS</button>
 </div>
 
 <div class="section">
-<h2>🎧 Add Beat</h2>
+<h2>🎧 Add / Edit Beat</h2>
 
 <input id="title" placeholder="Title"><br>
 <input id="image" placeholder="Image URL"><br>
@@ -55,144 +53,130 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="wavPrice" placeholder="WAV Price"><br>
 <input id="exclusivePrice" placeholder="Exclusive Price"><br>
 
-<button id="addBeatBtn">ADD BEAT</button>
+<button onclick="addBeat()">UPLOAD</button>
+<button onclick="updateBeat()">UPDATE SELECTED</button>
+<button onclick="deleteSelected()">DELETE SELECTED</button>
+
 <p id="status"></p>
 </div>
 
 <div class="section">
-<h2>✏ Edit Beat Price</h2>
-
-<input id="editId" placeholder="Beat ID"><br>
-<input id="newMp3" placeholder="New MP3 Price"><br>
-<input id="newWav" placeholder="New WAV Price"><br>
-
-<button id="updateBtn">UPDATE PRICE</button>
+<h2>📀 Your Beats</h2>
+<div id="beatList"></div>
 </div>
-
-<div class="section">
-<h2>🗑 Delete Beat</h2>
-
-<input id="deleteId" placeholder="Beat ID"><br>
-<button id="deleteBtn">DELETE</button>
-</div>
-
-<pre id="log" class="small"></pre>
 
 </div>
 
 <script>
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
 projectId:"junior-beats-store"
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+let selectedId=null;
 
-function get(id){ return document.getElementById(id); }
-function log(msg){ get("log").innerHTML += msg + "\n"; }
-
-/* LOGIN */
-get("loginBtn").onclick = async () => {
-try{
-await auth.signInWithEmailAndPassword(
-get("email").value,
-get("password").value
-);
-
-get("loginBox").style.display="none";
-get("panel").style.display="block";
-
-log("Login ✔");
-
-}catch(e){
-alert(e.message);
-log(e.message);
-}
-};
-
-/* SAVE SETTINGS */
-get("saveSettingsBtn").onclick = async () => {
-try{
-
-await db.collection("settings").doc("site").set({
-storeName:get("storeName").value || "Junior Beats",
-font:get("font").value || "Arial",
-background:get("background").value || ""
+function login(){
+auth.signInWithEmailAndPassword(email.value,password.value)
+.then(()=>{
+loginBox.style.display="none";
+panel.style.display="block";
+loadBeats();
 });
-
-get("settingsStatus").innerText="Saved ✔";
-log("Settings saved ✔");
-
-}catch(e){
-get("settingsStatus").innerText="Error ❌";
-log(e.message);
 }
-};
 
-/* ADD BEAT */
-get("addBeatBtn").onclick = async () => {
-try{
+function saveSettings(){
+db.collection("settings").doc("site").set({
+storeName:storeName.value || "Junior Beats",
+background:background.value || "",
+font:font.value || "Arial"
+});
+}
 
-const data = {
-title:get("title").value || "Untitled",
-image:get("image").value || "",
-previewFile:get("preview").value || "",
-mp3File:get("mp3").value || "",
-wavFile:get("wav").value || "",
-buyLink:get("buyLink").value || "",
+function addBeat(){
+db.collection("beats").add({
+title:title.value,
+image:image.value,
+previewFile:preview.value,
+mp3File:mp3.value,
+wavFile:wav.value,
+buyLink:buyLink.value,
 prices:{
-mp3:get("mp3Price").value || "0",
-wav:get("wavPrice").value || "0",
-exclusive:get("exclusivePrice").value || "0"
+mp3:mp3Price.value,
+wav:wavPrice.value,
+exclusive:exclusivePrice.value
 },
 createdAt:Date.now()
-};
-
-await db.collection("beats").add(data);
-
-get("status").innerText="Beat added ✔";
-log("Beat added ✔");
-
-}catch(e){
-get("status").innerText="Error ❌";
-log(e.message);
+});
+status.innerText="Uploaded ✔";
+loadBeats();
 }
-};
 
-/* UPDATE */
-get("updateBtn").onclick = async () => {
-try{
+function updateBeat(){
+if(!selectedId) return alert("Select a beat");
 
-await db.collection("beats").doc(get("editId").value).update({
-"prices.mp3":get("newMp3").value,
-"prices.wav":get("newWav").value
+db.collection("beats").doc(selectedId).update({
+title:title.value,
+image:image.value,
+previewFile:preview.value,
+mp3File:mp3.value,
+wavFile:wav.value,
+buyLink:buyLink.value,
+prices:{
+mp3:mp3Price.value,
+wav:wavPrice.value,
+exclusive:exclusivePrice.value
+}
 });
 
-alert("Updated ✔");
-log("Price updated ✔");
-
-}catch(e){
-log(e.message);
+status.innerText="Updated ✔";
+loadBeats();
 }
-};
 
-/* DELETE */
-get("deleteBtn").onclick = async () => {
-try{
+function deleteSelected(){
+if(!selectedId) return alert("Select a beat");
 
-await db.collection("beats").doc(get("deleteId").value).delete();
-
-alert("Deleted ✔");
-log("Deleted ✔");
-
-}catch(e){
-log(e.message);
+db.collection("beats").doc(selectedId).delete();
+status.innerText="Deleted ✔";
+selectedId=null;
+loadBeats();
 }
-};
+
+function loadBeats(){
+beatList.innerHTML="";
+db.collection("beats").get().then(snap=>{
+snap.forEach(doc=>{
+let b=doc.data();
+beatList.innerHTML+=`
+<div class="beatRow" id="row-${doc.id}">
+<b>${b.title}</b><br>
+<button onclick="selectBeat('${doc.id}','${b.title}','${b.image}','${b.previewFile}','${b.mp3File}','${b.wavFile}','${b.buyLink}','${b.prices?.mp3}','${b.prices?.wav}','${b.prices?.exclusive}')">SELECT</button>
+</div>`;
+});
+});
+}
+
+function selectBeat(id,t,i,p,m,w,b,mp,wp,ep){
+selectedId=id;
+
+title.value=t;
+image.value=i;
+preview.value=p;
+mp3.value=m;
+wav.value=w;
+buyLink.value=b;
+
+mp3Price.value=mp;
+wavPrice.value=wp;
+exclusivePrice.value=ep;
+
+document.querySelectorAll(".beatRow").forEach(e=>e.classList.remove("selected"));
+document.getElementById("row-"+id).classList.add("selected");
+}
 </script>
 
 </body>
