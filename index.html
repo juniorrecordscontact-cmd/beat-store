@@ -8,191 +8,108 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#111;
-color:white;
-text-align:center;
-background-size:cover;
-background-position:center;
-}
-
-header{
-padding:20px;
-font-size:28px;
-font-weight:bold;
-}
-
-.container{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-gap:20px;
-padding:20px;
-}
-
-.beat{
-width:280px;
-height:320px;
-border-radius:12px;
-overflow:hidden;
-position:relative;
-background-size:cover;
-background-position:center;
-}
-
-.overlay{
-position:absolute;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-}
-
-.content{
-position:absolute;
-bottom:10px;
-width:100%;
-}
-
-button{
-padding:8px;
-width:80%;
-background:#00c853;
-border:none;
-color:white;
-cursor:pointer;
-border-radius:6px;
-}
-
-small{color:#aaa;}
+body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;}
+h1{padding:20px;}
+input{padding:10px;width:300px;margin:10px;}
+.container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;}
+.beat{width:280px;height:320px;background-size:cover;position:relative;border-radius:12px;}
+.overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
+.content{position:absolute;bottom:10px;width:100%;}
+button{padding:8px;width:80%;background:#00c853;border:none;color:white;}
+#chatBox{max-width:500px;margin:auto;text-align:left;}
 </style>
 </head>
 
 <body>
 
-<header id="storeName">Loading Junior Beats...</header>
+<h1 id="title">Junior Beats</h1>
 
-<small id="debug"></small>
+<input id="search" placeholder="Search beats...">
 
 <div class="container" id="box"></div>
 
+<!-- CHAT -->
+<h2>💬 Live Chat</h2>
+<input id="username" placeholder="Your name"><br>
+<input id="message" placeholder="Message"><br>
+<button onclick="sendMessage()">Send</button>
+
+<div id="chatBox"></div>
+
 <script>
-/* =========================
-   FIREBASE INIT
-========================= */
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
-projectId:"junior-beats-store",
-storageBucket:"junior-beats-store.firebasestorage.app",
-messagingSenderId:"781170149321",
-appId:"1:781170149321:web:b1f1e2dd17d3b0f86bca18"
+projectId:"junior-beats-store"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-/* =========================
-   SAFE STATE HANDLING
-========================= */
-let storeLoaded = false;
+let beats=[];
 
-function setDebug(msg){
-document.getElementById("debug").innerText = msg;
-}
-
-/* =========================
-   LOAD SETTINGS (SAFE)
-========================= */
-async function loadSettings(){
-try{
-const doc = await db.collection("settings").doc("site").get();
-
+/* SETTINGS */
+db.collection("settings").doc("site").get().then(doc=>{
 if(doc.exists){
-const s = doc.data();
-
-document.getElementById("storeName").innerText =
-s.storeName || "Junior Beats";
-
-if(s.background){
-document.body.style.backgroundImage = `url('${s.background}')`;
+let s=doc.data();
+if(s.storeName) title.innerText=s.storeName;
+if(s.background) document.body.style.backgroundImage=`url('${s.background}')`;
+if(s.font) document.body.style.fontFamily=s.font;
 }
+});
 
-if(s.font){
-document.body.style.fontFamily = s.font;
-}
-
-setDebug("Settings loaded ✔");
-}else{
-setDebug("No settings found — using defaults");
-}
-}catch(e){
-setDebug("Settings error: "+e.message);
-}
-}
-
-/* =========================
-   LOAD BEATS (SAFE)
-========================= */
-async function loadBeats(){
-try{
-const snap = await db.collection("beats").get();
-
-const box = document.getElementById("box");
-box.innerHTML = "";
-
-if(snap.empty){
-setDebug("No beats found in database");
-return;
-}
-
-snap.forEach(doc=>{
-const b = doc.data();
-
-box.innerHTML += `
-<div class="beat" style="background-image:url('${b.image || ""}')">
+/* LOAD BEATS */
+function render(list){
+box.innerHTML="";
+list.forEach(b=>{
+box.innerHTML+=`
+<div class="beat" style="background-image:url('${b.image}')">
 <div class="overlay"></div>
-
 <div class="content">
-<h3>${b.title || "Untitled"}</h3>
-
+<h3>${b.title}</h3>
 <audio controls style="width:90%">
-<source src="${b.previewFile || ""}">
+<source src="${b.previewFile}">
 </audio>
-
-<p>
-MP3 $${b.prices?.mp3 || "0"} |
-WAV $${b.prices?.wav || "0"} |
-EX $${b.prices?.exclusive || "0"}
-</p>
-
-<button onclick="window.open('${b.buyLink}','_blank')">
-BUY
-</button>
-
+<p>MP3 $${b.prices?.mp3} | WAV $${b.prices?.wav} | EX $${b.prices?.exclusive}</p>
+<button onclick="window.open('${b.buyLink}')">BUY</button>
 </div>
 </div>`;
 });
-
-setDebug("Beats loaded ✔");
-
-}catch(e){
-setDebug("Beat load error: "+e.message);
-}
 }
 
-/* =========================
-   INIT EVERYTHING PROPERLY
-========================= */
-async function init(){
-setDebug("Loading Firebase data...");
-await loadSettings();
-await loadBeats();
-storeLoaded = true;
+db.collection("beats").get().then(snap=>{
+snap.forEach(doc=>{
+beats.push(doc.data());
+});
+render(beats);
+});
+
+/* SEARCH */
+search.oninput=()=>{
+let filtered=beats.filter(b=>
+b.title.toLowerCase().includes(search.value.toLowerCase())
+);
+render(filtered);
+};
+
+/* CHAT */
+function sendMessage(){
+db.collection("chat").add({
+name:username.value || "Anonymous",
+text:message.value,
+time:Date.now()
+});
+message.value="";
 }
 
-init();
+db.collection("chat").orderBy("time")
+.onSnapshot(snapshot=>{
+chatBox.innerHTML="";
+snapshot.forEach(doc=>{
+let m=doc.data();
+chatBox.innerHTML+=`<p><b>${m.name}:</b> ${m.text}</p>`;
+});
+});
 </script>
 
 </body>
