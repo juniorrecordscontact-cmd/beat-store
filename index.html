@@ -14,8 +14,6 @@ h1{padding:20px;}
 .beat{width:280px;height:320px;background-size:cover;position:relative;border-radius:12px;}
 .overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
 .content{position:absolute;bottom:10px;width:100%;}
-.tag{background:#00c853;padding:3px 8px;border-radius:5px;font-size:12px;}
-.sold{background:red;}
 button{padding:8px;width:80%;background:#00c853;border:none;color:white;}
 </style>
 </head>
@@ -36,12 +34,19 @@ projectId:"junior-beats-store"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-/* LOAD */
+/* SETTINGS */
+db.collection("settings").doc("site").get().then(doc=>{
+if(doc.exists){
+let s=doc.data();
+if(s.storeName) title.innerText=s.storeName;
+if(s.background) document.body.style.backgroundImage=`url('${s.background}')`;
+}
+});
+
+/* LOAD BEATS */
 db.collection("beats").get().then(snap=>{
 snap.forEach(doc=>{
 let b=doc.data();
-
-let sold = b.status === "sold";
 
 box.innerHTML+=`
 <div class="beat" style="background-image:url('${b.image}')">
@@ -50,21 +55,13 @@ box.innerHTML+=`
 <div class="content">
 <h3>${b.title}</h3>
 
-<span class="tag">${b.genre}</span>
-<span class="tag">EXCLUSIVE</span>
-
 <audio controls style="width:90%">
 <source src="${b.previewFile}">
 </audio>
 
 <p>$${b.price}</p>
 
-${
-sold
-? `<button class="sold">SOLD</button>`
-: `<button onclick="window.open('${b.buyLink}')">BUY EXCLUSIVE</button>`
-}
-
+<button onclick="window.open('${b.buyLink}')">BUY</button>
 </div>
 </div>`;
 });
