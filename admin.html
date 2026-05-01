@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>FULL CONTROL ADMIN SYSTEM</title>
+<title>Junior Beats Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -10,7 +10,7 @@
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button,textarea{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
+input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
 button{background:#00c853;color:white;cursor:pointer;}
 .section{border-top:1px solid #333;margin-top:25px;padding-top:20px;}
 #panel{display:none;}
@@ -20,7 +20,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <body>
 
-<h1>🎛 FULL ADMIN CONTROL SYSTEM</h1>
+<h1>🎛 Junior Beats Admin</h1>
 
 <!-- LOGIN -->
 <div id="loginBox">
@@ -51,7 +51,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="title" placeholder="Beat Title"><br>
 
 <input id="image" placeholder="Cover Image URL"><br>
-<input id="preview" placeholder="Preview MP3 URL (watermarked)"><br>
+<input id="preview" placeholder="Preview MP3 URL"><br>
 <input id="mp3" placeholder="MP3 Download URL"><br>
 <input id="wav" placeholder="WAV Download URL"><br>
 
@@ -85,7 +85,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 <button onclick="deleteBeat()">DELETE BEAT</button>
 </div>
 
-<!-- DEBUG -->
+<!-- DEBUG LOG -->
 <div class="section">
 <h2>📊 System Logs</h2>
 <pre id="log" class="small"></pre>
@@ -94,6 +94,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
 const firebaseConfig = {
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
@@ -108,69 +109,120 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* LOGIN */
-function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{
-loginBox.style.display="none";
-panel.style.display="block";
-})
-.catch(e=>alert(e.message));
+/* ================= HELPERS ================= */
+function get(id){
+return document.getElementById(id);
 }
 
-/* ADD BEAT */
-function addBeat(){
+function log(msg){
+const box = get("log");
+if(box) box.innerHTML += msg + "\n";
+}
 
-if(!title.value || !image.value || !preview.value || !mp3.value || !wav.value){
-status.innerText="Missing fields ❌";
+/* ================= LOGIN ================= */
+window.login = async function(){
+try{
+await auth.signInWithEmailAndPassword(
+get("email").value,
+get("password").value
+);
+
+get("loginBox").style.display="none";
+get("panel").style.display="block";
+
+log("Login success ✔");
+
+}catch(e){
+alert(e.message);
+log("Login error: " + e.message);
+}
+}
+
+/* ================= ADD BEAT ================= */
+window.addBeat = async function(){
+try{
+
+const title = get("title").value;
+const image = get("image").value;
+const preview = get("preview").value;
+
+if(!title || !image || !preview){
+get("status").innerText="Missing required fields ❌";
 return;
 }
 
-db.collection("beats").add({
-title:title.value,
-image:image.value,
-previewFile:preview.value,
-mp3File:mp3.value,
-wavFile:wav.value,
-buyLink:buyLink.value,
+await db.collection("beats").add({
+title:title,
+image:image,
+previewFile:preview,
+mp3File:get("mp3").value || "",
+wavFile:get("wav").value || "",
+buyLink:get("buyLink").value || "",
 prices:{
-mp3:mp3Price.value,
-wav:wavPrice.value,
-exclusive:exclusivePrice.value
+mp3:get("mp3Price").value || "0",
+wav:get("wavPrice").value || "0",
+exclusive:get("exclusivePrice").value || "0"
 },
 createdAt:Date.now()
 });
 
-status.innerText="BEAT ADDED ✔";
+get("status").innerText="BEAT ADDED ✔";
+log("Beat added ✔");
+
+}catch(e){
+get("status").innerText="Error ❌";
+log("Add beat error: " + e.message);
+}
 }
 
-/* UPDATE PRICE */
-function updatePrice(){
+/* ================= UPDATE ================= */
+window.updatePrice = async function(){
+try{
 
-db.collection("beats").doc(editId.value).update({
-"prices.mp3":newMp3.value,
-"prices.wav":newWav.value
+await db.collection("beats").doc(get("editId").value).update({
+"prices.mp3":get("newMp3").value,
+"prices.wav":get("newWav").value
 });
 
 alert("UPDATED ✔");
+log("Price updated ✔");
+
+}catch(e){
+log("Update error: " + e.message);
+}
 }
 
-/* DELETE */
-function deleteBeat(){
-db.collection("beats").doc(deleteId.value).delete();
+/* ================= DELETE ================= */
+window.deleteBeat = async function(){
+try{
+
+await db.collection("beats").doc(get("deleteId").value).delete();
+
 alert("DELETED ✔");
+log("Beat deleted ✔");
+
+}catch(e){
+log("Delete error: " + e.message);
+}
 }
 
-/* SAVE SETTINGS */
-function saveSettings(){
+/* ================= SETTINGS ================= */
+window.saveSettings = async function(){
+try{
 
-db.collection("settings").doc("site").set({
-storeName:storeName.value,
-font:font.value,
-background:background.value
+await db.collection("settings").doc("site").set({
+storeName:get("storeName").value || "Junior Beats",
+font:get("font").value || "Arial",
+background:get("background").value || ""
 });
 
-settingsStatus.innerText="SETTINGS SAVED ✔";
+get("settingsStatus").innerText="SETTINGS SAVED ✔";
+log("Settings updated ✔");
+
+}catch(e){
+get("settingsStatus").innerText="Error ❌";
+log("Settings error: " + e.message);
+}
 }
 </script>
 
