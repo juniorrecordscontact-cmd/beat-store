@@ -10,13 +10,13 @@
 <style>
 body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;}
 h1{padding:20px;}
-input{padding:10px;width:300px;margin:10px;}
 .container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;}
 .beat{width:280px;height:320px;background-size:cover;position:relative;border-radius:12px;}
 .overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
 .content{position:absolute;bottom:10px;width:100%;}
+.tag{background:#00c853;padding:3px 8px;border-radius:5px;font-size:12px;}
+.sold{background:red;}
 button{padding:8px;width:80%;background:#00c853;border:none;color:white;}
-#chatBox{max-width:500px;margin:auto;text-align:left;}
 </style>
 </head>
 
@@ -24,17 +24,7 @@ button{padding:8px;width:80%;background:#00c853;border:none;color:white;}
 
 <h1 id="title">Junior Beats</h1>
 
-<input id="search" placeholder="Search beats...">
-
 <div class="container" id="box"></div>
-
-<!-- CHAT -->
-<h2>💬 Live Chat</h2>
-<input id="username" placeholder="Your name"><br>
-<input id="message" placeholder="Message"><br>
-<button onclick="sendMessage()">Send</button>
-
-<div id="chatBox"></div>
 
 <script>
 const firebaseConfig={
@@ -46,68 +36,37 @@ projectId:"junior-beats-store"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-let beats=[];
+/* LOAD */
+db.collection("beats").get().then(snap=>{
+snap.forEach(doc=>{
+let b=doc.data();
 
-/* SETTINGS */
-db.collection("settings").doc("site").get().then(doc=>{
-if(doc.exists){
-let s=doc.data();
-if(s.storeName) title.innerText=s.storeName;
-if(s.background) document.body.style.backgroundImage=`url('${s.background}')`;
-if(s.font) document.body.style.fontFamily=s.font;
-}
-});
+let sold = b.status === "sold";
 
-/* LOAD BEATS */
-function render(list){
-box.innerHTML="";
-list.forEach(b=>{
 box.innerHTML+=`
 <div class="beat" style="background-image:url('${b.image}')">
 <div class="overlay"></div>
+
 <div class="content">
 <h3>${b.title}</h3>
+
+<span class="tag">${b.genre}</span>
+<span class="tag">EXCLUSIVE</span>
+
 <audio controls style="width:90%">
 <source src="${b.previewFile}">
 </audio>
-<p>MP3 $${b.prices?.mp3} | WAV $${b.prices?.wav} | EX $${b.prices?.exclusive}</p>
-<button onclick="window.open('${b.buyLink}')">BUY</button>
+
+<p>$${b.price}</p>
+
+${
+sold
+? `<button class="sold">SOLD</button>`
+: `<button onclick="window.open('${b.buyLink}')">BUY EXCLUSIVE</button>`
+}
+
 </div>
 </div>`;
-});
-}
-
-db.collection("beats").get().then(snap=>{
-snap.forEach(doc=>{
-beats.push(doc.data());
-});
-render(beats);
-});
-
-/* SEARCH */
-search.oninput=()=>{
-let filtered=beats.filter(b=>
-b.title.toLowerCase().includes(search.value.toLowerCase())
-);
-render(filtered);
-};
-
-/* CHAT */
-function sendMessage(){
-db.collection("chat").add({
-name:username.value || "Anonymous",
-text:message.value,
-time:Date.now()
-});
-message.value="";
-}
-
-db.collection("chat").orderBy("time")
-.onSnapshot(snapshot=>{
-chatBox.innerHTML="";
-snapshot.forEach(doc=>{
-let m=doc.data();
-chatBox.innerHTML+=`<p><b>${m.name}:</b> ${m.text}</p>`;
 });
 });
 </script>
