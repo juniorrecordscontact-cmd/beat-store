@@ -12,7 +12,7 @@
 body{font-family:Arial;background:#111;color:white;text-align:center;}
 input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
 button{background:#00c853;color:white;cursor:pointer;}
-.section{margin-top:25px;}
+.section{margin-top:25px;border-top:1px solid #333;padding-top:15px;}
 .beatRow{border:1px solid #333;margin:10px;padding:10px;}
 .selected{border:2px solid #00c853;}
 #panel{display:none;}
@@ -21,14 +21,16 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <body>
 
-<h1>🎛 Junior Beats Admin (EXCLUSIVE WAV ONLY)</h1>
+<h1>🎛 Junior Beats Admin PRO</h1>
 
+<!-- LOGIN -->
 <div id="loginBox">
 <input id="email" placeholder="Email"><br>
 <input id="password" type="password" placeholder="Password"><br>
 <button onclick="login()">LOGIN</button>
 </div>
 
+<!-- PANEL -->
 <div id="panel">
 
 <!-- SETTINGS -->
@@ -40,28 +42,36 @@ button{background:#00c853;color:white;cursor:pointer;}
 <button onclick="saveSettings()">SAVE SETTINGS</button>
 </div>
 
-<!-- UPLOAD -->
+<!-- UPLOAD BEAT -->
 <div class="section">
 <h2>🎧 Upload Exclusive WAV Beat</h2>
 
 <input id="title" placeholder="Title"><br>
 <input id="image" placeholder="Cover Image URL"><br>
+<input id="bgColor" type="color" value="#000000"><br>
+
 <input id="preview" placeholder="Preview (watermarked) URL"><br>
 <input id="wav" placeholder="EXCLUSIVE WAV URL"><br>
 <input id="buyLink" placeholder="PayPal Link"><br>
-<input id="price" placeholder="Exclusive Price ($)"><br>
+<input id="price" placeholder="Price"><br>
 
-<button onclick="addBeat()">UPLOAD EXCLUSIVE BEAT</button>
+<button onclick="addBeat()">UPLOAD BEAT</button>
 <button onclick="updateBeat()">UPDATE SELECTED</button>
 <button onclick="deleteSelected()">DELETE SELECTED</button>
 
 <p id="status"></p>
 </div>
 
-<!-- LIST -->
+<!-- BEAT LIST -->
 <div class="section">
 <h2>📀 Your Beats</h2>
 <div id="beatList"></div>
+</div>
+
+<!-- CHAT MODERATION -->
+<div class="section">
+<h2>💬 Chat Moderation</h2>
+<div id="chatAdmin"></div>
 </div>
 
 </div>
@@ -86,6 +96,7 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 loginBox.style.display="none";
 panel.style.display="block";
 loadBeats();
+loadChat();
 })
 .catch(e=>alert(e.message));
 }
@@ -99,12 +110,12 @@ font:font.value || "Arial"
 });
 }
 
-/* ADD BEAT (ONLY WAV SYSTEM) */
+/* ADD BEAT (EXCLUSIVE ONLY) */
 function addBeat(){
-
 db.collection("beats").add({
 title:title.value,
 image:image.value,
+bgColor:bgColor.value || "#000000",
 previewFile:preview.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
@@ -124,6 +135,7 @@ if(!selectedId) return alert("Select a beat");
 db.collection("beats").doc(selectedId).update({
 title:title.value,
 image:image.value,
+bgColor:bgColor.value,
 previewFile:preview.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
@@ -134,18 +146,17 @@ status.innerText="Updated ✔";
 loadBeats();
 }
 
-/* DELETE */
+/* DELETE BEAT */
 function deleteSelected(){
 if(!selectedId) return alert("Select a beat");
 
 db.collection("beats").doc(selectedId).delete();
-
-status.innerText="Deleted ✔";
 selectedId=null;
+status.innerText="Deleted ✔";
 loadBeats();
 }
 
-/* LOAD */
+/* LOAD BEATS */
 function loadBeats(){
 beatList.innerHTML="";
 
@@ -156,16 +167,7 @@ let b=doc.data();
 beatList.innerHTML+=`
 <div class="beatRow" id="row-${doc.id}">
 <b>${b.title}</b> - $${b.price || 0}<br>
-
-<button onclick="selectBeat(
-'${doc.id}',
-'${b.title}',
-'${b.image}',
-'${b.previewFile}',
-'${b.wavFile}',
-'${b.buyLink}',
-'${b.price}'
-)">
+<button onclick="selectBeat('${doc.id}','${b.title}','${b.image}','${b.bgColor}','${b.previewFile}','${b.wavFile}','${b.buyLink}','${b.price}')">
 SELECT
 </button>
 </div>`;
@@ -173,12 +175,13 @@ SELECT
 });
 }
 
-/* SELECT */
-function selectBeat(id,t,i,p,w,b,pr){
+/* SELECT BEAT */
+function selectBeat(id,t,i,c,p,w,b,pr){
 selectedId=id;
 
 title.value=t;
 image.value=i;
+bgColor.value=c || "#000000";
 preview.value=p;
 wav.value=w;
 buyLink.value=b;
@@ -186,6 +189,31 @@ price.value=pr;
 
 document.querySelectorAll(".beatRow").forEach(e=>e.classList.remove("selected"));
 document.getElementById("row-"+id).classList.add("selected");
+}
+
+/* CHAT MODERATION */
+function loadChat(){
+chatAdmin.innerHTML="";
+
+db.collection("chat").orderBy("time")
+.onSnapshot(snapshot=>{
+chatAdmin.innerHTML="";
+
+snapshot.forEach(doc=>{
+let m = doc.data();
+
+chatAdmin.innerHTML += `
+<div style="border:1px solid #333;margin:5px;padding:5px;">
+<b>${m.name}:</b> ${m.text}
+<br>
+<button onclick="deleteMsg('${doc.id}')">DELETE</button>
+</div>`;
+});
+});
+}
+
+function deleteMsg(id){
+db.collection("chat").doc(id).delete();
 }
 </script>
 
