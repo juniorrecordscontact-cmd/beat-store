@@ -16,7 +16,9 @@ color:white;
 text-align:center;
 }
 
-h1{padding:20px;}
+h1{
+padding:20px;
+}
 
 .container{
 display:flex;
@@ -74,7 +76,7 @@ margin-top:20px;
 
 <script>
 
-// 🔥 INIT FIREBASE
+// 🔥 FIREBASE INIT
 firebase.initializeApp({
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
 authDomain:"junior-beats-store.firebaseapp.com",
@@ -86,9 +88,9 @@ const db = firebase.firestore();
 const box = document.getElementById("box");
 const errorBox = document.getElementById("errorBox");
 
-// 🧠 SAFE VALUE HANDLER
+// 🧠 SAFE VALUE
 function safe(v, fallback=""){
-return v !== undefined && v !== null ? v : fallback;
+return (v !== undefined && v !== null) ? v : fallback;
 }
 
 // 💰 SAFE PRICE
@@ -97,18 +99,19 @@ let num = parseFloat(v);
 return isNaN(num) ? 0 : num;
 }
 
-// 🚀 BUY SYSTEM
+// 🚀 BUY SYSTEM (FULL FLOW)
 function buyBeat(id, title, price, link){
 
 try{
 
-const email = prompt("Enter your email for license delivery:");
+const email = prompt("Enter your email (this is where your license will be sent):");
 
 if(!email){
-alert("Email required");
+alert("Email is required to receive your beat.");
 return;
 }
 
+// SAVE PURCHASE
 db.collection("purchases").add({
 beatId: id,
 email: email,
@@ -117,13 +120,21 @@ amount: safePrice(price),
 status: "pending",
 createdAt: Date.now()
 }).then(()=>{
+
+alert(
+"✅ Purchase Started!\n\n" +
+"1. Complete your payment on PayPal\n" +
+"2. Your exclusive WAV + license will be sent to your email after payment confirmation."
+);
+
+// OPEN PAYPAL
 window.open(link, "_blank");
-alert("Redirecting to payment...");
+
 });
 
-}catch(e){
-console.error(e);
-alert("Purchase error");
+}catch(err){
+console.error(err);
+alert("Something went wrong. Try again.");
 }
 
 }
@@ -133,6 +144,7 @@ function loadSettings(){
 db.collection("settings").doc("site").get()
 .then(doc=>{
 if(doc.exists){
+
 let s = doc.data();
 
 if(s.storeName){
@@ -146,6 +158,7 @@ document.body.style.backgroundImage = `url('${s.background}')`;
 if(s.font){
 document.body.style.fontFamily = s.font;
 }
+
 }
 })
 .catch(err=>{
@@ -166,7 +179,7 @@ snapshot.forEach(doc=>{
 let b = doc.data();
 let id = doc.id;
 
-// SAFE VALUES
+// SAFE DATA
 let title = safe(b.title, "Untitled");
 let image = safe(b.image, "");
 let bgColor = safe(b.bgColor, "#000");
@@ -174,14 +187,14 @@ let preview = safe(b.previewFile, "");
 let price = safePrice(b.price);
 let link = safe(b.buyLink, "#");
 
-// BUILD CARD
+// CREATE CARD
 let div = document.createElement("div");
 div.className = "beat";
 
 div.style.backgroundImage = image ? `url('${image}')` : "none";
 div.style.backgroundColor = bgColor;
 
-// HTML CONTENT
+// CONTENT
 div.innerHTML = `
 <div class="overlay"></div>
 
@@ -198,7 +211,7 @@ div.innerHTML = `
 </div>
 `;
 
-// BUTTON EVENT (SAFE)
+// SAFE BUTTON BIND
 div.querySelector("button").onclick = function(){
 buyBeat(id, title, price, link);
 };
