@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Junior Beats Admin PRO</title>
+<title>Junior Beats Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -10,27 +10,24 @@
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
+input,button{padding:10px;margin:5px;width:300px;border:none;border-radius:6px;}
 button{background:#00c853;color:white;cursor:pointer;}
 .section{margin-top:25px;border-top:1px solid #333;padding-top:15px;}
 .beatRow{border:1px solid #333;margin:10px;padding:10px;}
-.selected{border:2px solid #00c853;}
 #panel{display:none;}
 </style>
 </head>
 
 <body>
 
-<h1>🎛 Junior Beats Admin PRO</h1>
+<h1>🎛 Junior Beats Admin</h1>
 
-<!-- LOGIN -->
 <div id="loginBox">
 <input id="email" placeholder="Email"><br>
 <input id="password" type="password" placeholder="Password"><br>
 <button onclick="login()">LOGIN</button>
 </div>
 
-<!-- PANEL -->
 <div id="panel">
 
 <!-- SETTINGS -->
@@ -39,39 +36,39 @@ button{background:#00c853;color:white;cursor:pointer;}
 <input id="storeName" placeholder="Store Name"><br>
 <input id="background" placeholder="Background URL"><br>
 <input id="font" placeholder="Font"><br>
-<button onclick="saveSettings()">SAVE SETTINGS</button>
+<button onclick="saveSettings()">SAVE</button>
 </div>
 
-<!-- UPLOAD BEAT -->
+<!-- UPLOAD -->
 <div class="section">
-<h2>🎧 Upload Exclusive WAV Beat</h2>
+<h2>🎧 Upload Beat (Exclusive WAV)</h2>
 
 <input id="title" placeholder="Title"><br>
-<input id="image" placeholder="Cover Image URL"><br>
-<input id="bgColor" type="color" value="#000000"><br>
+<input id="image" placeholder="Image URL"><br>
+<input id="bgColor" type="color"><br>
 
-<input id="preview" placeholder="Preview (watermarked) URL"><br>
-<input id="wav" placeholder="EXCLUSIVE WAV URL"><br>
+<input id="preview" placeholder="Preview MP3 URL"><br>
+<input id="wav" placeholder="WAV URL"><br>
 <input id="buyLink" placeholder="PayPal Link"><br>
 <input id="price" placeholder="Price"><br>
 
-<button onclick="addBeat()">UPLOAD BEAT</button>
-<button onclick="updateBeat()">UPDATE SELECTED</button>
-<button onclick="deleteSelected()">DELETE SELECTED</button>
+<button onclick="addBeat()">UPLOAD</button>
+<button onclick="updateBeat()">UPDATE</button>
+<button onclick="deleteBeat()">DELETE</button>
 
 <p id="status"></p>
 </div>
 
-<!-- BEAT LIST -->
+<!-- SEED BUTTON -->
 <div class="section">
-<h2>📀 Your Beats</h2>
-<div id="beatList"></div>
+<h2>🔥 Database Setup</h2>
+<button onclick="seedBeats()">SEED DATABASE</button>
 </div>
 
-<!-- CHAT MODERATION -->
+<!-- LIST -->
 <div class="section">
-<h2>💬 Chat Moderation</h2>
-<div id="chatAdmin"></div>
+<h2>📀 Beats</h2>
+<div id="beatList"></div>
 </div>
 
 </div>
@@ -96,31 +93,28 @@ auth.signInWithEmailAndPassword(email.value,password.value)
 loginBox.style.display="none";
 panel.style.display="block";
 loadBeats();
-loadChat();
-})
-.catch(e=>alert(e.message));
-}
-
-/* SETTINGS */
-function saveSettings(){
-db.collection("settings").doc("site").set({
-storeName:storeName.value || "Junior Beats",
-background:background.value || "",
-font:font.value || "Arial"
 });
 }
 
-/* ADD BEAT (EXCLUSIVE ONLY) */
+/* SAVE SETTINGS */
+function saveSettings(){
+db.collection("settings").doc("site").set({
+storeName:storeName.value,
+background:background.value,
+font:font.value
+});
+}
+
+/* ADD BEAT */
 function addBeat(){
 db.collection("beats").add({
 title:title.value,
 image:image.value,
-bgColor:bgColor.value || "#000000",
+bgColor:bgColor.value || "#000",
 previewFile:preview.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
-price:price.value,
-type:"exclusive",
+price:Number(price.value),
 createdAt:Date.now()
 });
 
@@ -130,7 +124,7 @@ loadBeats();
 
 /* UPDATE */
 function updateBeat(){
-if(!selectedId) return alert("Select a beat");
+if(!selectedId) return alert("Select beat");
 
 db.collection("beats").doc(selectedId).update({
 title:title.value,
@@ -139,24 +133,23 @@ bgColor:bgColor.value,
 previewFile:preview.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
-price:price.value
+price:Number(price.value)
 });
 
 status.innerText="Updated ✔";
 loadBeats();
 }
 
-/* DELETE BEAT */
-function deleteSelected(){
-if(!selectedId) return alert("Select a beat");
+/* DELETE */
+function deleteBeat(){
+if(!selectedId) return alert("Select beat");
 
 db.collection("beats").doc(selectedId).delete();
 selectedId=null;
-status.innerText="Deleted ✔";
 loadBeats();
 }
 
-/* LOAD BEATS */
+/* LOAD */
 function loadBeats(){
 beatList.innerHTML="";
 
@@ -165,55 +158,58 @@ snap.forEach(doc=>{
 let b=doc.data();
 
 beatList.innerHTML+=`
-<div class="beatRow" id="row-${doc.id}">
-<b>${b.title}</b> - $${b.price || 0}<br>
-<button onclick="selectBeat('${doc.id}','${b.title}','${b.image}','${b.bgColor}','${b.previewFile}','${b.wavFile}','${b.buyLink}','${b.price}')">
-SELECT
-</button>
+<div class="beatRow">
+<b>${b.title}</b> - $${b.price}
+<br>
+<button onclick="selectBeat('${doc.id}')">SELECT</button>
 </div>`;
 });
 });
 }
 
-/* SELECT BEAT */
-function selectBeat(id,t,i,c,p,w,b,pr){
+/* SELECT */
+function selectBeat(id){
 selectedId=id;
 
-title.value=t;
-image.value=i;
-bgColor.value=c || "#000000";
-preview.value=p;
-wav.value=w;
-buyLink.value=b;
-price.value=pr;
+db.collection("beats").doc(id).get().then(doc=>{
+let b=doc.data();
 
-document.querySelectorAll(".beatRow").forEach(e=>e.classList.remove("selected"));
-document.getElementById("row-"+id).classList.add("selected");
-}
-
-/* CHAT MODERATION */
-function loadChat(){
-chatAdmin.innerHTML="";
-
-db.collection("chat").orderBy("time")
-.onSnapshot(snapshot=>{
-chatAdmin.innerHTML="";
-
-snapshot.forEach(doc=>{
-let m = doc.data();
-
-chatAdmin.innerHTML += `
-<div style="border:1px solid #333;margin:5px;padding:5px;">
-<b>${m.name}:</b> ${m.text}
-<br>
-<button onclick="deleteMsg('${doc.id}')">DELETE</button>
-</div>`;
-});
+title.value=b.title;
+image.value=b.image;
+bgColor.value=b.bgColor;
+preview.value=b.previewFile;
+wav.value=b.wavFile;
+buyLink.value=b.buyLink;
+price.value=b.price;
 });
 }
 
-function deleteMsg(id){
-db.collection("chat").doc(id).delete();
+/* SEED DATABASE */
+function seedBeats(){
+
+db.collection("beats").add({
+title:"Dark Trap Exclusive",
+image:"https://images.unsplash.com/photo-1511379938547-c1f69419868d",
+bgColor:"#000000",
+previewFile:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+wavFile:"https://example.com/wav1.wav",
+buyLink:"https://paypal.me",
+price:50,
+createdAt:Date.now()
+});
+
+db.collection("beats").add({
+title:"Piano Exclusive",
+image:"https://images.unsplash.com/photo-1510915361894-db8b60106cb1",
+bgColor:"#0a0a0a",
+previewFile:"https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+wavFile:"https://example.com/wav2.wav",
+buyLink:"https://paypal.me",
+price:70,
+createdAt:Date.now()
+});
+
+alert("Seeded ✔");
 }
 </script>
 
