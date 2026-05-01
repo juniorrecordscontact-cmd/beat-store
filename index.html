@@ -8,15 +8,71 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#111;color:white;text-align:center;}
+body{
+margin:0;
+font-family:Arial;
+background:#111;
+color:white;
+text-align:center;
+}
+
 h1{padding:20px;}
-input{padding:10px;width:300px;margin:10px;}
-.container{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;}
-.beat{width:280px;height:320px;background-size:cover;position:relative;border-radius:12px;}
-.overlay{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);}
-.content{position:absolute;bottom:10px;width:100%;}
-button{padding:8px;width:80%;background:#00c853;border:none;color:white;}
-#chatBox{max-width:500px;margin:auto;text-align:left;}
+
+input{
+padding:10px;
+width:300px;
+margin:10px;
+border-radius:6px;
+border:none;
+}
+
+.container{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+padding:10px;
+}
+
+.beat{
+width:280px;
+height:320px;
+background-size:cover;
+background-position:center;
+position:relative;
+border-radius:12px;
+overflow:hidden;
+}
+
+.overlay{
+position:absolute;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+}
+
+.content{
+position:absolute;
+bottom:10px;
+width:100%;
+}
+
+button{
+padding:8px;
+width:80%;
+background:#00c853;
+border:none;
+color:white;
+cursor:pointer;
+border-radius:6px;
+}
+
+#chatBox{
+max-width:500px;
+margin:auto;
+text-align:left;
+padding:10px;
+}
 </style>
 </head>
 
@@ -30,6 +86,7 @@ button{padding:8px;width:80%;background:#00c853;border:none;color:white;}
 
 <!-- CHAT -->
 <h2>💬 Live Chat</h2>
+
 <input id="username" placeholder="Your name"><br>
 <input id="message" placeholder="Message"><br>
 <button onclick="sendMessage()">Send</button>
@@ -46,68 +103,110 @@ projectId:"junior-beats-store"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-let beats=[];
+/* SAFE DOM ACCESS */
+const box = document.getElementById("box");
+const searchInput = document.getElementById("search");
+const chatBox = document.getElementById("chatBox");
+const title = document.getElementById("title");
 
-/* SETTINGS */
+/* STORE SETTINGS */
 db.collection("settings").doc("site").get().then(doc=>{
 if(doc.exists){
-let s=doc.data();
-if(s.storeName) title.innerText=s.storeName;
-if(s.background) document.body.style.backgroundImage=`url('${s.background}')`;
-if(s.font) document.body.style.fontFamily=s.font;
+let s = doc.data();
+
+if(s.storeName) title.innerText = s.storeName;
+if(s.background) document.body.style.backgroundImage = `url('${s.background}')`;
+if(s.font) document.body.style.fontFamily = s.font;
 }
+}).catch(err=>{
+console.log("Settings error:", err);
 });
 
 /* LOAD BEATS */
+let beats = [];
+
 function render(list){
-box.innerHTML="";
+box.innerHTML = "";
+
 list.forEach(b=>{
-box.innerHTML+=`
-<div class="beat" style="background-image:url('${b.image}')">
+box.innerHTML += `
+<div class="beat" style="background-image:url('${b.image || ""}')">
 <div class="overlay"></div>
+
 <div class="content">
-<h3>${b.title}</h3>
+<h3>${b.title || "Untitled"}</h3>
+
 <audio controls style="width:90%">
-<source src="${b.previewFile}">
+<source src="${b.previewFile || ""}">
 </audio>
-<p>MP3 $${b.prices?.mp3} | WAV $${b.prices?.wav} | EX $${b.prices?.exclusive}</p>
-<button onclick="window.open('${b.buyLink}')">BUY</button>
+
+<p>
+MP3 $${b.prices?.mp3 || "-"} |
+WAV $${b.prices?.wav || "-"} |
+EX $${b.prices?.exclusive || "-"}
+</p>
+
+<button onclick="window.open('${b.buyLink || "#"}')">
+BUY
+</button>
+
 </div>
 </div>`;
 });
 }
 
-db.collection("beats").get().then(snap=>{
+/* SAFE LOAD */
+db.collection("beats").get()
+.then(snap=>{
+beats = [];
+
 snap.forEach(doc=>{
 beats.push(doc.data());
 });
+
 render(beats);
+})
+.catch(err=>{
+console.log("Beat load error:", err);
+box.innerHTML = "<p>Error loading beats</p>";
 });
 
-/* SEARCH */
-search.oninput=()=>{
-let filtered=beats.filter(b=>
-b.title.toLowerCase().includes(search.value.toLowerCase())
+/* SEARCH FIXED */
+searchInput.addEventListener("input", ()=>{
+let q = searchInput.value.toLowerCase();
+
+let filtered = beats.filter(b=>
+(b.title || "").toLowerCase().includes(q)
 );
-render(filtered);
-};
 
-/* CHAT */
-function sendMessage(){
-db.collection("chat").add({
-name:username.value || "Anonymous",
-text:message.value,
-time:Date.now()
+render(filtered);
 });
-message.value="";
+
+/* CHAT SAFE */
+function sendMessage(){
+
+if(!username.value && !message.value) return;
+
+db.collection("chat").add({
+name: username.value || "Anonymous",
+text: message.value || "",
+time: Date.now()
+}).catch(err=>{
+console.log("Chat error:", err);
+});
+
+message.value = "";
 }
 
-db.collection("chat").orderBy("time")
+/* REALTIME CHAT */
+db.collection("chat")
+.orderBy("time")
 .onSnapshot(snapshot=>{
-chatBox.innerHTML="";
+chatBox.innerHTML = "";
+
 snapshot.forEach(doc=>{
-let m=doc.data();
-chatBox.innerHTML+=`<p><b>${m.name}:</b> ${m.text}</p>`;
+let m = doc.data();
+chatBox.innerHTML += `<p><b>${m.name}:</b> ${m.text}</p>`;
 });
 });
 </script>
