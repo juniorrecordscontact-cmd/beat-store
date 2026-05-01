@@ -10,7 +10,7 @@
 
 <style>
 body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
+input,select,button{padding:10px;margin:5px;width:300px;border-radius:6px;border:none;}
 button{background:#00c853;color:white;cursor:pointer;}
 .section{margin-top:25px;}
 .beatRow{border:1px solid #333;margin:10px;padding:10px;}
@@ -21,7 +21,7 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <body>
 
-<h1>🎛 Junior Beats Admin PRO</h1>
+<h1>🎛 Junior Beats Admin (Exclusive System)</h1>
 
 <div id="loginBox">
 <input id="email" placeholder="Email"><br>
@@ -32,30 +32,31 @@ button{background:#00c853;color:white;cursor:pointer;}
 <div id="panel">
 
 <div class="section">
-<h2>🏪 Store Settings</h2>
-<input id="storeName" placeholder="Store Name"><br>
-<input id="background" placeholder="Background URL"><br>
-<input id="font" placeholder="Font"><br>
-<button onclick="saveSettings()">SAVE SETTINGS</button>
-</div>
-
-<div class="section">
-<h2>🎧 Add / Edit Beat</h2>
+<h2>🎧 Upload Exclusive Beat</h2>
 
 <input id="title" placeholder="Title"><br>
-<input id="image" placeholder="Image URL"><br>
-<input id="preview" placeholder="Preview URL"><br>
-<input id="mp3" placeholder="MP3 URL"><br>
-<input id="wav" placeholder="WAV URL"><br>
+
+<select id="genre">
+<option>R&B</option>
+<option>Pop</option>
+<option>Trap</option>
+<option>Drill</option>
+<option>Afrobeats</option>
+<option>Soul</option>
+<option>Other</option>
+</select><br>
+
+<input id="image" placeholder="Cover Image URL"><br>
+<input id="preview" placeholder="Preview (watermarked MP3 URL)"><br>
+<input id="wav" placeholder="FULL WAV (exclusive) URL"><br>
 <input id="buyLink" placeholder="PayPal Link"><br>
 
-<input id="mp3Price" placeholder="MP3 Price"><br>
-<input id="wavPrice" placeholder="WAV Price"><br>
-<input id="exclusivePrice" placeholder="Exclusive Price"><br>
+<input id="price" placeholder="Exclusive Price"><br>
 
 <button onclick="addBeat()">UPLOAD</button>
 <button onclick="updateBeat()">UPDATE SELECTED</button>
-<button onclick="deleteSelected()">DELETE SELECTED</button>
+<button onclick="markSold()">MARK AS SOLD</button>
+<button onclick="deleteSelected()">DELETE</button>
 
 <p id="status"></p>
 </div>
@@ -80,6 +81,7 @@ const db=firebase.firestore();
 
 let selectedId=null;
 
+/* LOGIN */
 function login(){
 auth.signInWithEmailAndPassword(email.value,password.value)
 .then(()=>{
@@ -89,90 +91,90 @@ loadBeats();
 });
 }
 
-function saveSettings(){
-db.collection("settings").doc("site").set({
-storeName:storeName.value || "Junior Beats",
-background:background.value || "",
-font:font.value || "Arial"
-});
-}
-
+/* ADD */
 function addBeat(){
 db.collection("beats").add({
 title:title.value,
+genre:genre.value,
 image:image.value,
 previewFile:preview.value,
-mp3File:mp3.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
-prices:{
-mp3:mp3Price.value,
-wav:wavPrice.value,
-exclusive:exclusivePrice.value
-},
+price:price.value,
+status:"available",
 createdAt:Date.now()
 });
 status.innerText="Uploaded ✔";
 loadBeats();
 }
 
+/* UPDATE */
 function updateBeat(){
 if(!selectedId) return alert("Select a beat");
 
 db.collection("beats").doc(selectedId).update({
 title:title.value,
+genre:genre.value,
 image:image.value,
 previewFile:preview.value,
-mp3File:mp3.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
-prices:{
-mp3:mp3Price.value,
-wav:wavPrice.value,
-exclusive:exclusivePrice.value
-}
+price:price.value
 });
 
 status.innerText="Updated ✔";
 loadBeats();
 }
 
+/* MARK SOLD */
+function markSold(){
+if(!selectedId) return alert("Select a beat");
+
+db.collection("beats").doc(selectedId).update({
+status:"sold"
+});
+
+status.innerText="Marked as SOLD ❌";
+loadBeats();
+}
+
+/* DELETE */
 function deleteSelected(){
 if(!selectedId) return alert("Select a beat");
 
 db.collection("beats").doc(selectedId).delete();
 status.innerText="Deleted ✔";
-selectedId=null;
 loadBeats();
 }
 
+/* LOAD */
 function loadBeats(){
 beatList.innerHTML="";
+
 db.collection("beats").get().then(snap=>{
 snap.forEach(doc=>{
 let b=doc.data();
+
 beatList.innerHTML+=`
 <div class="beatRow" id="row-${doc.id}">
-<b>${b.title}</b><br>
-<button onclick="selectBeat('${doc.id}','${b.title}','${b.image}','${b.previewFile}','${b.mp3File}','${b.wavFile}','${b.buyLink}','${b.prices?.mp3}','${b.prices?.wav}','${b.prices?.exclusive}')">SELECT</button>
+<b>${b.title}</b> (${b.genre}) - ${b.status}<br>
+<button onclick="selectBeat('${doc.id}','${b.title}','${b.genre}','${b.image}','${b.previewFile}','${b.wavFile}','${b.buyLink}','${b.price}')">SELECT</button>
 </div>`;
 });
 });
 }
 
-function selectBeat(id,t,i,p,m,w,b,mp,wp,ep){
+/* SELECT */
+function selectBeat(id,t,g,i,p,w,b,pr){
 selectedId=id;
 
 title.value=t;
+genre.value=g;
 image.value=i;
 preview.value=p;
-mp3.value=m;
 wav.value=w;
 buyLink.value=b;
-
-mp3Price.value=mp;
-wavPrice.value=wp;
-exclusivePrice.value=ep;
+price.value=pr;
 
 document.querySelectorAll(".beatRow").forEach(e=>e.classList.remove("selected"));
 document.getElementById("row-"+id).classList.add("selected");
