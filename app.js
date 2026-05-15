@@ -27,6 +27,7 @@ function loadBeats() {
       snapshot.forEach(doc => {
 
         const b = doc.data();
+        const id = doc.id; // 🔥 UNIQUE FIREBASE ID
 
         const card = document.createElement("div");
         card.className = "beat-card";
@@ -43,7 +44,7 @@ function loadBeats() {
           <p>🎵 ${b.tempo || "N/A"} BPM</p>
           <p>💰 $${b.price}</p>
 
-          <button onclick="addToCart('${b.title}', ${b.price}, '${b.wavFile}')">
+          <button onclick="addToCart('${id}', '${b.title}', ${b.price}, '${b.wavFile}')">
             Add To Cart 🛒
           </button>
         `;
@@ -70,12 +71,11 @@ function setPlayer(title, audio) {
 }
 
 /* =========================
-   ADD TO CART (NO DUPLICATES)
+   ADD TO CART (FIXED UNIQUE ID)
 ========================= */
-function addToCart(title, price, wavFile) {
+function addToCart(id, title, price, wavFile) {
 
-  // prevent duplicates
-  const exists = cart.some(item => item.wavFile === wavFile);
+  const exists = cart.some(item => item.id === id);
 
   if (exists) {
     alert("This beat is already in your cart.");
@@ -83,6 +83,7 @@ function addToCart(title, price, wavFile) {
   }
 
   cart.push({
+    id,
     title,
     price,
     wavFile
