@@ -80,6 +80,13 @@ button{
 <!-- PANEL -->
 <div id="panel">
 
+<!-- LOGOUT BUTTON -->
+<div class="section">
+  <button onclick="logout()" style="background:#ff3b3b;">
+    🚪 Logout
+  </button>
+</div>
+
 <!-- SETTINGS -->
 <div class="section">
 <h2>⚙️ Site Settings</h2>
@@ -154,6 +161,15 @@ auth.onAuthStateChanged(user => {
   loadBeats();
   loadPurchases();
 });
+
+/* =========================
+   LOGOUT
+========================= */
+function logout(){
+  auth.signOut().then(() => {
+    location.reload();
+  });
+}
 
 /* =========================
    SETTINGS SAVE
