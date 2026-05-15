@@ -7,7 +7,7 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const store = document.getElementById("store");
 
-/* LOAD BEATS FROM FIRESTORE */
+/* LOAD BEATS */
 function loadBeats() {
   db.collection("beats").onSnapshot(snapshot => {
     store.innerHTML = "";
@@ -20,7 +20,6 @@ function loadBeats() {
 
       card.innerHTML = `
         <img src="${b.image}">
-
         <h3>${b.title}</h3>
 
         <audio controls>
@@ -34,7 +33,7 @@ function loadBeats() {
           '${b.title}',
           ${b.price},
           ${b.tempo || 0},
-          '${b.buyLink}'
+          '${b.wavFile}'
         )">
           Buy Now
         </button>
@@ -45,68 +44,36 @@ function loadBeats() {
   });
 }
 
-/* CHECKOUT POPUP */
-function openCheckout(title, price, tempo, payLink) {
+/* CHECKOUT SYSTEM */
+function openCheckout(title, price, tempo, wavFile) {
 
-  const overlay = document.createElement("div");
+  const email = prompt("Enter your email:");
 
-  overlay.style = `
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.85);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
-  `;
+  if (!email) return;
 
-  overlay.innerHTML = `
-    <div style="
-      background:#111;
-      padding:25px;
-      border-radius:12px;
-      width:300px;
-      text-align:center;
-      color:white;
-    ">
-      <h2>${title}</h2>
-      <p>Tempo: ${tempo} BPM</p>
-      <p>Price: $${price}</p>
+  // save purchase in Firebase
+  db.collection("purchases").add({
+    beatTitle: title,
+    email: email,
+    amount: price,
+    file: wavFile,
+    status: "pending",
+    createdAt: Date.now()
+  });
 
-      <button id="confirmPay" style="
-        margin-top:10px;
-        padding:10px;
-        width:100%;
-        border:none;
-        border-radius:8px;
-        background:white;
-        color:black;
-        cursor:pointer;
-      ">
-        Confirm & Pay
-      </button>
+  // PayPal link (auto price)
+  const payLink =
+    "https://www.paypal.com/paypalme/jayanreid07/" + price;
 
-      <button onclick="this.closest('div').remove()" style="
-        margin-top:10px;
-        padding:10px;
-        width:100%;
-        border:none;
-        border-radius:8px;
-        background:#333;
-        color:white;
-        cursor:pointer;
-      ">
-        Cancel
-      </button>
-    </div>
-  `;
+  // success redirect page
+  const successURL =
+    window.location.origin +
+    "/success.html?file=" +
+    encodeURIComponent(wavFile);
 
-  document.body.appendChild(overlay);
-
-  document.getElementById("confirmPay").onclick = () => {
-    window.location.href = payLink;
-  };
+  // redirect to PayPal
+  window.location.href =
+    payLink + "?return=" + encodeURIComponent(successURL);
 }
 
 /* INIT */
