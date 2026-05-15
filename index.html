@@ -1,31 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Junior Beats</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
 <header>
   <h1>🎧 Junior Beats</h1>
-  <button onclick="toggleAdmin()">Admin Panel</button>
 </header>
 
-<!-- ADMIN PANEL -->
-<div id="admin" class="hidden">
-  <h2>Admin Upload</h2>
-
-  <input id="title" placeholder="Beat Title"><br>
-  <input id="price" placeholder="Price"><br>
-  <input id="image" placeholder="Image URL"><br>
-  <input id="audio" placeholder="Audio URL"><br>
-  <input id="paylink" placeholder="PayPal Link"><br>
-
-  <button onclick="addBeat()">Add Beat</button>
-</div>
-
-<!-- STORE -->
+<!-- STORE ONLY -->
 <div id="store"></div>
 
 <script src="app.js"></script>
