@@ -41,3 +41,44 @@
 
 </body>
 </html>
+
+firebase.firestore()
+.collection("settings")
+.doc("site")
+.get()
+.then(doc => {
+
+  const s = doc.data();
+  if (!s) return;
+
+  // background (SAFE overlay, does not break anything)
+  if (s.bg) {
+    document.body.style.backgroundImage = `url(${s.bg})`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+  }
+
+  // font (SAFE global change)
+  if (s.font) {
+    document.body.style.fontFamily = s.font;
+  }
+
+  // logo (ONLY if element exists)
+  const logo = document.getElementById("logo");
+  if (logo && s.logo) {
+    logo.src = s.logo;
+  }
+
+  // store name
+  const store = document.getElementById("storeName");
+  if (store && s.storeName) {
+    store.innerText = s.storeName;
+  }
+
+  // slogan
+  const slogan = document.getElementById("slogan");
+  if (slogan) {
+    slogan.innerText = s.slogan || "";
+  }
+
+});
