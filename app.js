@@ -7,7 +7,9 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const store = document.getElementById("store");
 
-/* LOAD BEATS */
+/* =========================
+   LOAD BEATS
+========================= */
 function loadBeats() {
   db.collection("beats").onSnapshot(snapshot => {
     store.innerHTML = "";
@@ -19,11 +21,12 @@ function loadBeats() {
       card.className = "beat-card";
 
       card.innerHTML = `
-        <img src="${b.image}">
+        <img src="${b.image}" />
+
         <h3>${b.title}</h3>
 
         <audio controls>
-          <source src="${b.previewFile}">
+          <source src="${b.previewFile}" />
         </audio>
 
         <p>🎵 ${b.tempo || "N/A"} BPM</p>
@@ -44,14 +47,19 @@ function loadBeats() {
   });
 }
 
-/* CHECKOUT SYSTEM */
+/* =========================
+   CHECKOUT SYSTEM
+========================= */
 function openCheckout(title, price, tempo, wavFile) {
 
   const email = prompt("Enter your email:");
 
-  if (!email) return;
+  if (!email) {
+    alert("Email required to continue.");
+    return;
+  }
 
-  // save purchase in Firebase
+  // Save purchase to Firebase (pending)
   db.collection("purchases").add({
     beatTitle: title,
     email: email,
@@ -65,16 +73,20 @@ function openCheckout(title, price, tempo, wavFile) {
   const payLink =
     "https://www.paypal.com/paypalme/jayanreid07/" + price;
 
-  // success redirect page
+  // Return to success page with data
   const successURL =
     window.location.origin +
     "/success.html?file=" +
-    encodeURIComponent(wavFile);
+    encodeURIComponent(wavFile) +
+    "&email=" +
+    encodeURIComponent(email);
 
-  // redirect to PayPal
+  // Redirect to PayPal
   window.location.href =
     payLink + "?return=" + encodeURIComponent(successURL);
 }
 
-/* INIT */
+/* =========================
+   INIT
+========================= */
 window.onload = loadBeats;
