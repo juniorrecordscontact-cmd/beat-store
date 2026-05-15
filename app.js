@@ -11,79 +11,69 @@ const cartItems = document.getElementById("cartItems");
 const cartTotal = document.getElementById("cartTotal");
 
 let currentAudio = null;
-
 let cart = [];
 
 /* =========================
    LOAD BEATS
 ========================= */
-function loadBeats(){
+function loadBeats() {
 
   db.collection("beats")
-  .orderBy("createdAt","desc")
-  .onSnapshot(snapshot=>{
+    .orderBy("createdAt", "desc")
+    .onSnapshot(snapshot => {
 
-    store.innerHTML="";
+      store.innerHTML = "";
 
-    snapshot.forEach(doc=>{
+      snapshot.forEach(doc => {
 
-      const b = doc.data();
+        const b = doc.data();
 
-      const card = document.createElement("div");
-      card.className="beat-card";
+        const card = document.createElement("div");
+        card.className = "beat-card";
 
-      card.innerHTML=`
+        card.innerHTML = `
+          <img src="${b.image}" />
 
-        <img src="${b.image}" />
+          <h3>${b.title}</h3>
 
-        <h3>${b.title}</h3>
+          <audio controls onplay="setPlayer('${b.title}', this)">
+            <source src="${b.previewFile}" />
+          </audio>
 
-        <audio controls
-          onplay="setPlayer('${b.title}', this)">
-          <source src="${b.previewFile}" />
-        </audio>
+          <p>🎵 ${b.tempo || "N/A"} BPM</p>
+          <p>💰 $${b.price}</p>
 
-        <p>🎵 ${b.tempo || "N/A"} BPM</p>
+          <!-- ADD TO CART BUTTON (FIXED & CLEAR) -->
+          <button onclick="addToCart('${b.title}', ${b.price}, '${b.wavFile}')">
+            Add To Cart 🛒
+          </button>
+        `;
 
-        <p>💰 $${b.price}</p>
-
-        <button onclick='addToCart(
-          "${b.title}",
-          ${b.price},
-          "${b.wavFile}"
-        )'>
-          Add To Cart
-        </button>
-
-      `;
-
-      store.appendChild(card);
+        store.appendChild(card);
+      });
 
     });
-
-  });
-
 }
 
 /* =========================
-   PLAYER
+   AUDIO PLAYER
 ========================= */
-function setPlayer(title,audio){
+function setPlayer(title, audio) {
 
   document.getElementById("nowPlaying")
-  .innerText="Now Playing: " + title;
+    .innerText = "Now Playing: " + title;
 
-  if(currentAudio && currentAudio !== audio){
+  if (currentAudio && currentAudio !== audio) {
     currentAudio.pause();
   }
 
-  currentAudio=audio;
+  currentAudio = audio;
 }
 
 /* =========================
    ADD TO CART
 ========================= */
-function addToCart(title,price,wavFile){
+function addToCart(title, price, wavFile) {
 
   cart.push({
     title,
@@ -95,78 +85,70 @@ function addToCart(title,price,wavFile){
 }
 
 /* =========================
-   RENDER CART
+   CART RENDER
 ========================= */
-function renderCart(){
+function renderCart() {
 
-  cartItems.innerHTML="";
+  cartItems.innerHTML = "";
 
-  let total=0;
+  let total = 0;
 
-  cart.forEach((item,index)=>{
+  cart.forEach((item, index) => {
 
     total += item.price;
 
     cartItems.innerHTML += `
-
       <div class="cartItem">
 
         <div>
-          ${item.title} - $${item.price}
+          <b>${item.title}</b> — $${item.price}
         </div>
 
-        <button class="removeBtn"
-          onclick="removeItem(${index})">
+        <button class="removeBtn" onclick="removeItem(${index})">
           Remove
         </button>
 
       </div>
-
     `;
   });
 
-  cartTotal.innerText =
-    "Total: $" + total;
+  cartTotal.innerText = "Total: $" + total;
 }
 
 /* =========================
    REMOVE ITEM
 ========================= */
-function removeItem(index){
-
-  cart.splice(index,1);
-
+function removeItem(index) {
+  cart.splice(index, 1);
   renderCart();
 }
 
 /* =========================
    CHECKOUT
 ========================= */
-function checkoutCart(){
+function checkoutCart() {
 
-  if(cart.length === 0){
+  if (cart.length === 0) {
     alert("Cart is empty.");
     return;
   }
 
-  const email =
-    prompt("Enter your email:");
+  const email = prompt("Enter your email:");
+  if (!email) return;
 
-  if(!email) return;
+  let total = 0;
 
-  let total=0;
-
-  cart.forEach(item=>{
+  cart.forEach(item => {
 
     total += item.price;
 
     db.collection("purchases").add({
-      beatTitle:item.title,
-      email:email,
-      amount:item.price,
-      file:item.wavFile,
-      status:"pending",
-      createdAt:Date.now()
+      beatTitle: item.title,
+      email: email,
+      amount: item.price,
+      file: item.wavFile,
+      status: "pending",
+      createdAt: Date.now()
     });
 
   });
@@ -180,4 +162,4 @@ function checkoutCart(){
 /* =========================
    INIT
 ========================= */
-window.onload=loadBeats;
+window.onload = loadBeats;
