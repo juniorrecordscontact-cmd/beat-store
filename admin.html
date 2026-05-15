@@ -80,7 +80,7 @@ button{
 <!-- PANEL -->
 <div id="panel">
 
-<!-- LOGOUT BUTTON -->
+<!-- LOGOUT -->
 <div class="section">
   <button onclick="logout()" style="background:#ff3b3b;">
     🚪 Logout
@@ -94,6 +94,7 @@ button{
 <input id="slogan" placeholder="Slogan (By Jayan Reid)">
 <input id="storeName" placeholder="Store Name">
 <input id="bg" placeholder="Background URL">
+<input id="logo" placeholder="Logo Image URL">
 
 <button onclick="saveSettings()">Save Settings</button>
 </div>
@@ -138,55 +139,41 @@ projectId:"junior-beats-store"
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* =========================
-   LOGIN
-========================= */
+/* LOGIN */
 function login(){
   auth.signInWithEmailAndPassword(email.value,password.value)
-  .catch(err=>{
-    alert(err.message);
-  });
+  .catch(err=>alert(err.message));
 }
 
-/* =========================
-   AUTH STATE
-========================= */
-auth.onAuthStateChanged(user => {
+/* AUTH */
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
 
-  if (!user) return;
-
-  loginBox.style.display = "none";
-  panel.style.display = "block";
+  loginBox.style.display="none";
+  panel.style.display="block";
 
   loadBeats();
   loadPurchases();
 });
 
-/* =========================
-   LOGOUT
-========================= */
+/* LOGOUT */
 function logout(){
-  auth.signOut().then(() => {
-    location.reload();
-  });
+  auth.signOut().then(()=>location.reload());
 }
 
-/* =========================
-   SETTINGS SAVE
-========================= */
+/* SETTINGS SAVE (UPDATED WITH LOGO) */
 function saveSettings(){
   db.collection("settings").doc("site").set({
     slogan: slogan.value,
     storeName: storeName.value,
-    bg: bg.value
+    bg: bg.value,
+    logo: logo.value
   });
 
   alert("Settings saved ✔");
 }
 
-/* =========================
-   ADD BEAT
-========================= */
+/* ADD BEAT */
 function addBeat(){
   db.collection("beats").add({
     title:title.value,
@@ -202,9 +189,7 @@ function addBeat(){
   alert("Uploaded ✔");
 }
 
-/* =========================
-   LOAD BEATS
-========================= */
+/* LOAD BEATS */
 function loadBeats(){
   db.collection("beats")
   .onSnapshot(snap=>{
@@ -223,9 +208,7 @@ function loadBeats(){
   });
 }
 
-/* =========================
-   LOAD PURCHASES
-========================= */
+/* LOAD PURCHASES */
 function loadPurchases(){
   db.collection("purchases")
   .orderBy("createdAt","desc")
