@@ -8,3 +8,38 @@ const beats = [
     buyLink: "https://www.paypal.com/paypalme/jayanreid07/25"
   }
 ];
+
+function renderBeats() {
+  const store = document.getElementById("store");
+
+  // safety check (prevents blank page crash)
+  if (!store) {
+    console.error("Missing #store in HTML");
+    return;
+  }
+
+  store.innerHTML = "";
+
+  beats.forEach(beat => {
+    const card = document.createElement("div");
+
+    card.innerHTML = `
+      <h3>${beat.title}</h3>
+
+      <img src="${beat.image}" width="200">
+
+      <audio controls src="${beat.previewFile}"></audio>
+
+      <p>$${beat.price}</p>
+
+      <a href="${beat.buyLink}" target="_blank">
+        <button>Buy Now</button>
+      </a>
+    `;
+
+    store.appendChild(card);
+  });
+}
+
+// wait until page fully loads
+window.addEventListener("DOMContentLoaded", renderBeats);
