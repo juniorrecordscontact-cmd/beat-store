@@ -13,13 +13,10 @@ const cartTotal = document.getElementById("cartTotal");
 let currentAudio = null;
 
 /* =========================
-   LOAD CART FROM BROWSER
+   CART (PERSISTENT)
 ========================= */
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-/* =========================
-   SAVE CART
-========================= */
 function saveCart() {
   localStorage.setItem("cart", JSON.stringify(cart));
 }
@@ -40,6 +37,12 @@ function loadBeats() {
         const b = doc.data();
         const id = doc.id;
 
+        const inCart = cart.some(item => item.id === id);
+
+        const buttonText = inCart
+          ? "Remove From Cart ❌"
+          : "Add To Cart 🛒";
+
         const card = document.createElement("div");
         card.className = "beat-card";
 
@@ -55,8 +58,8 @@ function loadBeats() {
           <p>🎵 ${b.tempo || "N/A"} BPM</p>
           <p>💰 $${b.price}</p>
 
-          <button onclick="addToCart('${id}', '${b.title}', ${b.price}, '${b.wavFile}')">
-            Add To Cart 🛒
+          <button id="btn-${id}" onclick="toggleCart('${id}', '${b.title}', ${b.price}, '${b.wavFile}')">
+            ${buttonText}
           </button>
         `;
 
@@ -67,7 +70,7 @@ function loadBeats() {
 }
 
 /* =========================
-   AUDIO PLAYER
+   PLAYER
 ========================= */
 function setPlayer(title, audio) {
 
@@ -82,39 +85,50 @@ function setPlayer(title, audio) {
 }
 
 /* =========================
-   ADD TO CART (PERSISTENT)
+   TOGGLE CART (MARKETPLACE STYLE)
 ========================= */
-function addToCart(id, title, price, wavFile) {
+function toggleCart(id, title, price, wavFile) {
 
-  const exists = cart.some(item => item.id === id);
+  const index = cart.findIndex(item => item.id === id);
 
-  if (exists) {
-    alert("This beat is already in your cart.");
-    return;
+  if (index > -1) {
+    cart.splice(index, 1);
+  } else {
+    cart.push({ id, title, price, wavFile });
   }
 
-  cart.push({
-    id,
-    title,
-    price,
-    wavFile
+  saveCart();
+  renderCart();
+  updateButtons();
+}
+
+/* =========================
+   UPDATE BUTTON STATES
+========================= */
+function updateButtons() {
+
+  cart.forEach(item => {
+    const btn = document.getElementById(`btn-${item.id}`);
+    if (btn) btn.innerText = "Remove From Cart ❌";
   });
 
-  saveCart();
-  renderCart();
+  db.collection("beats").get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const id = doc.id;
+      const inCart = cart.some(i => i.id === id);
+
+      const btn = document.getElementById(`btn-${id}`);
+      if (btn) {
+        btn.innerText = inCart
+          ? "Remove From Cart ❌"
+          : "Add To Cart 🛒";
+      }
+    });
+  });
 }
 
 /* =========================
-   REMOVE ITEM
-========================= */
-function removeItem(index) {
-  cart.splice(index, 1);
-  saveCart();
-  renderCart();
-}
-
-/* =========================
-   RENDER CART
+   CART RENDER
 ========================= */
 function renderCart() {
 
@@ -133,7 +147,7 @@ function renderCart() {
           <b>${item.title}</b> — $${item.price}
         </div>
 
-        <button class="removeBtn" onclick="removeItem(${index})">
+        <button class="removeBtn" onclick="toggleCart('${item.id}', '${item.title}', ${item.price}, '${item.wavFile}')">
           Remove
         </button>
 
@@ -185,5 +199,5 @@ function checkoutCart() {
 ========================= */
 window.onload = function () {
   loadBeats();
-  renderCart(); // 🔥 LOAD CART ON START
+  renderCart();
 };
