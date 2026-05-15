@@ -1,10 +1,12 @@
 const beats = [
   {
-    title: "Summer Guitar Beat",
+    title: "TEST BEAT",
     price: 25,
-    previewFile: "https://www.dropbox.com/scl/fi/3n3sfuytmc7flqn5wxal6/115-BPM-Summer-Guitar.mp3?raw=1",
-    wavFile: "https://www.dropbox.com/scl/fi/a0njsx2e82ybvs3dik7zz/115-BPM-Summer-Guitar.wav?raw=1",
-    image: "https://www.dropbox.com/scl/fi/ksun4elxr76vvoqlmltst/guitar.jpg?raw=1",
+
+    // IMPORTANT: must be raw links
+    previewFile: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    image: "https://images.unsplash.com/photo-1511379938547-c1f69419868d",
+
     buyLink: "https://www.paypal.com/paypalme/jayanreid07/25"
   }
 ];
@@ -12,20 +14,26 @@ const beats = [
 function renderBeats() {
   const store = document.getElementById("store");
 
-  if (!store) return;
+  console.log("STORE FOUND:", store);
 
   store.innerHTML = "";
 
-  beats.forEach(beat => {
+  beats.forEach(b => {
     const card = document.createElement("div");
     card.className = "beat-card";
 
     card.innerHTML = `
-      <img src="${beat.image}">
-      <h3>${beat.title}</h3>
-      <audio controls src="${beat.previewFile}"></audio>
-      <p>$${beat.price}</p>
-      <a href="${beat.buyLink}" target="_blank">
+      <img src="${b.image}" onerror="console.log('IMAGE FAILED')">
+
+      <h3>${b.title}</h3>
+
+      <audio controls>
+        <source src="${b.previewFile}">
+      </audio>
+
+      <p>$${b.price}</p>
+
+      <a href="${b.buyLink}" target="_blank">
         <button>Buy Now</button>
       </a>
     `;
