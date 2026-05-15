@@ -11,7 +11,18 @@ const cartItems = document.getElementById("cartItems");
 const cartTotal = document.getElementById("cartTotal");
 
 let currentAudio = null;
-let cart = [];
+
+/* =========================
+   LOAD CART FROM BROWSER
+========================= */
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+/* =========================
+   SAVE CART
+========================= */
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
 
 /* =========================
    LOAD BEATS
@@ -27,7 +38,7 @@ function loadBeats() {
       snapshot.forEach(doc => {
 
         const b = doc.data();
-        const id = doc.id; // 🔥 UNIQUE FIREBASE ID
+        const id = doc.id;
 
         const card = document.createElement("div");
         card.className = "beat-card";
@@ -71,7 +82,7 @@ function setPlayer(title, audio) {
 }
 
 /* =========================
-   ADD TO CART (FIXED UNIQUE ID)
+   ADD TO CART (PERSISTENT)
 ========================= */
 function addToCart(id, title, price, wavFile) {
 
@@ -89,11 +100,21 @@ function addToCart(id, title, price, wavFile) {
     wavFile
   });
 
+  saveCart();
   renderCart();
 }
 
 /* =========================
-   CART RENDER
+   REMOVE ITEM
+========================= */
+function removeItem(index) {
+  cart.splice(index, 1);
+  saveCart();
+  renderCart();
+}
+
+/* =========================
+   RENDER CART
 ========================= */
 function renderCart() {
 
@@ -121,14 +142,6 @@ function renderCart() {
   });
 
   cartTotal.innerText = "Total: $" + total;
-}
-
-/* =========================
-   REMOVE ITEM
-========================= */
-function removeItem(index) {
-  cart.splice(index, 1);
-  renderCart();
 }
 
 /* =========================
@@ -170,4 +183,7 @@ function checkoutCart() {
 /* =========================
    INIT
 ========================= */
-window.onload = loadBeats;
+window.onload = function () {
+  loadBeats();
+  renderCart(); // 🔥 LOAD CART ON START
+};
