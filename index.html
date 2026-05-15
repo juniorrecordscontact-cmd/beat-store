@@ -19,21 +19,28 @@
     header{
       display:flex;
       align-items:center;
-      gap:12px;
+      gap:15px;
       padding:15px;
     }
 
+    /* 🔥 FIXED LOGO SIZE */
     #logo{
-      width:45px;
-      height:45px;
-      border-radius:8px;
+      width:80px;
+      height:80px;
       object-fit:cover;
+      border-radius:12px;
+      flex-shrink:0;
     }
 
     #slogan{
       margin:0;
       opacity:0.7;
       font-size:14px;
+    }
+
+    #storeName{
+      margin:0;
+      font-weight:bold;
     }
   </style>
 </head>
@@ -43,16 +50,16 @@
   <!-- HEADER -->
   <header>
 
-    <!-- 🔥 LOGO (ADDED SAFE) -->
+    <!-- LOGO -->
     <img id="logo" src="" alt="logo">
 
     <div>
       <h1>🎧 Junior Beats</h1>
 
-      <!-- 🔥 DYNAMIC SLOGAN -->
+      <!-- DYNAMIC SLOGAN -->
       <p id="slogan">By Jayan Reid</p>
 
-      <!-- 🔥 STORE NAME (NEW BUT SAFE) -->
+      <!-- STORE NAME -->
       <p id="storeName"></p>
     </div>
 
@@ -76,13 +83,14 @@
 
   <script src="app.js"></script>
 
-  <!-- 🔥 SETTINGS PATCH (DOES NOT TOUCH YOUR SYSTEM) -->
+  <!-- 🔥 SETTINGS PATCH (SAFE, DOES NOT TOUCH YOUR SYSTEM) -->
   <script>
     firebase.firestore()
     .collection("settings")
     .doc("site")
     .get()
     .then(doc => {
+
       const s = doc.data();
       if(!s) return;
 
@@ -99,21 +107,23 @@
       }
 
       // logo
-      if(s.logo){
-        const logo = document.getElementById("logo");
-        if(logo) logo.src = s.logo;
+      const logo = document.getElementById("logo");
+      if(logo && s.logo){
+        logo.src = s.logo;
       }
 
       // store name
-      if(s.storeName){
-        const storeName = document.getElementById("storeName");
-        if(storeName) storeName.innerText = s.storeName;
+      const storeName = document.getElementById("storeName");
+      if(storeName && s.storeName){
+        storeName.innerText = s.storeName;
       }
 
       // slogan
-      if(s.slogan){
-        document.getElementById("slogan").innerText = s.slogan;
+      const slogan = document.getElementById("slogan");
+      if(slogan && s.slogan){
+        slogan.innerText = s.slogan;
       }
+
     });
   </script>
 
