@@ -48,18 +48,14 @@ function loadBeats() {
 }
 
 /* =========================
-   CHECKOUT SYSTEM
+   CHECKOUT (FREE SYSTEM)
 ========================= */
 function openCheckout(title, price, tempo, wavFile) {
 
   const email = prompt("Enter your email:");
+  if (!email) return;
 
-  if (!email) {
-    alert("Email required to continue.");
-    return;
-  }
-
-  // Save purchase to Firebase (pending)
+  // Save purchase as pending
   db.collection("purchases").add({
     beatTitle: title,
     email: email,
@@ -69,17 +65,17 @@ function openCheckout(title, price, tempo, wavFile) {
     createdAt: Date.now()
   });
 
-  // PayPal link (auto price)
+  // PayPal link (automatic price)
   const payLink =
     "https://www.paypal.com/paypalme/jayanreid07/" + price;
 
-  // Return to success page with data
+  // Success page redirect (NO backend verification)
   const successURL =
     window.location.origin +
-    "/success.html?file=" +
-    encodeURIComponent(wavFile) +
-    "&email=" +
-    encodeURIComponent(email);
+    "/success.html?email=" +
+    encodeURIComponent(email) +
+    "&file=" +
+    encodeURIComponent(wavFile);
 
   // Redirect to PayPal
   window.location.href =
