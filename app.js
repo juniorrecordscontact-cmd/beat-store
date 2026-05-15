@@ -43,7 +43,6 @@ function loadBeats() {
           <p>🎵 ${b.tempo || "N/A"} BPM</p>
           <p>💰 $${b.price}</p>
 
-          <!-- ADD TO CART BUTTON (FIXED & CLEAR) -->
           <button onclick="addToCart('${b.title}', ${b.price}, '${b.wavFile}')">
             Add To Cart 🛒
           </button>
@@ -71,9 +70,17 @@ function setPlayer(title, audio) {
 }
 
 /* =========================
-   ADD TO CART
+   ADD TO CART (NO DUPLICATES)
 ========================= */
 function addToCart(title, price, wavFile) {
+
+  // prevent duplicates
+  const exists = cart.some(item => item.wavFile === wavFile);
+
+  if (exists) {
+    alert("This beat is already in your cart.");
+    return;
+  }
 
   cart.push({
     title,
