@@ -61,6 +61,11 @@ button{
   padding:10px;
   margin:10px;
   border-radius:8px;
+  cursor:pointer;
+}
+
+.beatRow:hover{
+  background:#2a2a35;
 }
 </style>
 
@@ -80,28 +85,25 @@ button{
 <!-- PANEL -->
 <div id="panel">
 
-<!-- LOGOUT -->
 <div class="section">
-  <button onclick="logout()" style="background:#ff3b3b;">
-    🚪 Logout
-  </button>
+  <button onclick="logout()" style="background:#ff3b3b;">🚪 Logout</button>
 </div>
 
 <!-- SETTINGS -->
 <div class="section">
 <h2>⚙️ Site Settings</h2>
 
-<input id="slogan" placeholder="Slogan (By Jayan Reid)">
+<input id="slogan" placeholder="Slogan">
 <input id="storeName" placeholder="Store Name">
 <input id="bg" placeholder="Background URL">
-<input id="logo" placeholder="Logo Image URL">
+<input id="logo" placeholder="Logo URL">
 
 <button onclick="saveSettings()">Save Settings</button>
 </div>
 
-<!-- UPLOAD -->
+<!-- UPLOAD / EDIT -->
 <div class="section">
-<h2>🎧 Upload Beat</h2>
+<h2>🎧 Upload / Edit Beat</h2>
 
 <input id="title" placeholder="Title"><br>
 <input id="producer" placeholder="Producer"><br>
@@ -112,12 +114,16 @@ button{
 <input id="preview" placeholder="MP3 URL"><br>
 <input id="wav" placeholder="WAV URL"><br>
 
-<button onclick="addBeat()">Upload</button>
+<button onclick="addBeat()">Add New Beat</button>
+<button onclick="updateBeat()">Update Selected Beat</button>
+<button onclick="deleteBeat()">Delete Selected Beat</button>
+
+<p id="status"></p>
 </div>
 
 <!-- BEATS -->
 <div class="section">
-<h2>📀 Beats</h2>
+<h2>📀 Beats (Click to Select)</h2>
 <div id="beatList"></div>
 </div>
 
@@ -138,6 +144,8 @@ projectId:"junior-beats-store"
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+let selectedBeatId = null;
 
 /* LOGIN */
 function login(){
@@ -161,19 +169,19 @@ function logout(){
   auth.signOut().then(()=>location.reload());
 }
 
-/* SETTINGS SAVE (UPDATED WITH LOGO) */
+/* SETTINGS */
 function saveSettings(){
   db.collection("settings").doc("site").set({
-    slogan: slogan.value,
-    storeName: storeName.value,
-    bg: bg.value,
-    logo: logo.value
+    slogan:slogan.value,
+    storeName:storeName.value,
+    bg:bg.value,
+    logo:logo.value
   });
 
-  alert("Settings saved ✔");
+  alert("Saved ✔");
 }
 
-/* ADD BEAT */
+/* ADD */
 function addBeat(){
   db.collection("beats").add({
     title:title.value,
@@ -186,19 +194,65 @@ function addBeat(){
     createdAt:Date.now()
   });
 
-  alert("Uploaded ✔");
+  status.innerText="Added ✔";
+}
+
+/* UPDATE */
+function updateBeat(){
+  if(!selectedBeatId) return alert("Select a beat first");
+
+  db.collection("beats").doc(selectedBeatId).update({
+    title:title.value,
+    producer:producer.value,
+    price:parseFloat(price.value),
+    tempo:tempo.value,
+    image:image.value,
+    previewFile:preview.value,
+    wavFile:wav.value
+  });
+
+  status.innerText="Updated ✔";
+}
+
+/* DELETE */
+function deleteBeat(){
+  if(!selectedBeatId) return alert("Select a beat first");
+
+  db.collection("beats").doc(selectedBeatId).delete();
+
+  selectedBeatId=null;
+  status.innerText="Deleted ✔";
+}
+
+/* SELECT */
+function selectBeat(id){
+  selectedBeatId = id;
+
+  db.collection("beats").doc(id).get().then(doc=>{
+    let b = doc.data();
+
+    title.value = b.title;
+    producer.value = b.producer;
+    price.value = b.price;
+    tempo.value = b.tempo;
+    image.value = b.image;
+    preview.value = b.previewFile;
+    wav.value = b.wavFile;
+  });
+
+  status.innerText="Selected ✔";
 }
 
 /* LOAD BEATS */
 function loadBeats(){
-  db.collection("beats")
-  .onSnapshot(snap=>{
+  db.collection("beats").onSnapshot(snap=>{
     beatList.innerHTML="";
+
     snap.forEach(doc=>{
       let b = doc.data();
 
       beatList.innerHTML += `
-        <div class="beatRow">
+        <div class="beatRow" onclick="selectBeat('${doc.id}')">
           <b>${b.title}</b><br>
           By ${b.producer || "Unknown"}<br>
           $${b.price} • ${b.tempo} BPM
@@ -214,6 +268,7 @@ function loadPurchases(){
   .orderBy("createdAt","desc")
   .onSnapshot(snap=>{
     purchaseList.innerHTML="";
+
     snap.forEach(doc=>{
       let p = doc.data();
 
