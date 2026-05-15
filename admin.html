@@ -1,76 +1,110 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="UTF-8">
 <title>Junior Beats Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{font-family:Arial;background:#111;color:white;text-align:center;}
-input,button{padding:10px;margin:5px;width:300px;border:none;border-radius:6px;}
-button{background:#00c853;color:white;cursor:pointer;}
-.section{margin-top:20px;border-top:1px solid #333;padding-top:15px;}
-.beatRow{border:1px solid #333;margin:10px;padding:10px;}
-#panel{display:none;}
+body{
+  font-family:Arial;
+  background:#0f0f12;
+  color:white;
+  margin:0;
+}
+
+h1{
+  text-align:center;
+  padding:20px;
+}
+
+.container{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  padding:20px;
+}
+
+.box{
+  background:#1a1a20;
+  padding:20px;
+  border-radius:12px;
+  border:1px solid #2b2b35;
+}
+
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:none;
+}
+
+button{
+  background:#6d3cff;
+  color:white;
+  cursor:pointer;
+}
+
+.beatRow{
+  background:#111;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+.small{
+  font-size:12px;
+  color:#aaa;
+}
 </style>
+
 </head>
 
 <body>
 
-<h1>🎛 Junior Beats Admin</h1>
+<h1>🎛 Junior Beats Admin Dashboard</h1>
 
-<div id="loginBox">
-<input id="email" placeholder="Email"><br>
-<input id="password" type="password" placeholder="Password"><br>
-<button onclick="login()">LOGIN</button>
-</div>
-
-<div id="panel">
+<div class="container">
 
 <!-- SETTINGS -->
-<div class="section">
-<h2>🏪 Settings</h2>
-<input id="storeName" placeholder="Store Name"><br>
-<input id="background" placeholder="Background URL"><br>
-<input id="font" placeholder="Font"><br>
-<button onclick="saveSettings()">SAVE</button>
+<div class="box">
+<h2>⚙️ Site Settings</h2>
+
+<input id="slogan" placeholder="Slogan (By Jayan Reid)">
+<input id="storeName" placeholder="Store Name">
+<input id="bg" placeholder="Background URL">
+
+<button onclick="saveSettings()">Save Settings</button>
 </div>
 
-<!-- UPLOAD -->
-<div class="section">
+<!-- UPLOAD BEATS -->
+<div class="box">
 <h2>🎧 Upload Beat</h2>
 
-<input id="title" placeholder="Title"><br>
-<input id="image" placeholder="Image URL"><br>
-<input id="bgColor" type="color"><br>
+<input id="title" placeholder="Title">
+<input id="producer" placeholder="Producer Name">
+<input id="price" placeholder="Price">
+<input id="tempo" placeholder="BPM">
 
-<input id="preview" placeholder="Preview MP3"><br>
-<input id="wav" placeholder="WAV File"><br>
+<input id="image" placeholder="Image URL">
+<input id="preview" placeholder="MP3 URL">
+<input id="wav" placeholder="WAV URL">
 
-<!-- ✅ NEW BPM FIELD -->
-<input id="bpm" placeholder="BPM (e.g. 140)"><br>
-
-<input id="buyLink" placeholder="PayPal Link"><br>
-<input id="price" placeholder="Price"><br>
-
-<button onclick="addBeat()">UPLOAD</button>
-<button onclick="updateBeat()">UPDATE</button>
-<button onclick="deleteBeat()">DELETE</button>
-
-<p id="status"></p>
+<button onclick="addBeat()">Upload Beat</button>
 </div>
 
-<!-- LIST -->
-<div class="section">
-<h2>📀 Beats</h2>
+<!-- BEATS LIST -->
+<div class="box">
+<h2>📀 Manage Beats</h2>
 <div id="beatList"></div>
 </div>
 
 <!-- PURCHASES -->
-<div class="section">
+<div class="box">
 <h2>💰 Purchases</h2>
 <div id="purchaseList"></div>
 </div>
@@ -84,144 +118,73 @@ authDomain:"junior-beats-store.firebaseapp.com",
 projectId:"junior-beats-store"
 });
 
-const auth = firebase.auth();
 const db = firebase.firestore();
 
-let selectedId = null;
-
-/* LOGIN */
-function login(){
-auth.signInWithEmailAndPassword(email.value,password.value)
-.then(()=>{
-loginBox.style.display="none";
-panel.style.display="block";
-loadBeats();
-loadPurchases();
-});
-}
-
-/* SETTINGS */
+/* =========================
+   SAVE SETTINGS
+========================= */
 function saveSettings(){
-db.collection("settings").doc("site").set({
-storeName:storeName.value,
-background:background.value,
-font:font.value
-});
+  db.collection("settings").doc("site").set({
+    slogan: slogan.value,
+    storeName: storeName.value,
+    bg: bg.value
+  });
 }
 
-/* CLEAN PRICE */
-function clean(n){
-return isNaN(parseFloat(n)) ? 0 : parseFloat(n);
-}
-
-/* ADD BEAT */
+/* =========================
+   ADD BEAT
+========================= */
 function addBeat(){
-db.collection("beats").add({
-title:title.value,
-image:image.value,
-bgColor:bgColor.value,
-previewFile:preview.value,
-wavFile:wav.value,
-buyLink:buyLink.value,
-price:clean(price.value),
-
-// ✅ NEW BPM
-tempo: clean(bpm.value),
-
-createdAt:Date.now()
-});
-
-status.innerText="Uploaded ✔";
-loadBeats();
+  db.collection("beats").add({
+    title:title.value,
+    producer:producer.value,
+    price:parseFloat(price.value),
+    tempo:tempo.value,
+    image:image.value,
+    previewFile:preview.value,
+    wavFile:wav.value,
+    createdAt:Date.now()
+  });
 }
 
-/* UPDATE */
-function updateBeat(){
-if(!selectedId) return alert("Select beat");
+/* =========================
+   LOAD BEATS
+========================= */
+db.collection("beats")
+.onSnapshot(snap=>{
+  beatList.innerHTML="";
+  snap.forEach(doc=>{
+    let b = doc.data();
 
-db.collection("beats").doc(selectedId).update({
-title:title.value,
-image:image.value,
-bgColor:bgColor.value,
-previewFile:preview.value,
-wavFile:wav.value,
-buyLink:buyLink.value,
-price:clean(price.value),
-
-// ✅ NEW BPM
-tempo: clean(bpm.value)
+    beatList.innerHTML += `
+      <div class="beatRow">
+        <b>${b.title}</b><br>
+        <span class="small">By ${b.producer || "Unknown"}</span><br>
+        $${b.price} • ${b.tempo} BPM
+      </div>
+    `;
+  });
 });
 
-status.innerText="Updated ✔";
-loadBeats();
-}
-
-/* DELETE */
-function deleteBeat(){
-if(!selectedId) return;
-
-db.collection("beats").doc(selectedId).delete();
-selectedId=null;
-loadBeats();
-}
-
-/* LOAD BEATS */
-function loadBeats(){
-beatList.innerHTML="";
-
-db.collection("beats").get().then(snap=>{
-snap.forEach(doc=>{
-let b = doc.data();
-
-beatList.innerHTML += `
-<div class="beatRow">
-<b>${b.title}</b> - $${b.price} - ${b.tempo || "N/A"} BPM
-<br>
-<button onclick="selectBeat('${doc.id}')">SELECT</button>
-</div>`;
-});
-});
-}
-
-/* SELECT */
-function selectBeat(id){
-selectedId=id;
-
-db.collection("beats").doc(id).get().then(doc=>{
-let b = doc.data();
-
-title.value=b.title;
-image.value=b.image;
-bgColor.value=b.bgColor;
-preview.value=b.previewFile;
-wav.value=b.wavFile;
-buyLink.value=b.buyLink;
-price.value=b.price;
-
-// ✅ BPM LOAD
-bpm.value=b.tempo || "";
-});
-}
-
-/* LOAD PURCHASES */
-function loadPurchases(){
+/* =========================
+   LOAD PURCHASES
+========================= */
 db.collection("purchases")
 .orderBy("createdAt","desc")
 .onSnapshot(snap=>{
-purchaseList.innerHTML="";
+  purchaseList.innerHTML="";
+  snap.forEach(doc=>{
+    let p = doc.data();
 
-snap.forEach(doc=>{
-let p = doc.data();
-
-purchaseList.innerHTML += `
-<div class="beatRow">
-<b>${p.beatTitle}</b><br>
-${p.email}<br>
-$${p.amount} - ${p.status}
-</div>`;
+    purchaseList.innerHTML += `
+      <div class="beatRow">
+        <b>${p.beatTitle}</b><br>
+        ${p.email}<br>
+        $${p.amount} • ${p.status}
+      </div>
+    `;
+  });
 });
-});
-}
 </script>
 
 </body>
