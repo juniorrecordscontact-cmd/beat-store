@@ -5,12 +5,14 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
-const store = document.getElementById("store");
 
-/* =========================
-   GLOBAL PLAYER
-========================= */
+const store = document.getElementById("store");
+const cartItems = document.getElementById("cartItems");
+const cartTotal = document.getElementById("cartTotal");
+
 let currentAudio = null;
+
+let cart = [];
 
 /* =========================
    LOAD BEATS
@@ -45,12 +47,12 @@ function loadBeats(){
 
         <p>💰 $${b.price}</p>
 
-        <button onclick="openCheckout(
-          '${b.title}',
+        <button onclick='addToCart(
+          "${b.title}",
           ${b.price},
-          '${b.wavFile}'
-        )">
-          Buy Now
+          "${b.wavFile}"
+        )'>
+          Add To Cart
         </button>
 
       `;
@@ -64,53 +66,118 @@ function loadBeats(){
 }
 
 /* =========================
-   FLOATING PLAYER
+   PLAYER
 ========================= */
-function setPlayer(title, audio){
+function setPlayer(title,audio){
 
   document.getElementById("nowPlaying")
-  .innerText = "Now Playing: " + title;
+  .innerText="Now Playing: " + title;
 
   if(currentAudio && currentAudio !== audio){
     currentAudio.pause();
   }
 
-  currentAudio = audio;
+  currentAudio=audio;
+}
+
+/* =========================
+   ADD TO CART
+========================= */
+function addToCart(title,price,wavFile){
+
+  cart.push({
+    title,
+    price,
+    wavFile
+  });
+
+  renderCart();
+}
+
+/* =========================
+   RENDER CART
+========================= */
+function renderCart(){
+
+  cartItems.innerHTML="";
+
+  let total=0;
+
+  cart.forEach((item,index)=>{
+
+    total += item.price;
+
+    cartItems.innerHTML += `
+
+      <div class="cartItem">
+
+        <div>
+          ${item.title} - $${item.price}
+        </div>
+
+        <button class="removeBtn"
+          onclick="removeItem(${index})">
+          Remove
+        </button>
+
+      </div>
+
+    `;
+  });
+
+  cartTotal.innerText =
+    "Total: $" + total;
+}
+
+/* =========================
+   REMOVE ITEM
+========================= */
+function removeItem(index){
+
+  cart.splice(index,1);
+
+  renderCart();
 }
 
 /* =========================
    CHECKOUT
 ========================= */
-function openCheckout(title, price, wavFile){
+function checkoutCart(){
 
-  const email = prompt("Enter your email:");
+  if(cart.length === 0){
+    alert("Cart is empty.");
+    return;
+  }
+
+  const email =
+    prompt("Enter your email:");
 
   if(!email) return;
 
-  db.collection("purchases").add({
-    beatTitle:title,
-    email:email,
-    amount:price,
-    file:wavFile,
-    status:"pending",
-    createdAt:Date.now()
+  let total=0;
+
+  cart.forEach(item=>{
+
+    total += item.price;
+
+    db.collection("purchases").add({
+      beatTitle:item.title,
+      email:email,
+      amount:item.price,
+      file:item.wavFile,
+      status:"pending",
+      createdAt:Date.now()
+    });
+
   });
 
   const payLink =
-    "https://www.paypal.com/paypalme/jayanreid07/" + price;
+    "https://www.paypal.com/paypalme/jayanreid07/" + total;
 
-  const successURL =
-    window.location.origin +
-    "/success.html?email=" +
-    encodeURIComponent(email) +
-    "&file=" +
-    encodeURIComponent(wavFile);
-
-  window.location.href =
-    payLink + "?return=" + encodeURIComponent(successURL);
+  window.location.href = payLink;
 }
 
 /* =========================
    INIT
 ========================= */
-window.onload = loadBeats;
+window.onload=loadBeats;
