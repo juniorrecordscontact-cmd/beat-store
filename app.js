@@ -12,23 +12,20 @@ const beats = [
 function renderBeats() {
   const store = document.getElementById("store");
 
-  if (!store) {
-    console.error("NO STORE FOUND");
-    return;
-  }
+  if (!store) return;
 
   store.innerHTML = "";
 
-  beats.forEach(b => {
+  beats.forEach(beat => {
     const card = document.createElement("div");
     card.className = "beat-card";
 
     card.innerHTML = `
-      <img src="${b.image}" />
-      <h3>${b.title}</h3>
-      <audio controls src="${b.previewFile}"></audio>
-      <p>$${b.price}</p>
-      <a href="${b.buyLink}" target="_blank">
+      <img src="${beat.image}">
+      <h3>${beat.title}</h3>
+      <audio controls src="${beat.previewFile}"></audio>
+      <p>$${beat.price}</p>
+      <a href="${beat.buyLink}" target="_blank">
         <button>Buy Now</button>
       </a>
     `;
