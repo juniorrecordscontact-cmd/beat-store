@@ -16,34 +16,40 @@
       transition: all 0.3s ease;
     }
 
+    /* HEADER LAYOUT FIX */
     header{
       display:flex;
       align-items:center;
-      gap:15px;
+      gap:12px;
       padding:15px;
     }
 
-    /* 🔥 FINAL LOGO FIX (IMPOSSIBLE TO MISS) */
+    /* LOGO */
     #logo{
-      width:110px;
-      height:110px;
+      width:80px;
+      height:80px;
       object-fit:cover;
-      border-radius:14px;
+      border-radius:12px;
       display:block;
       background:#222;
-      border:3px solid #555;
-      box-shadow:0 0 10px rgba(0,0,0,0.6);
+    }
+
+    /* TITLE BLOCK */
+    .titleBlock{
+      display:flex;
+      flex-direction:column;
+    }
+
+    #storeTitle{
+      margin:0;
+      font-size:22px;
+      font-weight:600;
     }
 
     #slogan{
       margin:0;
       opacity:0.7;
       font-size:14px;
-    }
-
-    #storeName{
-      margin:0;
-      font-weight:bold;
     }
   </style>
 </head>
@@ -56,14 +62,10 @@
     <!-- LOGO -->
     <img id="logo" src="" alt="logo">
 
-    <div>
-      <h1>🎧 Junior Beats</h1>
-
-      <!-- DYNAMIC SLOGAN -->
+    <!-- TITLE + SLOGAN -->
+    <div class="titleBlock">
+      <h1 id="storeTitle">Junior Beats</h1>
       <p id="slogan">By Jayan Reid</p>
-
-      <!-- STORE NAME -->
-      <p id="storeName"></p>
     </div>
 
   </header>
@@ -86,7 +88,7 @@
 
   <script src="app.js"></script>
 
-  <!-- 🔥 SETTINGS PATCH (SAFE, DOES NOT TOUCH YOUR LOGIC) -->
+  <!-- FIREBASE SETTINGS PATCH -->
   <script>
     firebase.firestore()
     .collection("settings")
@@ -115,10 +117,10 @@
         logo.src = s.logo;
       }
 
-      // store name
-      const storeName = document.getElementById("storeName");
-      if(storeName && s.storeName){
-        storeName.innerText = s.storeName;
+      // store title
+      const title = document.getElementById("storeTitle");
+      if(title && s.storeName){
+        title.innerText = s.storeName;
       }
 
       // slogan
