@@ -16,7 +16,6 @@
       transition: all 0.3s ease;
     }
 
-    /* HEADER LAYOUT FIX */
     header{
       display:flex;
       align-items:center;
@@ -24,17 +23,14 @@
       padding:15px;
     }
 
-    /* LOGO */
     #logo{
       width:80px;
       height:80px;
       object-fit:cover;
       border-radius:12px;
-      display:block;
       background:#222;
     }
 
-    /* TITLE BLOCK */
     .titleBlock{
       display:flex;
       flex-direction:column;
@@ -43,13 +39,33 @@
     #storeTitle{
       margin:0;
       font-size:22px;
-      font-weight:600;
     }
 
     #slogan{
       margin:0;
       opacity:0.7;
       font-size:14px;
+    }
+
+    /* GENRE BAR */
+    #genreBar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:10px 15px;
+    }
+
+    #genreBar button{
+      background:#2a2a2a;
+      color:white;
+      border:none;
+      padding:6px 10px;
+      border-radius:6px;
+      cursor:pointer;
+    }
+
+    #genreBar button.active{
+      background:#555;
     }
   </style>
 </head>
@@ -59,16 +75,17 @@
   <!-- HEADER -->
   <header>
 
-    <!-- LOGO -->
     <img id="logo" src="" alt="logo">
 
-    <!-- TITLE + SLOGAN -->
     <div class="titleBlock">
       <h1 id="storeTitle">Junior Beats</h1>
       <p id="slogan">By Jayan Reid</p>
     </div>
 
   </header>
+
+  <!-- GENRE FILTER BAR -->
+  <div id="genreBar"></div>
 
   <!-- CART -->
   <div id="cartBox">
@@ -88,48 +105,100 @@
 
   <script src="app.js"></script>
 
-  <!-- FIREBASE SETTINGS PATCH -->
+  <!-- FIREBASE + GENRE SYSTEM -->
   <script>
-    firebase.firestore()
-    .collection("settings")
-    .doc("site")
-    .get()
-    .then(doc => {
+    const db = firebase.firestore();
 
+    let allBeats = [];
+
+    // LOAD SETTINGS
+    db.collection("settings").doc("site").get().then(doc => {
       const s = doc.data();
       if(!s) return;
 
-      // background
-      if(s.bg){
-        document.body.style.backgroundImage = `url(${s.bg})`;
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundPosition = "center";
-      }
-
-      // font
-      if(s.font){
-        document.body.style.fontFamily = s.font;
-      }
-
-      // logo
-      const logo = document.getElementById("logo");
-      if(logo && s.logo){
-        logo.src = s.logo;
-      }
-
-      // store title
-      const title = document.getElementById("storeTitle");
-      if(title && s.storeName){
-        title.innerText = s.storeName;
-      }
-
-      // slogan
-      const slogan = document.getElementById("slogan");
-      if(slogan && s.slogan){
-        slogan.innerText = s.slogan;
-      }
-
+      if(s.logo) document.getElementById("logo").src = s.logo;
+      if(s.storeName) document.getElementById("storeTitle").innerText = s.storeName;
+      if(s.slogan) document.getElementById("slogan").innerText = s.slogan;
     });
+
+    // LOAD BEATS
+    db.collection("beats").onSnapshot(snapshot => {
+      allBeats = [];
+
+      snapshot.forEach(doc => {
+        allBeats.push({ id: doc.id, ...doc.data() });
+      });
+
+      renderBeats(allBeats);
+      buildGenreBar(allBeats);
+    });
+
+    // RENDER BEATS
+    function renderBeats(beats){
+      const store = document.getElementById("store");
+      store.innerHTML = "";
+
+      beats.forEach(b => {
+        store.innerHTML += `
+          <div class="beat" data-genres="${(b.genres||[]).join(',')}">
+
+            <h3>${b.title}</h3>
+
+            <div>
+              ${(b.genres||[]).map(g => `<span class="genre">${g}</span>`).join(" ")}
+            </div>
+
+            <p>$${b.price}</p>
+
+            <button onclick="addToCart('${b.id}')">Add to Cart</button>
+
+          </div>
+        `;
+      });
+    }
+
+    // BUILD GENRE BUTTONS (AUTO FROM DATA)
+    function buildGenreBar(beats){
+      const genreSet = new Set();
+
+      beats.forEach(b => {
+        (b.genres || []).forEach(g => genreSet.add(g));
+      });
+
+      const bar = document.getElementById("genreBar");
+
+      bar.innerHTML = `
+        <button onclick="filterGenre('ALL')" class="active">All Beats</button>
+        ${[...genreSet].map(g => `
+          <button onclick="filterGenre('${g}')">${g}</button>
+        `).join("")}
+      `;
+    }
+
+    // FILTER SYSTEM
+    function filterGenre(genre){
+
+      document.querySelectorAll("#genreBar button").forEach(b=>{
+        b.classList.remove("active");
+      });
+
+      event.target.classList.add("active");
+
+      const cards = document.querySelectorAll(".beat");
+
+      cards.forEach(card => {
+
+        const genres = card.getAttribute("data-genres") || "";
+
+        if(genre === "ALL"){
+          card.style.display = "block";
+        } else {
+          card.style.display = genres.includes(genre) ? "block" : "none";
+        }
+
+      });
+    }
+
   </script>
 
 </body>
