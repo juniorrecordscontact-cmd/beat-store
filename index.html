@@ -9,16 +9,53 @@
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body{
+      margin:0;
+      transition: all 0.3s ease;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:15px;
+    }
+
+    #logo{
+      width:45px;
+      height:45px;
+      border-radius:8px;
+      object-fit:cover;
+    }
+
+    #slogan{
+      margin:0;
+      opacity:0.7;
+      font-size:14px;
+    }
+  </style>
 </head>
 
 <body>
 
   <!-- HEADER -->
   <header>
-    <h1>🎧 Junior Beats</h1>
 
-    <!-- 🔥 DYNAMIC SLOGAN -->
-    <p id="slogan">By Jayan Reid</p>
+    <!-- 🔥 LOGO (ADDED SAFE) -->
+    <img id="logo" src="" alt="logo">
+
+    <div>
+      <h1>🎧 Junior Beats</h1>
+
+      <!-- 🔥 DYNAMIC SLOGAN -->
+      <p id="slogan">By Jayan Reid</p>
+
+      <!-- 🔥 STORE NAME (NEW BUT SAFE) -->
+      <p id="storeName"></p>
+    </div>
+
   </header>
 
   <!-- CART -->
@@ -39,7 +76,46 @@
 
   <script src="app.js"></script>
 
+  <!-- 🔥 SETTINGS PATCH (DOES NOT TOUCH YOUR SYSTEM) -->
+  <script>
+    firebase.firestore()
+    .collection("settings")
+    .doc("site")
+    .get()
+    .then(doc => {
+      const s = doc.data();
+      if(!s) return;
+
+      // background
+      if(s.bg){
+        document.body.style.backgroundImage = `url(${s.bg})`;
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundPosition = "center";
+      }
+
+      // font
+      if(s.font){
+        document.body.style.fontFamily = s.font;
+      }
+
+      // logo
+      if(s.logo){
+        const logo = document.getElementById("logo");
+        if(logo) logo.src = s.logo;
+      }
+
+      // store name
+      if(s.storeName){
+        const storeName = document.getElementById("storeName");
+        if(storeName) storeName.innerText = s.storeName;
+      }
+
+      // slogan
+      if(s.slogan){
+        document.getElementById("slogan").innerText = s.slogan;
+      }
+    });
+  </script>
+
 </body>
 </html>
-
-});
