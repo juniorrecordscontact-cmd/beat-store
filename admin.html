@@ -6,6 +6,7 @@
 <title>Junior Beats Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
@@ -21,26 +22,12 @@ h1{
   padding:20px;
 }
 
-.container{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  padding:20px;
-}
-
-.box{
-  background:#1a1a20;
-  padding:20px;
-  border-radius:12px;
-  border:1px solid #2b2b35;
-}
-
 input,button{
-  width:100%;
+  width:300px;
   padding:10px;
-  margin-top:8px;
-  border-radius:8px;
+  margin:6px;
   border:none;
+  border-radius:6px;
 }
 
 button{
@@ -49,16 +36,23 @@ button{
   cursor:pointer;
 }
 
-.beatRow{
-  background:#111;
-  padding:10px;
-  margin-top:10px;
-  border-radius:8px;
+#panel{
+  display:none;
+  padding:20px;
+  text-align:center;
 }
 
-.small{
-  font-size:12px;
-  color:#aaa;
+.section{
+  margin-top:20px;
+  border-top:1px solid #333;
+  padding-top:20px;
+}
+
+.beatRow{
+  background:#1a1a20;
+  padding:10px;
+  margin:10px;
+  border-radius:8px;
 }
 </style>
 
@@ -66,45 +60,40 @@ button{
 
 <body>
 
-<h1>🎛 Junior Beats Admin Dashboard</h1>
+<h1>🎛 Junior Beats Admin</h1>
 
-<div class="container">
-
-<!-- SETTINGS -->
-<div class="box">
-<h2>⚙️ Site Settings</h2>
-
-<input id="slogan" placeholder="Slogan (By Jayan Reid)">
-<input id="storeName" placeholder="Store Name">
-<input id="bg" placeholder="Background URL">
-
-<button onclick="saveSettings()">Save Settings</button>
+<div id="loginBox">
+  <input id="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
 </div>
 
-<!-- UPLOAD BEATS -->
-<div class="box">
+<div id="panel">
+
+<!-- UPLOAD -->
+<div class="section">
 <h2>🎧 Upload Beat</h2>
 
-<input id="title" placeholder="Title">
-<input id="producer" placeholder="Producer Name">
-<input id="price" placeholder="Price">
-<input id="tempo" placeholder="BPM">
+<input id="title" placeholder="Title"><br>
+<input id="producer" placeholder="Producer"><br>
+<input id="price" placeholder="Price"><br>
+<input id="tempo" placeholder="BPM"><br>
 
-<input id="image" placeholder="Image URL">
-<input id="preview" placeholder="MP3 URL">
-<input id="wav" placeholder="WAV URL">
+<input id="image" placeholder="Image URL"><br>
+<input id="preview" placeholder="MP3 URL"><br>
+<input id="wav" placeholder="WAV URL"><br>
 
-<button onclick="addBeat()">Upload Beat</button>
+<button onclick="addBeat()">Upload</button>
 </div>
 
-<!-- BEATS LIST -->
-<div class="box">
-<h2>📀 Manage Beats</h2>
+<!-- BEATS -->
+<div class="section">
+<h2>📀 Beats</h2>
 <div id="beatList"></div>
 </div>
 
 <!-- PURCHASES -->
-<div class="box">
+<div class="section">
 <h2>💰 Purchases</h2>
 <div id="purchaseList"></div>
 </div>
@@ -118,18 +107,49 @@ authDomain:"junior-beats-store.firebaseapp.com",
 projectId:"junior-beats-store"
 });
 
+const auth = firebase.auth();
 const db = firebase.firestore();
 
+const ADMIN_EMAIL = "yourgmail@gmail.com";
+const ADMIN_CODE = "JAYAN-ADMIN-2026";
+
 /* =========================
-   SAVE SETTINGS
+   LOGIN
 ========================= */
-function saveSettings(){
-  db.collection("settings").doc("site").set({
-    slogan: slogan.value,
-    storeName: storeName.value,
-    bg: bg.value
+function login(){
+  auth.signInWithEmailAndPassword(email.value,password.value)
+  .catch(err=>{
+    alert(err.message);
   });
 }
+
+/* =========================
+   ADMIN GATE (FULL SECURITY)
+========================= */
+auth.onAuthStateChanged(user=>{
+  if(user){
+
+    if(user.email !== ADMIN_EMAIL){
+      alert("Access denied");
+      auth.signOut();
+      return;
+    }
+
+    const code = prompt("Enter Admin Code:");
+
+    if(code !== ADMIN_CODE){
+      alert("Wrong code");
+      auth.signOut();
+      return;
+    }
+
+    loginBox.style.display="none";
+    panel.style.display="block";
+
+    loadBeats();
+    loadPurchases();
+  }
+});
 
 /* =========================
    ADD BEAT
@@ -145,46 +165,54 @@ function addBeat(){
     wavFile:wav.value,
     createdAt:Date.now()
   });
+
+  alert("Uploaded ✔");
 }
 
 /* =========================
    LOAD BEATS
 ========================= */
-db.collection("beats")
-.onSnapshot(snap=>{
-  beatList.innerHTML="";
-  snap.forEach(doc=>{
-    let b = doc.data();
+function loadBeats(){
+  db.collection("beats")
+  .onSnapshot(snap=>{
+    beatList.innerHTML="";
 
-    beatList.innerHTML += `
-      <div class="beatRow">
-        <b>${b.title}</b><br>
-        <span class="small">By ${b.producer || "Unknown"}</span><br>
-        $${b.price} • ${b.tempo} BPM
-      </div>
-    `;
+    snap.forEach(doc=>{
+      let b = doc.data();
+
+      beatList.innerHTML += `
+        <div class="beatRow">
+          <b>${b.title}</b><br>
+          By ${b.producer || "Unknown"}<br>
+          $${b.price} • ${b.tempo} BPM
+        </div>
+      `;
+    });
   });
-});
+}
 
 /* =========================
    LOAD PURCHASES
 ========================= */
-db.collection("purchases")
-.orderBy("createdAt","desc")
-.onSnapshot(snap=>{
-  purchaseList.innerHTML="";
-  snap.forEach(doc=>{
-    let p = doc.data();
+function loadPurchases(){
+  db.collection("purchases")
+  .orderBy("createdAt","desc")
+  .onSnapshot(snap=>{
+    purchaseList.innerHTML="";
 
-    purchaseList.innerHTML += `
-      <div class="beatRow">
-        <b>${p.beatTitle}</b><br>
-        ${p.email}<br>
-        $${p.amount} • ${p.status}
-      </div>
-    `;
+    snap.forEach(doc=>{
+      let p = doc.data();
+
+      purchaseList.innerHTML += `
+        <div class="beatRow">
+          <b>${p.beatTitle}</b><br>
+          ${p.email}<br>
+          $${p.amount} • ${p.status}
+        </div>
+      `;
+    });
   });
-});
+}
 </script>
 
 </body>
