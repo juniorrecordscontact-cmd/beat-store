@@ -1,40 +1,15 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0a0a0a;
-  color: white;
-}
-
-header {
-  text-align: center;
-  padding: 30px;
-}
-
-header h1 {
-  font-size: 40px;
-  margin: 0;
-}
-
 #store {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
   padding: 30px;
-  max-width: 1100px;
-  margin: auto;
 }
 
 .beat-card {
   background: #151515;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #2a2a2a;
   text-align: center;
-  transition: 0.2s;
-}
-
-.beat-card:hover {
-  transform: translateY(-5px);
 }
 
 .beat-card img {
@@ -46,20 +21,4 @@ header h1 {
 audio {
   width: 90%;
   margin: 10px 0;
-}
-
-button {
-  width: 90%;
-  margin: 10px;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  background: white;
-  color: black;
-  font-weight: bold;
-}
-
-button:hover {
-  background: #ffcc00;
 }
