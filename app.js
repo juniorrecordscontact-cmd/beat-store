@@ -6,31 +6,25 @@ const beats = [
     wavFile: "https://www.dropbox.com/scl/fi/a0njsx2e82ybvs3dik7zz/115-BPM-Summer-Guitar.wav?raw=1",
     image: "https://www.dropbox.com/scl/fi/ksun4elxr76vvoqlmltst/guitar.jpg?raw=1",
     buyLink: "https://www.paypal.com/paypalme/jayanreid07/25"
-  },
-  {
-    title: "Second Beat Test",
-    price: 30,
-    previewFile: "https://www.dropbox.com/scl/fi/3n3sfuytmc7flqn5wxal6/115-BPM-Summer-Guitar.mp3?raw=1",
-    wavFile: "https://www.dropbox.com/scl/fi/a0njsx2e82ybvs3dik7zz/115-BPM-Summer-Guitar.wav?raw=1",
-    image: "https://www.dropbox.com/scl/fi/ksun4elxr76vvoqlmltst/guitar.jpg?raw=1",
-    buyLink: "https://www.paypal.com/paypalme/jayanreid07/30"
   }
 ];
 
 function renderBeats() {
   const store = document.getElementById("store");
 
-  if (!store) return;
+  if (!store) {
+    console.error("NO STORE FOUND");
+    return;
+  }
 
   store.innerHTML = "";
 
   beats.forEach(b => {
     const card = document.createElement("div");
-
     card.className = "beat-card";
 
     card.innerHTML = `
-      <img src="${b.image}">
+      <img src="${b.image}" />
       <h3>${b.title}</h3>
       <audio controls src="${b.previewFile}"></audio>
       <p>$${b.price}</p>
