@@ -25,6 +25,10 @@
       padding:10px 15px;
       cursor:pointer;
     }
+
+    .section{
+      margin-bottom:30px;
+    }
   </style>
 </head>
 
@@ -32,100 +36,138 @@
 
   <h1>Admin Panel</h1>
 
-  <input id="title" placeholder="Beat Title">
-  <input id="image" placeholder="Image URL">
-  <input id="price" placeholder="Price">
-  <input id="buyLink" placeholder="Buy Link">
+  <!-- ========================= -->
+  <!-- 🔴 YOUR EXISTING CODE HERE -->
+  <!-- DO NOT REMOVE ANYTHING -->
+  <!-- ========================= -->
 
-  <!-- GENRES (MAX 3) -->
-  <h3>Genres (Max 3)</h3>
+  <div class="section">
 
-  <select id="genre1">
-    <option value="">Genre 1</option>
-    <option>Pop</option>
-    <option>Acoustic</option>
-    <option>Trap</option>
-    <option>Hip-Hop</option>
-    <option>RnB</option>
-    <option>Drill</option>
-    <option>Lofi</option>
-    <option>Afrobeats</option>
-    <option>Electro</option>
-    <option>Dance</option>
-    <option>Jazz</option>
-    <option>Soul</option>
-    <option>Pop-Rock</option>
-    <option>Dark Trap</option>
-    <option>Chill</option>
-  </select>
+    <!-- KEEP ALL YOUR CURRENT INPUTS -->
+    <!-- Example placeholders ONLY -->
 
-  <select id="genre2">
-    <option value="">Genre 2 (optional)</option>
-    <option>Pop</option>
-    <option>Acoustic</option>
-    <option>Trap</option>
-    <option>Hip-Hop</option>
-    <option>RnB</option>
-    <option>Drill</option>
-    <option>Lofi</option>
-    <option>Afrobeats</option>
-    <option>Electro</option>
-    <option>Dance</option>
-    <option>Jazz</option>
-    <option>Soul</option>
-    <option>Pop-Rock</option>
-    <option>Dark Trap</option>
-    <option>Chill</option>
-  </select>
+    <input id="title" placeholder="Beat Title">
+    <input id="image" placeholder="Image URL">
+    <input id="price" placeholder="Price">
+    <input id="buyLink" placeholder="Buy Link">
 
-  <select id="genre3">
-    <option value="">Genre 3 (optional)</option>
-    <option>Pop</option>
-    <option>Acoustic</option>
-    <option>Trap</option>
-    <option>Hip-Hop</option>
-    <option>RnB</option>
-    <option>Drill</option>
-    <option>Lofi</option>
-    <option>Afrobeats</option>
-    <option>Electro</option>
-    <option>Dance</option>
-    <option>Jazz</option>
-    <option>Soul</option>
-    <option>Pop-Rock</option>
-    <option>Dark Trap</option>
-    <option>Chill</option>
-  </select>
+    <!-- KEEP YOUR EXISTING AUDIO / UPLOAD / SETTINGS OPTIONS HERE -->
+    <!-- DO NOT CHANGE THEM -->
+    
+  </div>
 
-  <br>
+  <!-- ========================= -->
+  <!-- 🟢 NEW: GENRE SYSTEM -->
+  <!-- ========================= -->
+
+  <div class="section">
+
+    <h3>Genres (Max 3 per beat)</h3>
+
+    <select id="genre1">
+      <option value="">Genre 1</option>
+      <option>Pop</option>
+      <option>Acoustic</option>
+      <option>Trap</option>
+      <option>Hip-Hop</option>
+      <option>RnB</option>
+      <option>Drill</option>
+      <option>Lofi</option>
+      <option>Afrobeats</option>
+      <option>Electro</option>
+      <option>Dance</option>
+      <option>Jazz</option>
+      <option>Soul</option>
+      <option>Pop-Rock</option>
+      <option>Dark Trap</option>
+      <option>Chill</option>
+    </select>
+
+    <select id="genre2">
+      <option value="">Genre 2 (optional)</option>
+      <option>Pop</option>
+      <option>Acoustic</option>
+      <option>Trap</option>
+      <option>Hip-Hop</option>
+      <option>RnB</option>
+      <option>Drill</option>
+      <option>Lofi</option>
+      <option>Afrobeats</option>
+      <option>Electro</option>
+      <option>Dance</option>
+      <option>Jazz</option>
+      <option>Soul</option>
+      <option>Pop-Rock</option>
+      <option>Dark Trap</option>
+      <option>Chill</option>
+    </select>
+
+    <select id="genre3">
+      <option value="">Genre 3 (optional)</option>
+      <option>Pop</option>
+      <option>Acoustic</option>
+      <option>Trap</option>
+      <option>Hip-Hop</option>
+      <option>RnB</option>
+      <option>Drill</option>
+      <option>Lofi</option>
+      <option>Afrobeats</option>
+      <option>Electro</option>
+      <option>Dance</option>
+      <option>Jazz</option>
+      <option>Soul</option>
+      <option>Pop-Rock</option>
+      <option>Dark Trap</option>
+      <option>Chill</option>
+    </select>
+
+  </div>
+
+  <!-- ========================= -->
+  <!-- 🟡 ADD BUTTON (KEEP YOUR OWN IF EXISTS) -->
+  <!-- ========================= -->
 
   <button onclick="addBeat()">Add Beat</button>
 
   <script>
+
     const db = firebase.firestore();
 
     function addBeat(){
 
+      // =========================
+      // 🟢 NEW: GENRE LOGIC ONLY
+      // =========================
       const genres = [
-        genre1.value,
-        genre2.value,
-        genre3.value
+        genre1?.value,
+        genre2?.value,
+        genre3?.value
       ]
       .filter(g => g && g.trim() !== "")
       .slice(0, 3);
 
+      // =========================
+      // 🔴 YOUR EXISTING SAVE LOGIC
+      // KEEP EVERYTHING YOU ALREADY HAD
+      // JUST ADD "genres"
+      // =========================
+
       db.collection("beats").add({
+
+        // KEEP YOUR EXISTING FIELDS BELOW
         title: title.value,
         image: image.value,
         price: price.value,
         buyLink: buyLink.value,
 
+        // 🟢 NEW FIELD (ONLY ADDITION)
         genres: genres,
 
         createdAt: Date.now()
       });
 
-      alert("Beat added with genres!");
+      alert("Beat added successfully");
+
     }
 
   </script>
