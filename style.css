@@ -1,39 +1,83 @@
 body {
-  font-family: Arial;
-  background: #0d0d0d;
-  color: white;
-  text-align: center;
   margin: 0;
-  padding: 0;
+  font-family: Arial, sans-serif;
+  color: white;
+
+  /* background */
+  background: radial-gradient(circle at top, #1a1a1a, #000000);
 }
 
-h1 {
-  margin-top: 20px;
+/* HEADER */
+header {
+  padding: 30px 20px;
 }
 
-p {
-  opacity: 0.8;
+header h1 {
+  margin: 0;
+  font-size: 40px;
 }
 
-.beat {
-  background: #1a1a1a;
-  padding: 20px;
-  margin: 20px auto;
-  width: 320px;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+header p {
+  opacity: 0.7;
 }
 
+/* STORE GRID */
+#store {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 30px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* BEAT CARD */
+#store div {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 15px;
+  padding: 15px;
+  transition: 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+#store div:hover {
+  transform: translateY(-5px);
+  background: rgba(255,255,255,0.08);
+}
+
+/* IMAGE */
+#store img {
+  width: 100%;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+/* AUDIO */
 audio {
   width: 100%;
   margin: 10px 0;
 }
 
+/* PRICE */
+p {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+/* BUTTON */
 button {
-  background: #00ff99;
+  background: #ffffff;
+  color: #000;
   border: none;
-  padding: 10px 15px;
+  padding: 10px;
+  width: 100%;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 6px;
   font-weight: bold;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #ffcc00;
 }
