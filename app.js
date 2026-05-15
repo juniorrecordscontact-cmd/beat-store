@@ -8,68 +8,97 @@ const db = firebase.firestore();
 const store = document.getElementById("store");
 
 /* =========================
+   GLOBAL PLAYER
+========================= */
+let currentAudio = null;
+
+/* =========================
    LOAD BEATS
 ========================= */
-function loadBeats() {
-  db.collection("beats").onSnapshot(snapshot => {
-    store.innerHTML = "";
+function loadBeats(){
 
-    snapshot.forEach(doc => {
+  db.collection("beats")
+  .orderBy("createdAt","desc")
+  .onSnapshot(snapshot=>{
+
+    store.innerHTML="";
+
+    snapshot.forEach(doc=>{
+
       const b = doc.data();
 
       const card = document.createElement("div");
-      card.className = "beat-card";
+      card.className="beat-card";
 
-      card.innerHTML = `
+      card.innerHTML=`
+
         <img src="${b.image}" />
 
         <h3>${b.title}</h3>
 
-        <audio controls>
+        <audio controls
+          onplay="setPlayer('${b.title}', this)">
           <source src="${b.previewFile}" />
         </audio>
 
         <p>🎵 ${b.tempo || "N/A"} BPM</p>
+
         <p>💰 $${b.price}</p>
 
         <button onclick="openCheckout(
           '${b.title}',
           ${b.price},
-          ${b.tempo || 0},
           '${b.wavFile}'
         )">
           Buy Now
         </button>
+
       `;
 
       store.appendChild(card);
+
     });
+
   });
+
 }
 
 /* =========================
-   CHECKOUT (FREE SYSTEM)
+   FLOATING PLAYER
 ========================= */
-function openCheckout(title, price, tempo, wavFile) {
+function setPlayer(title, audio){
+
+  document.getElementById("nowPlaying")
+  .innerText = "Now Playing: " + title;
+
+  if(currentAudio && currentAudio !== audio){
+    currentAudio.pause();
+  }
+
+  currentAudio = audio;
+}
+
+/* =========================
+   CHECKOUT
+========================= */
+function openCheckout(title, price, wavFile){
 
   const email = prompt("Enter your email:");
-  if (!email) return;
 
-  // Save purchase as pending
+  if(!email) return;
+
   db.collection("purchases").add({
-    beatTitle: title,
-    email: email,
-    amount: price,
-    file: wavFile,
-    status: "pending",
-    createdAt: Date.now()
+    beatTitle:title,
+    email:email,
+    amount:price,
+    file:wavFile,
+    status:"pending",
+    createdAt:Date.now()
   });
 
-  // PayPal link (automatic price)
   const payLink =
     "https://www.paypal.com/paypalme/jayanreid07/" + price;
 
-  // Success page redirect (NO backend verification)
   const successURL =
     window.location.origin +
     "/success.html?email=" +
@@ -77,7 +106,6 @@ function openCheckout(title, price, tempo, wavFile) {
     "&file=" +
     encodeURIComponent(wavFile);
 
-  // Redirect to PayPal
   window.location.href =
     payLink + "?return=" + encodeURIComponent(successURL);
 }
