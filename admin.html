@@ -120,10 +120,6 @@ projectId:"junior-beats-store"
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const ADMIN_CODE = "JAYAN-ADMIN-2026";
-
-let authReady = false;
-
 /* =========================
    LOGIN
 ========================= */
@@ -135,31 +131,11 @@ function login(){
 }
 
 /* =========================
-   STABLE AUTH FLOW (NO LOCKOUT)
+   AUTH STATE (CLEAN — NO PROMPTS)
 ========================= */
 auth.onAuthStateChanged(user => {
 
   if (!user) return;
-
-  if (authReady) return;
-  authReady = true;
-
-  console.log("Logged in:", user.email);
-
-  const code = prompt("Enter Admin Code:");
-
-  if (!code) {
-    auth.signOut();
-    authReady = false;
-    return;
-  }
-
-  if (code !== ADMIN_CODE) {
-    alert("Wrong code");
-    auth.signOut();
-    authReady = false;
-    return;
-  }
 
   loginBox.style.display = "none";
   panel.style.display = "block";
