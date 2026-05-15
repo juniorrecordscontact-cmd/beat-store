@@ -13,7 +13,7 @@
   <style>
     body{
       margin:0;
-      transition: all 0.3s ease;
+      font-family:Arial;
     }
 
     header{
@@ -24,11 +24,10 @@
     }
 
     #logo{
-      width:80px;
-      height:80px;
+      width:70px;
+      height:70px;
       object-fit:cover;
-      border-radius:12px;
-      background:#222;
+      border-radius:10px;
     }
 
     .titleBlock{
@@ -47,25 +46,36 @@
       font-size:14px;
     }
 
-    /* GENRE BAR */
-    #genreBar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      padding:10px 15px;
+    /* BEATS */
+    .beat{
+      padding:15px;
+      border-bottom:1px solid #eee;
     }
 
-    #genreBar button{
-      background:#2a2a2a;
-      color:white;
-      border:none;
-      padding:6px 10px;
+    /* 🔥 GENRES FIX */
+    .genreWrap{
+      margin-top:6px;
+    }
+
+    .genre{
+      display:inline-block;
+      background:#222;
+      color:#fff;
+      padding:4px 8px;
+      margin:2px;
       border-radius:6px;
-      cursor:pointer;
+      font-size:12px;
     }
 
-    #genreBar button.active{
-      background:#555;
+    /* CART */
+    #cartBox{
+      position:fixed;
+      right:10px;
+      top:10px;
+      background:#111;
+      color:#fff;
+      padding:10px;
+      width:200px;
     }
   </style>
 </head>
@@ -74,24 +84,19 @@
 
   <!-- HEADER -->
   <header>
-
     <img id="logo" src="" alt="logo">
 
     <div class="titleBlock">
       <h1 id="storeTitle">Junior Beats</h1>
       <p id="slogan">By Jayan Reid</p>
     </div>
-
   </header>
-
-  <!-- GENRE FILTER BAR -->
-  <div id="genreBar"></div>
 
   <!-- CART -->
   <div id="cartBox">
-    <h2>🛒 Cart</h2>
+    <h3>Cart</h3>
     <div id="cartItems"></div>
-    <h3 id="cartTotal">Total: $0</h3>
+    <h4 id="cartTotal">Total: $0</h4>
     <button onclick="checkoutCart()">Checkout</button>
   </div>
 
@@ -105,13 +110,11 @@
 
   <script src="app.js"></script>
 
-  <!-- FIREBASE + GENRE SYSTEM -->
+  <!-- FIREBASE + RENDER -->
   <script>
     const db = firebase.firestore();
 
-    let allBeats = [];
-
-    // LOAD SETTINGS
+    // SETTINGS LOAD
     db.collection("settings").doc("site").get().then(doc => {
       const s = doc.data();
       if(!s) return;
@@ -123,82 +126,35 @@
 
     // LOAD BEATS
     db.collection("beats").onSnapshot(snapshot => {
-      allBeats = [];
-
-      snapshot.forEach(doc => {
-        allBeats.push({ id: doc.id, ...doc.data() });
-      });
-
-      renderBeats(allBeats);
-      buildGenreBar(allBeats);
-    });
-
-    // RENDER BEATS
-    function renderBeats(beats){
       const store = document.getElementById("store");
       store.innerHTML = "";
 
-      beats.forEach(b => {
+      snapshot.forEach(doc => {
+        const b = doc.data();
+
         store.innerHTML += `
-          <div class="beat" data-genres="${(b.genres||[]).join(',')}">
+          <div class="beat">
 
             <h3>${b.title}</h3>
 
-            <div>
-              ${(b.genres||[]).map(g => `<span class="genre">${g}</span>`).join(" ")}
+            <p>By ${b.producer || "Unknown"}</p>
+
+            <p>$${b.price} • ${b.tempo || ""} BPM</p>
+
+            <!-- 🔥 GENRES FIXED DISPLAY -->
+            <div class="genreWrap">
+              ${(b.genres && b.genres.length)
+                ? b.genres.map(g => `<span class="genre">${g}</span>`).join("")
+                : ""
+              }
             </div>
 
-            <p>$${b.price}</p>
-
-            <button onclick="addToCart('${b.id}')">Add to Cart</button>
+            <button onclick="addToCart('${doc.id}')">Add to Cart</button>
 
           </div>
         `;
       });
-    }
-
-    // BUILD GENRE BUTTONS (AUTO FROM DATA)
-    function buildGenreBar(beats){
-      const genreSet = new Set();
-
-      beats.forEach(b => {
-        (b.genres || []).forEach(g => genreSet.add(g));
-      });
-
-      const bar = document.getElementById("genreBar");
-
-      bar.innerHTML = `
-        <button onclick="filterGenre('ALL')" class="active">All Beats</button>
-        ${[...genreSet].map(g => `
-          <button onclick="filterGenre('${g}')">${g}</button>
-        `).join("")}
-      `;
-    }
-
-    // FILTER SYSTEM
-    function filterGenre(genre){
-
-      document.querySelectorAll("#genreBar button").forEach(b=>{
-        b.classList.remove("active");
-      });
-
-      event.target.classList.add("active");
-
-      const cards = document.querySelectorAll(".beat");
-
-      cards.forEach(card => {
-
-        const genres = card.getAttribute("data-genres") || "";
-
-        if(genre === "ALL"){
-          card.style.display = "block";
-        } else {
-          card.style.display = genres.includes(genre) ? "block" : "none";
-        }
-
-      });
-    }
-
+    });
   </script>
 
 </body>
