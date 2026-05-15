@@ -49,6 +49,10 @@ button{background:#00c853;color:white;cursor:pointer;}
 
 <input id="preview" placeholder="Preview MP3"><br>
 <input id="wav" placeholder="WAV File"><br>
+
+<!-- ✅ NEW BPM FIELD -->
+<input id="bpm" placeholder="BPM (e.g. 140)"><br>
+
 <input id="buyLink" placeholder="PayPal Link"><br>
 <input id="price" placeholder="Price"><br>
 
@@ -120,6 +124,10 @@ previewFile:preview.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
 price:clean(price.value),
+
+// ✅ NEW BPM
+tempo: clean(bpm.value),
+
 createdAt:Date.now()
 });
 
@@ -138,7 +146,10 @@ bgColor:bgColor.value,
 previewFile:preview.value,
 wavFile:wav.value,
 buyLink:buyLink.value,
-price:clean(price.value)
+price:clean(price.value),
+
+// ✅ NEW BPM
+tempo: clean(bpm.value)
 });
 
 status.innerText="Updated ✔";
@@ -164,7 +175,7 @@ let b = doc.data();
 
 beatList.innerHTML += `
 <div class="beatRow">
-<b>${b.title}</b> - $${b.price}
+<b>${b.title}</b> - $${b.price} - ${b.tempo || "N/A"} BPM
 <br>
 <button onclick="selectBeat('${doc.id}')">SELECT</button>
 </div>`;
@@ -186,6 +197,9 @@ preview.value=b.previewFile;
 wav.value=b.wavFile;
 buyLink.value=b.buyLink;
 price.value=b.price;
+
+// ✅ BPM LOAD
+bpm.value=b.tempo || "";
 });
 }
 
