@@ -1,49 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Purchase Complete</title>
+  <title>Verifying Purchase...</title>
+
   <style>
     body {
-      background: #111;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      padding: 60px;
+      background:#111;
+      color:white;
+      font-family:Arial;
+      text-align:center;
+      padding:60px;
     }
 
     .box {
-      background: #1b1b1b;
-      padding: 30px;
-      border-radius: 12px;
-      display: inline-block;
+      background:#1b1b1b;
+      padding:30px;
+      border-radius:12px;
+      display:inline-block;
     }
 
     a {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 18px;
-      background: purple;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
+      display:none;
+      margin-top:20px;
+      padding:12px 18px;
+      background:purple;
+      color:white;
+      text-decoration:none;
+      border-radius:8px;
     }
   </style>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
 <div class="box">
-  <h1>🎉 Purchase Complete</h1>
-  <p>Your beat is ready to download.</p>
+  <h1>⏳ Verifying Payment...</h1>
+  <p>Please wait while we confirm your purchase.</p>
 
   <a id="downloadBtn" href="#">Download Beat</a>
 </div>
 
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const file = params.get("file");
+firebase.initializeApp({
+  apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+  authDomain: "junior-beats-store.firebaseapp.com",
+  projectId: "junior-beats-store"
+});
 
-  document.getElementById("downloadBtn").href = file;
+const db = firebase.firestore();
+
+const params = new URLSearchParams(window.location.search);
+const file = params.get("file");
+const email = params.get("email");
+
+const btn = document.getElementById("downloadBtn");
+
+function checkPurchase() {
+  db.collection("purchases")
+    .where("email", "==", email)
+    .where("file", "==", file)
+    .get()
+    .then(snapshot => {
+
+      if (!snapshot.empty) {
+        document.querySelector("h1").innerText = "✅ Payment Verified!";
+        btn.style.display = "inline-block";
+        btn.href = file;
+      } else {
+        document.querySelector("h1").innerText = "❌ Payment Not Verified";
+      }
+
+    });
+}
+
+checkPurchase();
 </script>
 
 </body>
