@@ -1,45 +1,43 @@
-const beats = [
-  {
-    title: "TEST BEAT",
-    price: 25,
+firebase.initializeApp({
+  apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+  authDomain: "junior-beats-store.firebaseapp.com",
+  projectId: "junior-beats-store"
+});
 
-    // IMPORTANT: must be raw links
-    previewFile: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    image: "https://images.unsplash.com/photo-1511379938547-c1f69419868d",
+const db = firebase.firestore();
 
-    buyLink: "https://www.paypal.com/paypalme/jayanreid07/25"
-  }
-];
+const store = document.getElementById("store");
 
-function renderBeats() {
-  const store = document.getElementById("store");
+function loadBeats() {
+  db.collection("beats").onSnapshot(snapshot => {
 
-  console.log("STORE FOUND:", store);
+    store.innerHTML = "";
 
-  store.innerHTML = "";
+    snapshot.forEach(doc => {
+      const b = doc.data();
 
-  beats.forEach(b => {
-    const card = document.createElement("div");
-    card.className = "beat-card";
+      const card = document.createElement("div");
+      card.className = "beat-card";
 
-    card.innerHTML = `
-      <img src="${b.image}" onerror="console.log('IMAGE FAILED')">
+      card.innerHTML = `
+        <img src="${b.image}">
+        <h3>${b.title}</h3>
 
-      <h3>${b.title}</h3>
+        <audio controls>
+          <source src="${b.previewFile}">
+        </audio>
 
-      <audio controls>
-        <source src="${b.previewFile}">
-      </audio>
+        <p>$${b.price}</p>
 
-      <p>$${b.price}</p>
+        <a href="${b.buyLink}" target="_blank">
+          <button>Buy Now</button>
+        </a>
+      `;
 
-      <a href="${b.buyLink}" target="_blank">
-        <button>Buy Now</button>
-      </a>
-    `;
+      store.appendChild(card);
+    });
 
-    store.appendChild(card);
   });
 }
 
-window.addEventListener("DOMContentLoaded", renderBeats);
+window.onload = loadBeats;
