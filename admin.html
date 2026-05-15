@@ -17,9 +17,13 @@ body{
   margin:0;
 }
 
-h1{
-  text-align:center;
-  padding:20px;
+/* 🔥 CENTER LOGIN SCREEN */
+.center{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
 }
 
 input,button{
@@ -36,6 +40,7 @@ button{
   cursor:pointer;
 }
 
+/* PANEL */
 #panel{
   display:none;
   padding:20px;
@@ -60,14 +65,19 @@ button{
 
 <body>
 
-<h1>🎛 Junior Beats Admin</h1>
+<h1 style="text-align:center;">🎛 Junior Beats Admin</h1>
 
-<div id="loginBox">
+<!-- LOGIN (CENTERED) -->
+<div id="loginBox" class="center">
+
   <input id="email" placeholder="Email"><br>
   <input id="password" type="password" placeholder="Password"><br>
+
   <button onclick="login()">Login</button>
+
 </div>
 
+<!-- ADMIN PANEL -->
 <div id="panel">
 
 <!-- UPLOAD -->
@@ -113,19 +123,13 @@ const db = firebase.firestore();
 const ADMIN_EMAIL = "yourgmail@gmail.com";
 const ADMIN_CODE = "JAYAN-ADMIN-2026";
 
-/* =========================
-   LOGIN
-========================= */
+/* LOGIN */
 function login(){
   auth.signInWithEmailAndPassword(email.value,password.value)
-  .catch(err=>{
-    alert(err.message);
-  });
+  .catch(err=>alert(err.message));
 }
 
-/* =========================
-   ADMIN GATE (FULL SECURITY)
-========================= */
+/* ADMIN GATE */
 auth.onAuthStateChanged(user=>{
   if(user){
 
@@ -151,9 +155,7 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-/* =========================
-   ADD BEAT
-========================= */
+/* ADD BEAT */
 function addBeat(){
   db.collection("beats").add({
     title:title.value,
@@ -169,14 +171,11 @@ function addBeat(){
   alert("Uploaded ✔");
 }
 
-/* =========================
-   LOAD BEATS
-========================= */
+/* LOAD BEATS */
 function loadBeats(){
   db.collection("beats")
   .onSnapshot(snap=>{
     beatList.innerHTML="";
-
     snap.forEach(doc=>{
       let b = doc.data();
 
@@ -191,15 +190,12 @@ function loadBeats(){
   });
 }
 
-/* =========================
-   LOAD PURCHASES
-========================= */
+/* LOAD PURCHASES */
 function loadPurchases(){
   db.collection("purchases")
   .orderBy("createdAt","desc")
   .onSnapshot(snap=>{
     purchaseList.innerHTML="";
-
     snap.forEach(doc=>{
       let p = doc.data();
 
