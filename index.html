@@ -10,17 +10,54 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
+<style>
+/* GENRE TAGS */
+.genreWrap{
+  margin-top:8px;
+}
+
+.genre{
+  display:inline-block;
+  background:#222;
+  color:white;
+  padding:4px 8px;
+  margin:3px;
+  border-radius:6px;
+  font-size:12px;
+}
+</style>
+
 </head>
 
 <body>
 
+<!-- HEADER -->
 <header>
   <img id="logo">
   <h1 id="storeTitle">Junior Beats</h1>
   <p id="slogan">By Jayan Reid</p>
 </header>
 
+<!-- GENRE BAR -->
+<div id="genreBar"></div>
+
+<!-- CART (RESTORED) -->
+<div id="cartBox">
+  <h2>🛒 Cart</h2>
+  <div id="cartItems"></div>
+  <h3 id="cartTotal">Total: $0</h3>
+  <button onclick="checkoutCart()">Checkout</button>
+</div>
+
+<!-- STORE -->
 <div id="store"></div>
+
+<!-- PLAYER -->
+<div id="playerBar">
+  <div id="nowPlaying">No beat playing</div>
+</div>
+
+<script src="app.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -30,6 +67,9 @@ projectId:"junior-beats-store"
 });
 
 const db = firebase.firestore();
+
+let allBeats = [];
+let currentGenre = "ALL";
 
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
@@ -41,29 +81,86 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
   if(s.logo) logo.src = s.logo;
 });
 
-/* BEATS FIXED */
-db.collection("beats").onSnapshot(snap=>{
-  store.innerHTML="";
+/* LOAD BEATS */
+db.collection("beats").onSnapshot(snapshot=>{
+  allBeats = [];
 
-  snap.forEach(doc=>{
-    let b = doc.data();
-    let genres = Array.isArray(b.genres) ? b.genres : [];
+  snapshot.forEach(doc=>{
+    allBeats.push({id:doc.id,...doc.data()});
+  });
+
+  buildGenres(allBeats);
+  renderBeats(allBeats);
+});
+
+/* BUILD GENRES */
+function buildGenres(beats){
+
+  const set = new Set();
+
+  beats.forEach(b=>{
+    (b.genres || []).forEach(g=>set.add(g));
+  });
+
+  const bar = document.getElementById("genreBar");
+
+  bar.innerHTML = `
+    <button onclick="filterGenre('ALL',event)">All</button>
+    ${[...set].map(g=>`
+      <button onclick="filterGenre('${g}',event)">${g}</button>
+    `).join("")}
+  `;
+}
+
+/* FILTER */
+function filterGenre(genre,e){
+  currentGenre = genre;
+
+  document.querySelectorAll("#genreBar button")
+    .forEach(b=>b.classList.remove("active"));
+
+  e.target.classList.add("active");
+
+  renderBeats(allBeats);
+}
+
+/* RENDER STORE (FULL RESTORE + GENRES FIXED) */
+function renderBeats(beats){
+
+  const store = document.getElementById("store");
+  store.innerHTML = "";
+
+  beats.forEach(b=>{
+
+    const genres = Array.isArray(b.genres) ? b.genres : [];
+
+    if(currentGenre !== "ALL"){
+      if(!genres.includes(currentGenre)) return;
+    }
 
     store.innerHTML += `
       <div class="beat-card">
 
-        <h3>${b.title}</h3>
-        <p>${b.producer}</p>
-        <p>$${b.price}</p>
+        <img src="${b.image || ''}" />
 
-        <div>
-          ${genres.map(g=>`<span>${g}</span>`).join(" ")}
+        <h3>${b.title || ''}</h3>
+
+        <p>${b.producer || ''}</p>
+
+        <p>$${b.price || 0} • ${b.tempo || ''} BPM</p>
+
+        <!-- GENRES -->
+        <div class="genreWrap">
+          ${genres.map(g=>`<span class="genre">${g}</span>`).join("")}
         </div>
+
+        <!-- CART -->
+        <button onclick="addToCart('${b.id}')">Add to Cart</button>
 
       </div>
     `;
   });
-});
+}
 </script>
 
 </body>
