@@ -1,86 +1,170 @@
+firebase.initializeApp({
+  apiKey: "AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+  authDomain: "junior-beats-store.firebaseapp.com",
+  projectId: "junior-beats-store"
+});
 
 const db = firebase.firestore();
 
-/* =========================
-   LOAD SETTINGS (SAFE)
-========================= */
-db.collection("settings").doc("site").get().then(doc => {
-  const s = doc.data();
-  if (!s) return;
+const store = document.getElementById("store");
+const cartItems = document.getElementById("cartItems");
+const cartTotal = document.getElementById("cartTotal");
 
-  if (s.logo) document.getElementById("logo").src = s.logo;
-  if (s.storeName) document.getElementById("storeTitle").innerText = s.storeName;
-  if (s.slogan) document.getElementById("slogan").innerText = s.slogan;
-});
+let currentAudio = null;
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
 
 /* =========================
-   LOAD BEATS (FIXED GENRES)
+   LOAD SLOGAN (🔥 NEW)
 ========================= */
-db.collection("beats").onSnapshot(snapshot => {
+function loadSlogan() {
+  db.collection("settings").doc("site").onSnapshot(doc => {
+    const data = doc.data();
+    document.getElementById("slogan").innerText =
+      data?.slogan || "By Jayan Reid";
+  });
+}
 
-  const store = document.getElementById("store");
-  store.innerHTML = "";
+/* =========================
+   LOAD BEATS
+========================= */
+function loadBeats() {
 
-  snapshot.forEach(doc => {
+  db.collection("beats")
+    .orderBy("createdAt", "desc")
+    .onSnapshot(snapshot => {
 
-    const b = doc.data();
+      store.innerHTML = "";
 
-    // 🔥 SAFE GENRE HANDLING (FIX)
-    let genres = [];
+      snapshot.forEach(doc => {
 
-    if (Array.isArray(b.genres)) {
-      genres = b.genres;
-    } else if (typeof b.genres === "string") {
-      genres = b.genres.split(",").map(g => g.trim());
-    }
+        const b = doc.data();
+        const id = doc.id;
 
-    store.innerHTML += `
-      <div class="beat">
+        const inCart = cart.some(item => item.id === id);
 
-        <h3>${b.title || "No Title"}</h3>
+        const btnText = inCart
+          ? "Remove ❌"
+          : "Add 🛒";
 
-        <p>By ${b.producer || "Unknown"}</p>
+        const card = document.createElement("div");
+        card.className = "beat-card";
 
-        <p>$${b.price || 0} • ${b.tempo || ""} BPM</p>
+        card.innerHTML = `
+          <img src="${b.image}" />
 
-        <!-- 🔥 GENRES DISPLAY -->
-        <div class="genreWrap">
-          ${
-            genres.length > 0
-              ? genres.map(g => `<span class="genre">${g}</span>`).join("")
-              : ""
-          }
+          <h3>${b.title}</h3>
+
+          <audio controls>
+            <source src="${b.previewFile}" />
+          </audio>
+
+          <p>🎵 ${b.tempo || "N/A"} BPM</p>
+          <p>💰 $${b.price}</p>
+
+          <button onclick="toggleCart('${id}', '${b.title}', ${b.price}, '${b.wavFile}')">
+            ${btnText}
+          </button>
+        `;
+
+        store.appendChild(card);
+      });
+
+    });
+}
+
+/* =========================
+   TOGGLE CART
+========================= */
+function toggleCart(id, title, price, wavFile) {
+
+  const index = cart.findIndex(item => item.id === id);
+
+  if (index > -1) {
+    cart.splice(index, 1);
+  } else {
+    cart.push({ id, title, price, wavFile });
+  }
+
+  saveCart();
+  renderCart();
+}
+
+/* =========================
+   CART RENDER
+========================= */
+function renderCart() {
+
+  cartItems.innerHTML = "";
+
+  let total = 0;
+
+  cart.forEach((item, index) => {
+
+    total += item.price;
+
+    cartItems.innerHTML += `
+      <div class="cartItem">
+
+        <div>
+          <b>${item.title}</b> — $${item.price}
         </div>
 
-        <!-- KEEP YOUR EXISTING CART FUNCTION -->
-        <button onclick="addToCart('${doc.id}')">Add to Cart</button>
+        <button onclick="toggleCart('${item.id}', '${item.title}', ${item.price}, '${item.wavFile}')">
+          Remove
+        </button>
 
       </div>
     `;
   });
-});
 
+  cartTotal.innerText = "Total: $" + total;
+}
 
 /* =========================
-   CART FUNCTIONS (UNCHANGED)
-   (assuming you already have them elsewhere)
+   CHECKOUT
 ========================= */
+function checkoutCart() {
 
-function checkoutCart(){
-  // your existing checkout logic
+  if (cart.length === 0) {
+    alert("Cart is empty.");
+    return;
+  }
+
+  const email = prompt("Enter your email:");
+  if (!email) return;
+
+  let total = 0;
+
+  cart.forEach(item => {
+
+    total += item.price;
+
+    db.collection("purchases").add({
+      beatTitle: item.title,
+      email: email,
+      amount: item.price,
+      file: item.wavFile,
+      status: "pending",
+      createdAt: Date.now()
+    });
+
+  });
+
+  const payLink =
+    "https://www.paypal.com/paypalme/jayanreid07/" + total;
+
+  window.location.href = payLink;
 }
-
-function addToCart(id){
-  // your existing cart logic
-}
-
 
 /* =========================
-   PLAYER (UNCHANGED HOOK)
+   INIT
 ========================= */
-
-function playBeat(url){
-  document.getElementById("nowPlaying").innerText = "Playing...";
-  // your existing player logic
-}
+window.onload = function () {
+  loadBeats();
+  renderCart();
+  loadSlogan();
+};
