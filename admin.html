@@ -30,7 +30,7 @@ h1{
   align-items:center;
 }
 
-input,button,select{
+input,button{
   width:300px;
   padding:10px;
   margin:6px;
@@ -47,7 +47,6 @@ button{
 #panel{
   display:none;
   padding:20px;
-  text-align:center;
 }
 
 .section{
@@ -70,119 +69,53 @@ button{
 
 <h1>🎛 Junior Beats Admin</h1>
 
-<!-- LOGIN -->
 <div id="loginBox" class="center">
-  <input id="email" placeholder="Email"><br>
-  <input id="password" type="password" placeholder="Password"><br>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
-<!-- PANEL -->
 <div id="panel">
 
 <div class="section">
-  <button onclick="logout()" style="background:#ff3b3b;">🚪 Logout</button>
+  <button onclick="logout()" style="background:#ff3b3b;">Logout</button>
 </div>
 
-<!-- SETTINGS -->
 <div class="section">
-<h2>⚙️ Site Settings</h2>
+<h2>Site Settings</h2>
 
-<input id="slogan" placeholder="Slogan"><br>
-<input id="storeName" placeholder="Store Name"><br>
-<input id="bg" placeholder="Background Image URL"><br>
-<input id="logo" placeholder="Logo Image URL"><br>
-<input id="font" placeholder="Font (Arial, Poppins, etc)"><br>
+<input id="storeName" placeholder="Store Name">
+<input id="slogan" placeholder="Slogan">
+<input id="bg" placeholder="Background Image URL">
+<input id="logo" placeholder="Logo Image URL">
+<input id="font" placeholder="Font">
 
 <button onclick="saveSettings()">Save Settings</button>
 </div>
 
-<!-- UPLOAD -->
 <div class="section">
-<h2>🎧 Upload Beat</h2>
+<h2>Upload Beat</h2>
 
-<input id="title" placeholder="Title"><br>
-<input id="producer" placeholder="Producer"><br>
-<input id="price" placeholder="Price"><br>
-<input id="tempo" placeholder="BPM"><br>
+<input id="title" placeholder="Title">
+<input id="producer" placeholder="Producer">
+<input id="price" placeholder="Price">
+<input id="tempo" placeholder="BPM">
 
-<!-- 🔥 GENRES ADDED (NO REMOVALS) -->
-<select id="genre1">
-  <option value="">Genre 1</option>
-  <option>Pop</option>
-  <option>Acoustic</option>
-  <option>Trap</option>
-  <option>Hip-Hop</option>
-  <option>RnB</option>
-  <option>Drill</option>
-  <option>Lofi</option>
-  <option>Afrobeats</option>
-  <option>Electro</option>
-  <option>Dance</option>
-  <option>Jazz</option>
-  <option>Soul</option>
-  <option>Pop-Rock</option>
-  <option>Dark Trap</option>
-  <option>Chill</option>
-</select>
+<input id="image" placeholder="Image URL">
+<input id="preview" placeholder="MP3 URL">
+<input id="wav" placeholder="WAV URL">
 
-<select id="genre2">
-  <option value="">Genre 2 (optional)</option>
-  <option>Pop</option>
-  <option>Acoustic</option>
-  <option>Trap</option>
-  <option>Hip-Hop</option>
-  <option>RnB</option>
-  <option>Drill</option>
-  <option>Lofi</option>
-  <option>Afrobeats</option>
-  <option>Electro</option>
-  <option>Dance</option>
-  <option>Jazz</option>
-  <option>Soul</option>
-  <option>Pop-Rock</option>
-  <option>Dark Trap</option>
-  <option>Chill</option>
-</select>
-
-<select id="genre3">
-  <option value="">Genre 3 (optional)</option>
-  <option>Pop</option>
-  <option>Acoustic</option>
-  <option>Trap</option>
-  <option>Hip-Hop</option>
-  <option>RnB</option>
-  <option>Drill</option>
-  <option>Lofi</option>
-  <option>Afrobeats</option>
-  <option>Electro</option>
-  <option>Dance</option>
-  <option>Jazz</option>
-  <option>Soul</option>
-  <option>Pop-Rock</option>
-  <option>Dark Trap</option>
-  <option>Chill</option>
-</select>
-
-<input id="image" placeholder="Image URL"><br>
-<input id="preview" placeholder="MP3 URL"><br>
-<input id="wav" placeholder="WAV URL"><br>
+<!-- GENRES (TEXT INPUT SIMPLE FIX) -->
+<input id="genres" placeholder="Genres (comma separated e.g Trap, Pop)">
 
 <button onclick="addBeat()">Upload</button>
 <button onclick="updateBeat()">Update Selected</button>
 <button onclick="deleteBeat()">Delete Selected</button>
 </div>
 
-<!-- BEATS -->
 <div class="section">
-<h2>📀 Beats (Click to Select)</h2>
+<h2>Beats</h2>
 <div id="beatList"></div>
-</div>
-
-<!-- PURCHASES -->
-<div class="section">
-<h2>💰 Purchases</h2>
-<div id="purchaseList"></div>
 </div>
 
 </div>
@@ -205,14 +138,12 @@ function login(){
   .catch(err=>alert(err.message));
 }
 
+/* AUTH */
 auth.onAuthStateChanged(user=>{
   if(!user) return;
-
   loginBox.style.display="none";
   panel.style.display="block";
-
   loadBeats();
-  loadPurchases();
 });
 
 /* LOGOUT */
@@ -220,80 +151,87 @@ function logout(){
   auth.signOut().then(()=>location.reload());
 }
 
-/* SETTINGS */
+/* SETTINGS FIXED */
 function saveSettings(){
   db.collection("settings").doc("site").set({
-    slogan:slogan.value,
-    storeName:storeName.value,
-    bg:bg.value,
-    logo:logo.value,
-    font:font.value
-  });
+    storeName:storeName.value || "",
+    slogan:slogan.value || "",
+    bg:bg.value || "",
+    logo:logo.value || "",
+    font:font.value || ""
+  }, { merge:true });
 
-  alert("Settings saved ✔");
+  alert("Settings saved");
 }
 
-/* ADD BEAT (GENRES ADDED ONLY) */
+/* ADD BEAT FIXED */
 function addBeat(){
 
-  const genres = [
-    genre1.value,
-    genre2.value,
-    genre3.value
-  ].filter(g => g && g.trim() !== "").slice(0,3);
+  const genresArray = genres.value
+    ? genres.value.split(",").map(g => g.trim())
+    : [];
 
   db.collection("beats").add({
-    title:title.value,
-    producer:producer.value,
-    price:parseFloat(price.value),
-    tempo:tempo.value,
-    image:image.value,
-    previewFile:preview.value,
-    wavFile:wav.value,
-
-    // 🔥 ADDED ONLY
-    genres: genres,
-
+    title:title.value || "",
+    producer:producer.value || "",
+    price:parseFloat(price.value || 0),
+    tempo:tempo.value || "",
+    image:image.value || "",
+    previewFile:preview.value || "",
+    wavFile:wav.value || "",
+    genres:genresArray,
     createdAt:Date.now()
   });
 
-  alert("Uploaded ✔");
+  alert("Uploaded");
 }
 
-/* UPDATE */
+/* UPDATE FIXED */
 function updateBeat(){
-  if(!selectedBeatId) return alert("Select a beat first");
 
-  const genres = [
-    genre1.value,
-    genre2.value,
-    genre3.value
-  ].filter(g => g && g.trim() !== "").slice(0,3);
+  if(!selectedBeatId) return alert("Select beat first");
+
+  const genresArray = genres.value
+    ? genres.value.split(",").map(g => g.trim())
+    : [];
 
   db.collection("beats").doc(selectedBeatId).update({
-    title:title.value,
-    producer:producer.value,
-    price:parseFloat(price.value),
-    tempo:tempo.value,
-    image:image.value,
-    previewFile:preview.value,
-    wavFile:wav.value,
-
-    // 🔥 ADDED ONLY
-    genres: genres
+    title:title.value || "",
+    producer:producer.value || "",
+    price:parseFloat(price.value || 0),
+    tempo:tempo.value || "",
+    image:image.value || "",
+    previewFile:preview.value || "",
+    wavFile:wav.value || "",
+    genres:genresArray
   });
 
-  alert("Updated ✔");
+  alert("Updated");
 }
 
 /* DELETE */
 function deleteBeat(){
-  if(!selectedBeatId) return alert("Select a beat first");
-
+  if(!selectedBeatId) return alert("Select beat first");
   db.collection("beats").doc(selectedBeatId).delete();
   selectedBeatId=null;
+}
 
-  alert("Deleted ✔");
+/* LOAD BEATS */
+function loadBeats(){
+  db.collection("beats").onSnapshot(snap=>{
+    beatList.innerHTML="";
+    snap.forEach(doc=>{
+      let b = doc.data();
+
+      beatList.innerHTML += `
+        <div class="beatRow" onclick="selectBeat('${doc.id}')">
+          <b>${b.title}</b><br>
+          ${b.producer}<br>
+          $${b.price}
+        </div>
+      `;
+    });
+  });
 }
 
 /* SELECT */
@@ -303,59 +241,14 @@ function selectBeat(id){
   db.collection("beats").doc(id).get().then(doc=>{
     let b = doc.data();
 
-    title.value=b.title;
-    producer.value=b.producer;
-    price.value=b.price;
-    tempo.value=b.tempo;
-    image.value=b.image;
-    preview.value=b.previewFile;
-    wav.value=b.wavFile;
-
-    // 🔥 LOAD GENRES BACK INTO SELECTS
-    genre1.value = b.genres?.[0] || "";
-    genre2.value = b.genres?.[1] || "";
-    genre3.value = b.genres?.[2] || "";
-  });
-}
-
-/* LOAD BEATS */
-function loadBeats(){
-  db.collection("beats").onSnapshot(snap=>{
-    beatList.innerHTML="";
-
-    snap.forEach(doc=>{
-      let b = doc.data();
-
-      beatList.innerHTML += `
-        <div class="beatRow" onclick="selectBeat('${doc.id}')">
-          <b>${b.title}</b><br>
-          By ${b.producer || "Unknown"}<br>
-          $${b.price} • ${b.tempo} BPM<br>
-          ${(b.genres||[]).join(", ")}
-        </div>
-      `;
-    });
-  });
-}
-
-/* PURCHASES */
-function loadPurchases(){
-  db.collection("purchases")
-  .orderBy("createdAt","desc")
-  .onSnapshot(snap=>{
-    purchaseList.innerHTML="";
-
-    snap.forEach(doc=>{
-      let p = doc.data();
-
-      purchaseList.innerHTML += `
-        <div class="beatRow">
-          <b>${p.beatTitle}</b><br>
-          ${p.email}<br>
-          $${p.amount} • ${p.status}
-        </div>
-      `;
-    });
+    title.value=b.title || "";
+    producer.value=b.producer || "";
+    price.value=b.price || "";
+    tempo.value=b.tempo || "";
+    image.value=b.image || "";
+    preview.value=b.previewFile || "";
+    wav.value=b.wavFile || "";
+    genres.value=(b.genres || []).join(", ");
   });
 }
 </script>
