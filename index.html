@@ -2,241 +2,69 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <title>Junior Beats</title>
+<meta charset="UTF-8">
+<title>Junior Beats</title>
 
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    body{
-      margin:0;
-      transition: all 0.3s ease;
-    }
-
-    header{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:15px;
-    }
-
-    #logo{
-      width:80px;
-      height:80px;
-      object-fit:cover;
-      border-radius:12px;
-      background:#222;
-    }
-
-    .titleBlock{
-      display:flex;
-      flex-direction:column;
-    }
-
-    #storeTitle{
-      margin:0;
-      font-size:22px;
-    }
-
-    #slogan{
-      margin:0;
-      opacity:0.7;
-      font-size:14px;
-    }
-
-    /* GENRE BAR */
-    #genreBar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      padding:10px 15px;
-    }
-
-    #genreBar button{
-      background:#2a2a2a;
-      color:white;
-      border:none;
-      padding:6px 10px;
-      border-radius:6px;
-      cursor:pointer;
-    }
-
-    #genreBar button.active{
-      background:#555;
-    }
-
-    /* GENRE TAGS */
-    .genreWrap{
-      margin-top:8px;
-    }
-
-    .genre{
-      display:inline-block;
-      background:#222;
-      color:white;
-      padding:4px 8px;
-      margin:3px;
-      border-radius:6px;
-      font-size:12px;
-    }
-
-    /* BEAT CARD SAFE STYLE */
-    .beat{
-      padding:15px;
-      border-bottom:1px solid #eee;
-    }
-
-    #store{
-      padding:10px;
-    }
-
-  </style>
 </head>
 
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <img id="logo" src="" alt="logo">
+<header>
+  <img id="logo">
+  <h1 id="storeTitle">Junior Beats</h1>
+  <p id="slogan">By Jayan Reid</p>
+</header>
 
-    <div class="titleBlock">
-      <h1 id="storeTitle">Junior Beats</h1>
-      <p id="slogan">By Jayan Reid</p>
-    </div>
-  </header>
+<div id="store"></div>
 
-  <!-- GENRE FILTER BAR -->
-  <div id="genreBar"></div>
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain:"junior-beats-store.firebaseapp.com",
+projectId:"junior-beats-store"
+});
 
-  <!-- CART (UNCHANGED SYSTEM) -->
-  <div id="cartBox">
-    <h2>🛒 Cart</h2>
-    <div id="cartItems"></div>
-    <h3 id="cartTotal">Total: $0</h3>
-    <button onclick="checkoutCart()">Checkout</button>
-  </div>
+const db = firebase.firestore();
 
-  <!-- STORE -->
-  <div id="store"></div>
+/* SETTINGS */
+db.collection("settings").doc("site").onSnapshot(doc=>{
+  const s = doc.data();
+  if(!s) return;
 
-  <!-- PLAYER -->
-  <div id="playerBar">
-    <div id="nowPlaying">No beat playing</div>
-  </div>
+  storeTitle.innerText = s.storeName || "";
+  slogan.innerText = s.slogan || "";
+  if(s.logo) logo.src = s.logo;
+});
 
-  <script src="app.js"></script>
+/* BEATS FIXED */
+db.collection("beats").onSnapshot(snap=>{
+  store.innerHTML="";
 
-  <script>
-    const db = firebase.firestore();
+  snap.forEach(doc=>{
+    let b = doc.data();
+    let genres = Array.isArray(b.genres) ? b.genres : [];
 
-    let allBeats = [];
-    let currentGenre = "ALL";
+    store.innerHTML += `
+      <div class="beat-card">
 
-    /* =========================
-       SETTINGS (SAFE)
-    ========================= */
-    db.collection("settings").doc("site").get().then(doc => {
-      const s = doc.data();
-      if(!s) return;
+        <h3>${b.title}</h3>
+        <p>${b.producer}</p>
+        <p>$${b.price}</p>
 
-      if(s.logo) document.getElementById("logo").src = s.logo;
-      if(s.storeName) document.getElementById("storeTitle").innerText = s.storeName;
-      if(s.slogan) document.getElementById("slogan").innerText = s.slogan;
-    });
+        <div>
+          ${genres.map(g=>`<span>${g}</span>`).join(" ")}
+        </div>
 
-    /* =========================
-       LOAD BEATS (FIXED + SAFE)
-    ========================= */
-    db.collection("beats").onSnapshot(snapshot => {
-
-      allBeats = [];
-
-      snapshot.forEach(doc => {
-        allBeats.push({ id: doc.id, ...doc.data() });
-      });
-
-      buildGenres(allBeats);
-      renderBeats(allBeats);
-    });
-
-    /* =========================
-       BUILD GENRE FILTERS
-    ========================= */
-    function buildGenres(beats){
-
-      const set = new Set();
-
-      beats.forEach(b => {
-        (b.genres || []).forEach(g => set.add(g));
-      });
-
-      const bar = document.getElementById("genreBar");
-
-      bar.innerHTML = `
-        <button onclick="filterGenre('ALL', event)" class="active">All</button>
-        ${[...set].map(g =>
-          `<button onclick="filterGenre('${g}', event)">${g}</button>`
-        ).join("")}
-      `;
-    }
-
-    /* =========================
-       FILTER FUNCTION
-    ========================= */
-    function filterGenre(genre, e){
-
-      currentGenre = genre;
-
-      document.querySelectorAll("#genreBar button")
-        .forEach(b => b.classList.remove("active"));
-
-      e.target.classList.add("active");
-
-      renderBeats(allBeats);
-    }
-
-    /* =========================
-       RENDER BEATS (FIXED GENRES)
-    ========================= */
-    function renderBeats(beats){
-
-      const store = document.getElementById("store");
-      store.innerHTML = "";
-
-      beats.forEach(b => {
-
-        const genres = Array.isArray(b.genres) ? b.genres : [];
-
-        // FILTER LOGIC
-        if(currentGenre !== "ALL"){
-          if(!genres.includes(currentGenre)) return;
-        }
-
-        store.innerHTML += `
-          <div class="beat">
-
-            <h3>${b.title || ""}</h3>
-
-            <p>By ${b.producer || "Unknown"}</p>
-
-            <p>$${b.price || 0} • ${b.tempo || ""} BPM</p>
-
-            <!-- GENRES -->
-            <div class="genreWrap">
-              ${genres.map(g => `<span class="genre">${g}</span>`).join("")}
-            </div>
-
-            <button onclick="addToCart('${b.id}')">Add to Cart</button>
-
-          </div>
-        `;
-      });
-    }
-
-  </script>
+      </div>
+    `;
+  });
+});
+</script>
 
 </body>
 </html>
