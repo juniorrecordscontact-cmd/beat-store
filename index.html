@@ -88,8 +88,32 @@
     }
 
     #searchBtn{
-      width:auto;
       padding:10px 16px;
+      border:none;
+      border-radius:8px;
+      background:#6d3cff;
+      color:white;
+      cursor:pointer;
+    }
+
+    /* STORE */
+    #store{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
+      padding:20px;
+    }
+
+    .beat{
+      background:#1b1b22;
+      padding:15px;
+      border-radius:12px;
+      color:white;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
       border:none;
       border-radius:8px;
       background:#6d3cff;
@@ -103,33 +127,21 @@
 
   <!-- HEADER -->
   <header>
-
     <img id="logo" src="" alt="logo">
 
     <div class="titleBlock">
       <h1 id="storeTitle">Junior Beats</h1>
       <p id="slogan">By Jayan Reid</p>
     </div>
-
   </header>
 
-  <!-- GENRE FILTER BAR -->
+  <!-- GENRE BAR -->
   <div id="genreBar"></div>
 
   <!-- SEARCH -->
   <div id="searchWrap">
-
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Search beats..."
-      onkeypress="handleSearchEnter(event)"
-    >
-
-    <button id="searchBtn" onclick="searchBeats()">
-      🔍 Search
-    </button>
-
+    <input id="searchInput" placeholder="Search beats..." onkeypress="handleEnter(event)">
+    <button id="searchBtn" onclick="searchBeats()">Search</button>
   </div>
 
   <!-- CART -->
@@ -148,147 +160,99 @@
     <div id="nowPlaying"></div>
   </div>
 
-  <script src="app.js"></script>
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain:"junior-beats-store.firebaseapp.com",
+projectId:"junior-beats-store"
+});
 
-  <!-- FIREBASE + GENRE SYSTEM -->
-  <script>
-    const db = firebase.firestore();
+const db = firebase.firestore();
 
-    let allBeats = [];
+let allBeats = [];
 
-    // LOAD SETTINGS
-    db.collection("settings").doc("site").get().then(doc => {
-      const s = doc.data();
-      if(!s) return;
+/* SETTINGS */
+db.collection("settings").doc("site").onSnapshot(doc=>{
+  const s = doc.data();
+  if(!s) return;
 
-      if(s.logo) document.getElementById("logo").src = s.logo;
-      if(s.storeName) document.getElementById("storeTitle").innerText = s.storeName;
-      if(s.slogan) document.getElementById("slogan").innerText = s.slogan;
-    });
+  storeTitle.innerText = s.storeName || "";
+  slogan.innerText = s.slogan || "";
 
-    // LOAD BEATS
-    db.collection("beats").onSnapshot(snapshot => {
-      allBeats = [];
+  if(s.logo){
+    logo.src = s.logo;
+  }
+});
 
-      snapshot.forEach(doc => {
-        allBeats.push({ id: doc.id, ...doc.data() });
-      });
+/* LOAD BEATS */
+db.collection("beats").onSnapshot(snapshot=>{
+  allBeats = [];
 
-      renderBeats(allBeats);
-      buildGenreBar(allBeats);
-    });
+  snapshot.forEach(doc=>{
+    allBeats.push({id:doc.id,...doc.data()});
+  });
 
-    // RENDER BEATS
-    function renderBeats(beats){
+  renderBeats(allBeats);
+});
 
-      const store = document.getElementById("store");
-      store.innerHTML = "";
+/* RENDER */
+function renderBeats(beats){
 
-      beats.forEach(b => {
+  const store = document.getElementById("store");
+  store.innerHTML = "";
 
-        store.innerHTML += `
-          <div class="beat" data-genres="${(b.genres||[]).join(',')}">
+  beats.forEach(b=>{
 
-            <h3>${b.title}</h3>
+    store.innerHTML += `
+      <div class="beat">
 
-            <div>
-              ${(b.genres||[]).map(g => `<span class="genre">${g}</span>`).join(" ")}
-            </div>
+        <h3>${b.title || ''}</h3>
 
-            <p>$${b.price}</p>
+        <p>${b.producer || ''}</p>
 
-            <button onclick="addToCart('${b.id}')">
-              Add to Cart
-            </button>
+        <p>$${b.price || 0}</p>
 
-          </div>
-        `;
-      });
-    }
+        <button onclick="addToCart('${b.id}')">Add to Cart</button>
 
-    // BUILD GENRE BUTTONS
-    function buildGenreBar(beats){
+      </div>
+    `;
+  });
+}
 
-      const genreSet = new Set();
+/* ✅ FIXED SEARCH (REAL DATA SEARCH) */
+function searchBeats(){
 
-      beats.forEach(b => {
-        (b.genres || []).forEach(g => genreSet.add(g));
-      });
+  const value = document.getElementById("searchInput")
+    .value.toLowerCase().trim();
 
-      const bar = document.getElementById("genreBar");
+  if(value === ""){
+    renderBeats(allBeats);
+    return;
+  }
 
-      bar.innerHTML = `
-        <button onclick="filterGenre('ALL')" class="active">
-          All Beats
-        </button>
+  const filtered = allBeats.filter(b => {
 
-        ${[...genreSet].map(g => `
-          <button onclick="filterGenre('${g}')">
-            ${g}
-          </button>
-        `).join("")}
-      `;
-    }
+    const title = (b.title || "").toLowerCase();
+    const producer = (b.producer || "").toLowerCase();
+    const genres = (b.genres || []).join(" ").toLowerCase();
 
-    // FILTER SYSTEM
-    function filterGenre(genre){
+    return (
+      title.includes(value) ||
+      producer.includes(value) ||
+      genres.includes(value)
+    );
+  });
 
-      document.querySelectorAll("#genreBar button").forEach(b=>{
-        b.classList.remove("active");
-      });
+  renderBeats(filtered);
+}
 
-      event.target.classList.add("active");
-
-      const cards = document.querySelectorAll(".beat");
-
-      cards.forEach(card => {
-
-        const genres = card.getAttribute("data-genres") || "";
-
-        if(genre === "ALL"){
-          card.style.display = "block";
-        } else {
-          card.style.display =
-            genres.includes(genre)
-            ? "block"
-            : "none";
-        }
-
-      });
-    }
-
-    // SEARCH SYSTEM
-    function searchBeats(){
-
-      const value = document
-        .getElementById("searchInput")
-        .value
-        .toLowerCase()
-        .trim();
-
-      const cards = document.querySelectorAll(".beat");
-
-      cards.forEach(card => {
-
-        const text = card.innerText.toLowerCase();
-
-        if(text.includes(value)){
-          card.style.display = "block";
-        } else {
-          card.style.display = "none";
-        }
-
-      });
-    }
-
-    // ENTER KEY SUPPORT
-    function handleSearchEnter(e){
-      if(e.key === "Enter"){
-        searchBeats();
-      }
-    }
-
-  </script>
+/* ENTER KEY */
+function handleEnter(e){
+  if(e.key === "Enter"){
+    searchBeats();
+  }
+}
+</script>
 
 </body>
 </html>
