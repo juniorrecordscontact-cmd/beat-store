@@ -60,6 +60,16 @@ button{
   padding:10px;
   margin:10px;
   border-radius:8px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.beatRow img{
+  width:50px;
+  height:50px;
+  object-fit:cover;
+  border-radius:6px;
 }
 </style>
 
@@ -105,8 +115,12 @@ button{
 <input id="preview" placeholder="MP3 URL">
 <input id="wav" placeholder="WAV URL">
 
-<!-- GENRES (TEXT INPUT SIMPLE FIX) -->
 <input id="genres" placeholder="Genres (comma separated e.g Trap, Pop)">
+
+<!-- 🔥 NEW FEATURE -->
+<label>
+  <input type="checkbox" id="featured"> Featured Beat
+</label>
 
 <button onclick="addBeat()">Upload</button>
 <button onclick="updateBeat()">Update Selected</button>
@@ -151,7 +165,7 @@ function logout(){
   auth.signOut().then(()=>location.reload());
 }
 
-/* SETTINGS FIXED */
+/* SETTINGS (SAFE MERGE) */
 function saveSettings(){
   db.collection("settings").doc("site").set({
     storeName:storeName.value || "",
@@ -164,7 +178,7 @@ function saveSettings(){
   alert("Settings saved");
 }
 
-/* ADD BEAT FIXED */
+/* ADD BEAT (ENHANCED ONLY - NO BREAKS) */
 function addBeat(){
 
   const genresArray = genres.value
@@ -180,13 +194,15 @@ function addBeat(){
     previewFile:preview.value || "",
     wavFile:wav.value || "",
     genres:genresArray,
+    featured:featured.checked || false,
+    plays:0,
     createdAt:Date.now()
   });
 
   alert("Uploaded");
 }
 
-/* UPDATE FIXED */
+/* UPDATE */
 function updateBeat(){
 
   if(!selectedBeatId) return alert("Select beat first");
@@ -203,7 +219,8 @@ function updateBeat(){
     image:image.value || "",
     previewFile:preview.value || "",
     wavFile:wav.value || "",
-    genres:genresArray
+    genres:genresArray,
+    featured:featured.checked || false
   });
 
   alert("Updated");
@@ -216,7 +233,7 @@ function deleteBeat(){
   selectedBeatId=null;
 }
 
-/* LOAD BEATS */
+/* LOAD BEATS (UPGRADED DISPLAY ONLY) */
 function loadBeats(){
   db.collection("beats").onSnapshot(snap=>{
     beatList.innerHTML="";
@@ -225,9 +242,16 @@ function loadBeats(){
 
       beatList.innerHTML += `
         <div class="beatRow" onclick="selectBeat('${doc.id}')">
-          <b>${b.title}</b><br>
-          ${b.producer}<br>
-          $${b.price}
+
+          <img src="${b.image || ''}">
+
+          <div>
+            <b>${b.title}</b><br>
+            ${b.producer || "Unknown"}<br>
+            $${b.price || 0} • Plays: ${b.plays || 0}
+            ${b.featured ? "🔥 Featured" : ""}
+          </div>
+
         </div>
       `;
     });
@@ -249,6 +273,7 @@ function selectBeat(id){
     preview.value=b.previewFile || "";
     wav.value=b.wavFile || "";
     genres.value=(b.genres || []).join(", ");
+    featured.checked = b.featured || false;
   });
 }
 </script>
