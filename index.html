@@ -24,18 +24,17 @@ header{
   padding:12px 15px;
 }
 
-/* LEFT SIDE */
 .leftHeader{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
 }
 
 #logo{
   width:60px;
   height:60px;
-  border-radius:10px;
   object-fit:cover;
+  border-radius:10px;
 }
 
 .titleBlock{
@@ -54,39 +53,29 @@ header{
   opacity:0.7;
 }
 
-/* SEARCH TOP RIGHT */
+/* SEARCH (LIVE) */
 #searchWrap{
   display:flex;
-  gap:6px;
   align-items:center;
 }
 
 #searchInput{
-  width:140px;
+  width:150px;
   padding:6px 8px;
   font-size:12px;
   border:none;
   border-radius:6px;
   background:#1e1e25;
   color:white;
-}
-
-#searchBtn{
-  padding:6px 8px;
-  font-size:11px;
-  border:none;
-  border-radius:6px;
-  background:#6d3cff;
-  color:white;
-  cursor:pointer;
+  outline:none;
 }
 
 /* STORE */
 #store{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
-  padding:20px;
+  gap:12px;
+  padding:15px;
 }
 
 /* BEAT CARD */
@@ -98,7 +87,7 @@ header{
 
 .beat img{
   width:100%;
-  height:130px;
+  height:120px;
   object-fit:cover;
 }
 
@@ -114,21 +103,21 @@ header{
 .meta{
   font-size:11px;
   opacity:0.8;
+  margin:2px 0;
 }
 
-/* GENRES */
 .genres{
   font-size:10px;
   opacity:0.8;
   margin-top:5px;
 }
 
-/* BUTTON GROUP */
+/* BUTTONS */
 .buttonGroup{
   display:flex;
   flex-direction:column;
   gap:6px;
-  margin-top:10px;
+  margin-top:8px;
 }
 
 button{
@@ -142,14 +131,41 @@ button{
   font-size:12px;
 }
 
-/* CART */
+/* CART (SMALL FIXED) */
 #cartBox{
-  max-width:600px;
-  margin:10px auto;
-  padding:10px;
+  max-width:520px;
+  margin:8px auto;
+  padding:8px 10px;
   background:#181820;
   border-radius:10px;
-  font-size:13px;
+  font-size:12px;
+}
+
+#cartBox h2{
+  font-size:15px;
+  margin:0 0 6px 0;
+}
+
+#cartItems div{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:4px 0;
+  border-bottom:1px solid #222;
+}
+
+#cartItems button{
+  padding:3px 6px;
+  font-size:10px;
+}
+
+/* PLAYER */
+#playerBar{
+  padding:10px;
+}
+
+audio{
+  width:100%;
 }
 </style>
 
@@ -168,10 +184,9 @@ button{
     </div>
   </div>
 
-  <!-- SEARCH RIGHT -->
+  <!-- LIVE SEARCH -->
   <div id="searchWrap">
-    <input id="searchInput" placeholder="Search...">
-    <button id="searchBtn" onclick="searchBeats()">🔍</button>
+    <input id="searchInput" placeholder="Search..." oninput="searchBeats()">
   </div>
 
 </header>
@@ -187,6 +202,11 @@ button{
 <!-- STORE -->
 <div id="store"></div>
 
+<!-- PLAYER -->
+<div id="playerBar">
+  <audio id="audioPlayer" controls></audio>
+</div>
+
 <script>
 firebase.initializeApp({
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
@@ -199,7 +219,7 @@ const db = firebase.firestore();
 let allBeats = [];
 let cart = [];
 
-/* LOAD SETTINGS */
+/* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
   if(!s) return;
@@ -212,9 +232,11 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
 /* LOAD BEATS */
 db.collection("beats").onSnapshot(snapshot=>{
   allBeats = [];
+
   snapshot.forEach(doc=>{
     allBeats.push({id:doc.id,...doc.data()});
   });
+
   renderBeats(allBeats);
 });
 
@@ -264,12 +286,15 @@ function renderBeats(beats){
 
 /* AUDIO */
 function playPreview(url){
-  const player = new Audio(url);
+  if(!url) return;
+  const player = document.getElementById("audioPlayer");
+  player.src = url;
   player.play();
 }
 
-/* SEARCH */
+/* LIVE SEARCH */
 function searchBeats(){
+
   const value = searchInput.value.toLowerCase().trim();
 
   if(!value){
@@ -292,7 +317,7 @@ function searchBeats(){
 /* CART (NO DUPLICATES) */
 function addToCart(id){
 
-  if(cart.find(c=>c.id===id)) return; // prevents duplicates
+  if(cart.find(c=>c.id===id)) return;
 
   const beat = allBeats.find(b=>b.id===id);
   if(!beat) return;
@@ -315,8 +340,11 @@ function renderCart(){
 
     cartItems.innerHTML += `
       <div>
-        ${item.title} - $${item.price}
-        <button onclick="removeFromCart(${i})">x</button>
+        ${item.title}
+        <span>
+          $${item.price}
+          <button onclick="removeFromCart(${i})">x</button>
+        </span>
       </div>
     `;
   });
@@ -330,7 +358,7 @@ function removeFromCart(i){
 }
 
 function checkoutCart(){
-  alert("Checkout ready (payment system stays unchanged)");
+  alert("Checkout ready — payment system unchanged");
 }
 </script>
 
