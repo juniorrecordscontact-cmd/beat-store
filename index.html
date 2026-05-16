@@ -216,8 +216,11 @@ const db = firebase.firestore();
 
 let allBeats = [];
 
-/* CART (PERSISTENT) */
+/* CART PERSISTENCE */
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+/* AUDIO STATE */
+let currentBeatId = null;
 
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
@@ -259,7 +262,7 @@ function renderBeats(beats){
 
           <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
           <div class="meta">BPM: ${b.tempo || 'N/A'}</div>
-          <div class="meta">Price: $${b.price || 0}</div>
+          <div class="meta">$${b.price || 0}</div>
 
           <div class="genres">
             ${(b.genres || []).join(" • ")}
@@ -268,7 +271,7 @@ function renderBeats(beats){
           <div class="buttonGroup">
 
             <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
-              ▶ Play Preview
+              ▶ Play / Pause
             </button>
 
             <button onclick="addToCart('${b.id}')">
@@ -284,13 +287,26 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO + PLAY TRACKING */
+/* AUDIO TOGGLE + TRACKING */
 function playPreview(url,id){
+
   if(!url) return;
 
   const player = document.getElementById("audioPlayer");
+
+  // toggle same beat
+  if(currentBeatId === id){
+    if(player.paused){
+      player.play();
+    } else {
+      player.pause();
+    }
+    return;
+  }
+
   player.src = url;
   player.play();
+  currentBeatId = id;
 
   db.collection("beats").doc(id).update({
     plays: firebase.firestore.FieldValue.increment(1)
