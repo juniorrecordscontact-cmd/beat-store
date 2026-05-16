@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Junior Beats Admin Studio</title>
+<title>Junior Beats Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -11,5 +11,247 @@
 
 <style>
 body{
+  font-family:Arial;
+  background:#0f0f12;
+  color:white;
   margin:0;
- 
+}
+
+h1{
+  text-align:center;
+  padding:20px;
+}
+
+.center{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+input,button{
+  width:300px;
+  padding:10px;
+  margin:6px;
+  border:none;
+  border-radius:6px;
+}
+
+button{
+  background:#6d3cff;
+  color:white;
+  cursor:pointer;
+}
+
+#panel{
+  display:none;
+  padding:20px;
+}
+
+.section{
+  margin-top:20px;
+  border-top:1px solid #333;
+  padding-top:20px;
+}
+
+.beatRow{
+  background:#1a1a20;
+  padding:10px;
+  margin:10px;
+  border-radius:8px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🎛 Junior Beats Admin</h1>
+
+<div id="loginBox" class="center">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="panel">
+
+<div class="section">
+  <button onclick="logout()" style="background:#ff3b3b;">Logout</button>
+</div>
+
+<div class="section">
+<h2>Site Settings</h2>
+
+<input id="storeName" placeholder="Store Name">
+<input id="slogan" placeholder="Slogan">
+<input id="bg" placeholder="Background Image URL">
+<input id="logo" placeholder="Logo Image URL">
+<input id="font" placeholder="Font">
+
+<button onclick="saveSettings()">Save Settings</button>
+</div>
+
+<div class="section">
+<h2>Upload Beat</h2>
+
+<input id="title" placeholder="Title">
+<input id="producer" placeholder="Producer">
+<input id="price" placeholder="Price">
+<input id="tempo" placeholder="BPM">
+
+<input id="image" placeholder="Image URL">
+<input id="preview" placeholder="MP3 URL">
+<input id="wav" placeholder="WAV URL">
+
+<!-- GENRES (TEXT INPUT SIMPLE FIX) -->
+<input id="genres" placeholder="Genres (comma separated e.g Trap, Pop)">
+
+<button onclick="addBeat()">Upload</button>
+<button onclick="updateBeat()">Update Selected</button>
+<button onclick="deleteBeat()">Delete Selected</button>
+</div>
+
+<div class="section">
+<h2>Beats</h2>
+<div id="beatList"></div>
+</div>
+
+</div>
+
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain:"junior-beats-store.firebaseapp.com",
+projectId:"junior-beats-store"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let selectedBeatId = null;
+
+/* LOGIN */
+function login(){
+  auth.signInWithEmailAndPassword(email.value,password.value)
+  .catch(err=>alert(err.message));
+}
+
+/* AUTH */
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
+  loginBox.style.display="none";
+  panel.style.display="block";
+  loadBeats();
+});
+
+/* LOGOUT */
+function logout(){
+  auth.signOut().then(()=>location.reload());
+}
+
+/* SETTINGS FIXED */
+function saveSettings(){
+  db.collection("settings").doc("site").set({
+    storeName:storeName.value || "",
+    slogan:slogan.value || "",
+    bg:bg.value || "",
+    logo:logo.value || "",
+    font:font.value || ""
+  }, { merge:true });
+
+  alert("Settings saved");
+}
+
+/* ADD BEAT FIXED */
+function addBeat(){
+
+  const genresArray = genres.value
+    ? genres.value.split(",").map(g => g.trim())
+    : [];
+
+  db.collection("beats").add({
+    title:title.value || "",
+    producer:producer.value || "",
+    price:parseFloat(price.value || 0),
+    tempo:tempo.value || "",
+    image:image.value || "",
+    previewFile:preview.value || "",
+    wavFile:wav.value || "",
+    genres:genresArray,
+    createdAt:Date.now()
+  });
+
+  alert("Uploaded");
+}
+
+/* UPDATE FIXED */
+function updateBeat(){
+
+  if(!selectedBeatId) return alert("Select beat first");
+
+  const genresArray = genres.value
+    ? genres.value.split(",").map(g => g.trim())
+    : [];
+
+  db.collection("beats").doc(selectedBeatId).update({
+    title:title.value || "",
+    producer:producer.value || "",
+    price:parseFloat(price.value || 0),
+    tempo:tempo.value || "",
+    image:image.value || "",
+    previewFile:preview.value || "",
+    wavFile:wav.value || "",
+    genres:genresArray
+  });
+
+  alert("Updated");
+}
+
+/* DELETE */
+function deleteBeat(){
+  if(!selectedBeatId) return alert("Select beat first");
+  db.collection("beats").doc(selectedBeatId).delete();
+  selectedBeatId=null;
+}
+
+/* LOAD BEATS */
+function loadBeats(){
+  db.collection("beats").onSnapshot(snap=>{
+    beatList.innerHTML="";
+    snap.forEach(doc=>{
+      let b = doc.data();
+
+      beatList.innerHTML += `
+        <div class="beatRow" onclick="selectBeat('${doc.id}')">
+          <b>${b.title}</b><br>
+          ${b.producer}<br>
+          $${b.price}
+        </div>
+      `;
+    });
+  });
+}
+
+/* SELECT */
+function selectBeat(id){
+  selectedBeatId=id;
+
+  db.collection("beats").doc(id).get().then(doc=>{
+    let b = doc.data();
+
+    title.value=b.title || "";
+    producer.value=b.producer || "";
+    price.value=b.price || "";
+    tempo.value=b.tempo || "";
+    image.value=b.image || "";
+    preview.value=b.previewFile || "";
+    wav.value=b.wavFile || "";
+    genres.value=(b.genres || []).join(", ");
+  });
+}
+</script>
+
+</body>
+</html>
