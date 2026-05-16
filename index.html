@@ -172,7 +172,6 @@ audio{
 
 <body>
 
-<!-- HEADER -->
 <header>
 
   <div class="leftHeader">
@@ -215,11 +214,7 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
-
-/* CART PERSISTENCE */
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-/* AUDIO STATE */
 let currentBeatId = null;
 
 /* SETTINGS */
@@ -241,6 +236,7 @@ db.collection("beats").onSnapshot(snapshot=>{
   });
 
   renderBeats(allBeats);
+  renderCart();
 });
 
 /* RENDER */
@@ -287,20 +283,16 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO TOGGLE + TRACKING */
+/* AUDIO FIXED SAFETY */
 function playPreview(url,id){
 
   if(!url) return;
 
   const player = document.getElementById("audioPlayer");
 
-  // toggle same beat
   if(currentBeatId === id){
-    if(player.paused){
-      player.play();
-    } else {
-      player.pause();
-    }
+    if(player.paused) player.play();
+    else player.pause();
     return;
   }
 
@@ -310,10 +302,10 @@ function playPreview(url,id){
 
   db.collection("beats").doc(id).update({
     plays: firebase.firestore.FieldValue.increment(1)
-  });
+  }).catch(()=>{});
 }
 
-/* SEARCH */
+/* SEARCH IMPROVED SAFETY */
 function searchBeats(){
 
   const value = searchInput.value.toLowerCase().trim();
@@ -327,7 +319,7 @@ function searchBeats(){
     return (
       (b.title||"").toLowerCase().includes(value) ||
       (b.producer||"").toLowerCase().includes(value) ||
-      (b.tempo||"").toString().includes(value) ||
+      String(b.tempo||"").includes(value) ||
       (b.genres||[]).join(" ").toLowerCase().includes(value)
     );
   });
@@ -335,7 +327,7 @@ function searchBeats(){
   renderBeats(filtered);
 }
 
-/* CART */
+/* CART SAFE */
 function addToCart(id){
 
   if(cart.find(c=>c.id===id)) return;
@@ -345,8 +337,10 @@ function addToCart(id){
 
   cart.push(beat);
   renderCart();
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
+/* CART RENDER */
 function renderCart(){
 
   const cartItems = document.getElementById("cartItems");
