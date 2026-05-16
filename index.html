@@ -2,258 +2,204 @@
 <html>
 
 <head>
-<meta charset="UTF-8">
-<title>Junior Beats</title>
+  <meta charset="UTF-8">
+  <title>Junior Beats</title>
 
-<link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<style>
-header{
-  display:flex;
-  align-items:center;
-  gap:15px;
-  padding:15px;
-}
+  <style>
+    body{
+      margin:0;
+      transition: all 0.3s ease;
+    }
 
-#logo{
-  width:70px;
-  height:70px;
-  object-fit:cover;
-  border-radius:12px;
-  background:#222;
-}
+    header{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:15px;
+    }
 
-.titleBlock{
-  display:flex;
-  flex-direction:column;
-}
+    #logo{
+      width:80px;
+      height:80px;
+      object-fit:cover;
+      border-radius:12px;
+      background:#222;
+    }
 
-#storeTitle{
-  margin:0;
-}
+    .titleBlock{
+      display:flex;
+      flex-direction:column;
+    }
 
-#slogan{
-  margin:0;
-  opacity:0.7;
-  font-size:14px;
-}
+    #storeTitle{
+      margin:0;
+      font-size:22px;
+    }
 
-/* SEARCH */
-#searchInput{
-  width:90%;
-  max-width:500px;
-  margin:15px auto;
-  display:block;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-}
+    #slogan{
+      margin:0;
+      opacity:0.7;
+      font-size:14px;
+    }
 
-/* STORE */
-#store{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:20px;
-  padding:20px;
-}
+    /* GENRE BAR */
+    #genreBar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:10px 15px;
+    }
 
-/* CARD */
-.beat-card{
-  background:#1b1b22;
-  padding:15px;
-  border-radius:12px;
-  color:white;
-}
+    #genreBar button{
+      background:#2a2a2a;
+      color:white;
+      border:none;
+      padding:6px 10px;
+      border-radius:6px;
+      cursor:pointer;
+    }
 
-.beat-card img{
-  width:100%;
-  height:160px;
-  object-fit:cover;
-  border-radius:8px;
-}
-
-button{
-  margin-top:10px;
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:#6d3cff;
-  color:white;
-  cursor:pointer;
-}
-
-/* CART */
-#cartBox{
-  max-width:900px;
-  margin:20px auto;
-  padding:15px;
-  background:#181820;
-  border-radius:12px;
-}
-
-.cartItem{
-  display:flex;
-  justify-content:space-between;
-  padding:8px;
-  border-bottom:1px solid #333;
-}
-</style>
-
+    #genreBar button.active{
+      background:#555;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header>
-  <img id="logo">
-  <div class="titleBlock">
-    <h1 id="storeTitle">Junior Beats</h1>
-    <p id="slogan">By Jayan Reid</p>
+  <!-- HEADER -->
+  <header>
+
+    <img id="logo" src="" alt="logo">
+
+    <div class="titleBlock">
+      <h1 id="storeTitle">Junior Beats</h1>
+      <p id="slogan">By Jayan Reid</p>
+    </div>
+
+  </header>
+
+  <!-- GENRE FILTER BAR -->
+  <div id="genreBar"></div>
+
+  <!-- CART -->
+  <div id="cartBox">
+    <h2>🛒 Cart</h2>
+    <div id="cartItems"></div>
+    <h3 id="cartTotal">Total: $0</h3>
+    <button onclick="checkoutCart()">Checkout</button>
   </div>
-</header>
 
-<!-- SEARCH -->
-<input id="searchInput" placeholder="Search beats..." onkeyup="searchBeats()">
+  <!-- STORE -->
+  <div id="store"></div>
 
-<!-- CART -->
-<div id="cartBox">
-  <h2>🛒 Cart</h2>
-  <div id="cartItems"></div>
-  <h3 id="cartTotal">Total: $0</h3>
-  <button onclick="checkoutCart()">Checkout</button>
-</div>
+  <!-- PLAYER -->
+  <div id="playerBar">
+    <div id="nowPlaying">No beat playing</div>
+  </div>
 
-<!-- STORE -->
-<div id="store"></div>
+  <script src="app.js"></script>
 
-<script>
-firebase.initializeApp({
-apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
-authDomain:"junior-beats-store.firebaseapp.com",
-projectId:"junior-beats-store"
-});
+  <!-- FIREBASE + GENRE SYSTEM -->
+  <script>
+    const db = firebase.firestore();
 
-const db = firebase.firestore();
+    let allBeats = [];
 
-let allBeats = [];
-let cart = [];
+    // LOAD SETTINGS
+    db.collection("settings").doc("site").get().then(doc => {
+      const s = doc.data();
+      if(!s) return;
 
-/* SETTINGS */
-db.collection("settings").doc("site").onSnapshot(doc=>{
-  const s = doc.data();
-  if(!s) return;
+      if(s.logo) document.getElementById("logo").src = s.logo;
+      if(s.storeName) document.getElementById("storeTitle").innerText = s.storeName;
+      if(s.slogan) document.getElementById("slogan").innerText = s.slogan;
+    });
 
-  storeTitle.innerText = s.storeName || "";
-  slogan.innerText = s.slogan || "";
+    // LOAD BEATS
+    db.collection("beats").onSnapshot(snapshot => {
+      allBeats = [];
 
-  if(s.logo){
-    logo.src = s.logo;
-  }
-});
+      snapshot.forEach(doc => {
+        allBeats.push({ id: doc.id, ...doc.data() });
+      });
 
-/* LOAD BEATS */
-db.collection("beats").onSnapshot(snapshot=>{
-  allBeats = [];
+      renderBeats(allBeats);
+      buildGenreBar(allBeats);
+    });
 
-  snapshot.forEach(doc=>{
-    allBeats.push({id:doc.id,...doc.data()});
-  });
+    // RENDER BEATS
+    function renderBeats(beats){
+      const store = document.getElementById("store");
+      store.innerHTML = "";
 
-  renderBeats(allBeats);
-});
+      beats.forEach(b => {
+        store.innerHTML += `
+          <div class="beat" data-genres="${(b.genres||[]).join(',')}">
 
-/* SEARCH */
-function searchBeats(){
+            <h3>${b.title}</h3>
 
-  const value = searchInput.value.toLowerCase();
+            <div>
+              ${(b.genres||[]).map(g => `<span class="genre">${g}</span>`).join(" ")}
+            </div>
 
-  const filtered = allBeats.filter(b=>{
-    return (
-      (b.title || "").toLowerCase().includes(value) ||
-      (b.producer || "").toLowerCase().includes(value)
-    );
-  });
+            <p>$${b.price}</p>
 
-  renderBeats(filtered);
-}
+            <button onclick="addToCart('${b.id}')">Add to Cart</button>
 
-/* RENDER */
-function renderBeats(beats){
+          </div>
+        `;
+      });
+    }
 
-  const store = document.getElementById("store");
-  store.innerHTML = "";
+    // BUILD GENRE BUTTONS (AUTO FROM DATA)
+    function buildGenreBar(beats){
+      const genreSet = new Set();
 
-  beats.forEach(b=>{
+      beats.forEach(b => {
+        (b.genres || []).forEach(g => genreSet.add(g));
+      });
 
-    store.innerHTML += `
-      <div class="beat-card">
+      const bar = document.getElementById("genreBar");
 
-        <img src="${b.image || ''}">
+      bar.innerHTML = `
+        <button onclick="filterGenre('ALL')" class="active">All Beats</button>
+        ${[...genreSet].map(g => `
+          <button onclick="filterGenre('${g}')">${g}</button>
+        `).join("")}
+      `;
+    }
 
-        <h3>${b.title || ''}</h3>
+    // FILTER SYSTEM
+    function filterGenre(genre){
 
-        <p>${b.producer || ''}</p>
+      document.querySelectorAll("#genreBar button").forEach(b=>{
+        b.classList.remove("active");
+      });
 
-        <p>$${b.price || 0}</p>
+      event.target.classList.add("active");
 
-        <button onclick="addToCart('${b.id}')">Add to Cart</button>
+      const cards = document.querySelectorAll(".beat");
 
-      </div>
-    `;
-  });
-}
+      cards.forEach(card => {
 
-/* ADD TO CART */
-function addToCart(id){
+        const genres = card.getAttribute("data-genres") || "";
 
-  const beat = allBeats.find(b => b.id === id);
-  if(!beat) return;
+        if(genre === "ALL"){
+          card.style.display = "block";
+        } else {
+          card.style.display = genres.includes(genre) ? "block" : "none";
+        }
 
-  cart.push(beat);
-  renderCart();
-}
+      });
+    }
 
-/* CART RENDER */
-function renderCart(){
-
-  const cartItems = document.getElementById("cartItems");
-  const cartTotal = document.getElementById("cartTotal");
-
-  cartItems.innerHTML = "";
-
-  let total = 0;
-
-  cart.forEach((item, i)=>{
-
-    total += parseFloat(item.price || 0);
-
-    cartItems.innerHTML += `
-      <div class="cartItem">
-        <span>${item.title}</span>
-        <span>$${item.price}</span>
-        <button onclick="removeFromCart(${i})">X</button>
-      </div>
-    `;
-  });
-
-  cartTotal.innerText = "Total: $" + total.toFixed(2);
-}
-
-/* REMOVE */
-function removeFromCart(i){
-  cart.splice(i,1);
-  renderCart();
-}
-
-/* CHECKOUT */
-function checkoutCart(){
-  alert("Checkout ready (connect PayPal here)");
-}
-</script>
+  </script>
 
 </body>
 </html>
