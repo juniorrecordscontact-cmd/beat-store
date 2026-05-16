@@ -67,6 +67,22 @@
     #genreBar button.active{
       background:#555;
     }
+
+    /* SEARCH */
+    #searchWrap{
+      padding:10px 15px;
+    }
+
+    #searchInput{
+      width:100%;
+      max-width:400px;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#222;
+      color:white;
+      outline:none;
+    }
   </style>
 </head>
 
@@ -87,6 +103,16 @@
   <!-- GENRE FILTER BAR -->
   <div id="genreBar"></div>
 
+  <!-- SEARCH -->
+  <div id="searchWrap">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search beats..."
+      onkeyup="searchBeats()"
+    >
+  </div>
+
   <!-- CART -->
   <div id="cartBox">
     <h2>🛒 Cart</h2>
@@ -100,7 +126,7 @@
 
   <!-- PLAYER -->
   <div id="playerBar">
-    <div id="nowPlaying">No beat playing</div>
+    <div id="nowPlaying"></div>
   </div>
 
   <script src="app.js"></script>
@@ -157,7 +183,7 @@
       });
     }
 
-    // BUILD GENRE BUTTONS (AUTO FROM DATA)
+    // BUILD GENRE BUTTONS
     function buildGenreBar(beats){
       const genreSet = new Set();
 
@@ -194,6 +220,29 @@
           card.style.display = "block";
         } else {
           card.style.display = genres.includes(genre) ? "block" : "none";
+        }
+
+      });
+    }
+
+    // SEARCH SYSTEM
+    function searchBeats(){
+
+      const value = document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase();
+
+      const cards = document.querySelectorAll(".beat");
+
+      cards.forEach(card => {
+
+        const text = card.innerText.toLowerCase();
+
+        if(text.includes(value)){
+          card.style.display = "block";
+        } else {
+          card.style.display = "none";
         }
 
       });
