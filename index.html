@@ -23,12 +23,12 @@ header{
   display:flex;
   align-items:center;
   gap:12px;
-  padding:15px;
+  padding:12px;
 }
 
 #logo{
-  width:65px;
-  height:65px;
+  width:60px;
+  height:60px;
   object-fit:cover;
   border-radius:10px;
   background:#222;
@@ -41,64 +41,65 @@ header{
 
 #storeTitle{
   margin:0;
-  font-size:20px;
+  font-size:18px;
 }
 
 #slogan{
   margin:0;
   opacity:0.7;
-  font-size:13px;
+  font-size:12px;
 }
 
 /* SEARCH (SMALL) */
 #searchWrap{
   display:flex;
-  gap:8px;
-  padding:10px 15px;
+  gap:6px;
+  padding:8px 12px;
 }
 
 #searchInput{
   flex:1;
-  max-width:320px;
-  padding:8px 10px;
+  max-width:240px;
+  padding:7px 8px;
+  font-size:12px;
   border:none;
-  border-radius:8px;
+  border-radius:6px;
   background:#1e1e25;
   color:white;
-  font-size:13px;
   outline:none;
 }
 
-#searchBtn{
-  padding:8px 12px;
+#searchWrap button{
+  padding:7px 10px;
+  font-size:12px;
   border:none;
-  border-radius:8px;
+  border-radius:6px;
   background:#6d3cff;
   color:white;
-  font-size:13px;
   cursor:pointer;
 }
 
 /* CART (SMALL) */
 #cartBox{
-  max-width:750px;
-  margin:15px auto;
-  padding:12px;
+  max-width:600px;
+  margin:10px auto;
+  padding:10px;
   background:#181820;
   border-radius:10px;
+  font-size:13px;
 }
 
 #cartBox h2{
-  margin:0 0 10px 0;
-  font-size:18px;
+  font-size:16px;
+  margin:0 0 8px 0;
 }
 
 /* STORE */
 #store{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:15px;
-  padding:20px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+  padding:15px;
 }
 
 /* BEAT CARD */
@@ -106,17 +107,11 @@ header{
   background:#1a1a22;
   border-radius:12px;
   overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,0.4);
-  transition:0.2s;
-}
-
-.beat:hover{
-  transform:translateY(-4px);
 }
 
 .beat img{
   width:100%;
-  height:140px;
+  height:120px;
   object-fit:cover;
 }
 
@@ -126,30 +121,42 @@ header{
 
 .beat h3{
   margin:5px 0;
-  font-size:15px;
+  font-size:14px;
 }
 
 .meta{
-  font-size:12px;
+  font-size:11px;
   opacity:0.8;
-  margin:3px 0;
+  margin:2px 0;
 }
 
 .genres{
-  margin-top:5px;
-  font-size:11px;
-  opacity:0.9;
+  font-size:10px;
+  opacity:0.8;
+  margin-top:4px;
 }
 
+/* BUTTON */
 button{
   width:100%;
-  padding:10px;
+  padding:8px;
   border:none;
   border-radius:8px;
   background:#6d3cff;
   color:white;
   cursor:pointer;
-  margin-top:10px;
+  margin-top:8px;
+}
+
+/* PLAYER */
+#playerBar{
+  padding:10px;
+  background:#111;
+  border-top:1px solid #222;
+}
+
+audio{
+  width:100%;
 }
 </style>
 
@@ -168,8 +175,8 @@ button{
 
 <!-- SEARCH -->
 <div id="searchWrap">
-  <input id="searchInput" placeholder="Search beats..." onkeypress="handleEnter(event)">
-  <button id="searchBtn" onclick="searchBeats()">Search</button>
+  <input id="searchInput" placeholder="Search..." onkeypress="handleEnter(event)">
+  <button onclick="searchBeats()">🔍</button>
 </div>
 
 <!-- CART -->
@@ -183,6 +190,11 @@ button{
 <!-- STORE -->
 <div id="store"></div>
 
+<!-- PLAYER -->
+<div id="playerBar">
+  <audio id="audioPlayer" controls></audio>
+</div>
+
 <script>
 firebase.initializeApp({
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
@@ -193,6 +205,7 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
+let cart = [];
 
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
@@ -240,13 +253,28 @@ function renderBeats(beats){
             ${(b.genres || []).join(" • ")}
           </div>
 
-          <button onclick="addToCart('${b.id}')">Add to Cart</button>
+          <button onclick="playPreview('${b.previewFile || ''}')">
+            ▶ Play Preview
+          </button>
+
+          <button onclick="addToCart('${b.id}')">
+            Add to Cart
+          </button>
 
         </div>
 
       </div>
     `;
   });
+}
+
+/* AUDIO PLAYER */
+function playPreview(url){
+  const player = document.getElementById("audioPlayer");
+  if(!url) return;
+
+  player.src = url;
+  player.play();
 }
 
 /* SEARCH */
@@ -277,6 +305,48 @@ function handleEnter(e){
   if(e.key === "Enter"){
     searchBeats();
   }
+}
+
+/* CART */
+function addToCart(id){
+  const beat = allBeats.find(b => b.id === id);
+  if(!beat) return;
+
+  cart.push(beat);
+  renderCart();
+}
+
+function renderCart(){
+
+  const cartItems = document.getElementById("cartItems");
+  const cartTotal = document.getElementById("cartTotal");
+
+  cartItems.innerHTML = "";
+
+  let total = 0;
+
+  cart.forEach((item,i)=>{
+
+    total += parseFloat(item.price || 0);
+
+    cartItems.innerHTML += `
+      <div>
+        ${item.title} - $${item.price}
+        <button onclick="removeFromCart(${i})">X</button>
+      </div>
+    `;
+  });
+
+  cartTotal.innerText = "Total: $" + total.toFixed(2);
+}
+
+function removeFromCart(i){
+  cart.splice(i,1);
+  renderCart();
+}
+
+function checkoutCart(){
+  alert("Checkout ready (connect payment later)");
 }
 </script>
 
