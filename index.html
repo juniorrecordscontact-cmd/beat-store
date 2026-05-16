@@ -5,8 +5,6 @@
 <meta charset="UTF-8">
 <title>Junior Beats</title>
 
-<link rel="stylesheet" href="style.css">
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
@@ -22,16 +20,22 @@ body{
 header{
   display:flex;
   align-items:center;
+  justify-content:space-between;
+  padding:12px 15px;
+}
+
+/* LEFT SIDE */
+.leftHeader{
+  display:flex;
+  align-items:center;
   gap:12px;
-  padding:12px;
 }
 
 #logo{
   width:60px;
   height:60px;
-  object-fit:cover;
   border-radius:10px;
-  background:#222;
+  object-fit:cover;
 }
 
 .titleBlock{
@@ -46,32 +50,30 @@ header{
 
 #slogan{
   margin:0;
-  opacity:0.7;
   font-size:12px;
+  opacity:0.7;
 }
 
-/* SEARCH (SMALL) */
+/* SEARCH TOP RIGHT */
 #searchWrap{
   display:flex;
   gap:6px;
-  padding:8px 12px;
+  align-items:center;
 }
 
 #searchInput{
-  flex:1;
-  max-width:240px;
-  padding:7px 8px;
+  width:140px;
+  padding:6px 8px;
   font-size:12px;
   border:none;
   border-radius:6px;
   background:#1e1e25;
   color:white;
-  outline:none;
 }
 
-#searchWrap button{
-  padding:7px 10px;
-  font-size:12px;
+#searchBtn{
+  padding:6px 8px;
+  font-size:11px;
   border:none;
   border-radius:6px;
   background:#6d3cff;
@@ -79,27 +81,12 @@ header{
   cursor:pointer;
 }
 
-/* CART (SMALL) */
-#cartBox{
-  max-width:600px;
-  margin:10px auto;
-  padding:10px;
-  background:#181820;
-  border-radius:10px;
-  font-size:13px;
-}
-
-#cartBox h2{
-  font-size:16px;
-  margin:0 0 8px 0;
-}
-
 /* STORE */
 #store{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:12px;
-  padding:15px;
+  gap:15px;
+  padding:20px;
 }
 
 /* BEAT CARD */
@@ -111,7 +98,7 @@ header{
 
 .beat img{
   width:100%;
-  height:120px;
+  height:130px;
   object-fit:cover;
 }
 
@@ -127,16 +114,23 @@ header{
 .meta{
   font-size:11px;
   opacity:0.8;
-  margin:2px 0;
 }
 
+/* GENRES */
 .genres{
   font-size:10px;
   opacity:0.8;
-  margin-top:4px;
+  margin-top:5px;
 }
 
-/* BUTTON */
+/* BUTTON GROUP */
+.buttonGroup{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:10px;
+}
+
 button{
   width:100%;
   padding:8px;
@@ -145,18 +139,17 @@ button{
   background:#6d3cff;
   color:white;
   cursor:pointer;
-  margin-top:8px;
+  font-size:12px;
 }
 
-/* PLAYER */
-#playerBar{
+/* CART */
+#cartBox{
+  max-width:600px;
+  margin:10px auto;
   padding:10px;
-  background:#111;
-  border-top:1px solid #222;
-}
-
-audio{
-  width:100%;
+  background:#181820;
+  border-radius:10px;
+  font-size:13px;
 }
 </style>
 
@@ -166,18 +159,22 @@ audio{
 
 <!-- HEADER -->
 <header>
-  <img id="logo">
-  <div class="titleBlock">
-    <h1 id="storeTitle">Junior Beats</h1>
-    <p id="slogan">By Jayan Reid</p>
-  </div>
-</header>
 
-<!-- SEARCH -->
-<div id="searchWrap">
-  <input id="searchInput" placeholder="Search..." onkeypress="handleEnter(event)">
-  <button onclick="searchBeats()">🔍</button>
-</div>
+  <div class="leftHeader">
+    <img id="logo">
+    <div class="titleBlock">
+      <h1 id="storeTitle">Junior Beats</h1>
+      <p id="slogan">By Jayan Reid</p>
+    </div>
+  </div>
+
+  <!-- SEARCH RIGHT -->
+  <div id="searchWrap">
+    <input id="searchInput" placeholder="Search...">
+    <button id="searchBtn" onclick="searchBeats()">🔍</button>
+  </div>
+
+</header>
 
 <!-- CART -->
 <div id="cartBox">
@@ -189,11 +186,6 @@ audio{
 
 <!-- STORE -->
 <div id="store"></div>
-
-<!-- PLAYER -->
-<div id="playerBar">
-  <audio id="audioPlayer" controls></audio>
-</div>
 
 <script>
 firebase.initializeApp({
@@ -207,7 +199,7 @@ const db = firebase.firestore();
 let allBeats = [];
 let cart = [];
 
-/* SETTINGS */
+/* LOAD SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
   if(!s) return;
@@ -220,11 +212,9 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
 /* LOAD BEATS */
 db.collection("beats").onSnapshot(snapshot=>{
   allBeats = [];
-
   snapshot.forEach(doc=>{
     allBeats.push({id:doc.id,...doc.data()});
   });
-
   renderBeats(allBeats);
 });
 
@@ -247,19 +237,23 @@ function renderBeats(beats){
 
           <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
           <div class="meta">BPM: ${b.tempo || 'N/A'}</div>
-          <div class="meta">Price: $${b.price || 0}</div>
+          <div class="meta">$${b.price || 0}</div>
 
           <div class="genres">
             ${(b.genres || []).join(" • ")}
           </div>
 
-          <button onclick="playPreview('${b.previewFile || ''}')">
-            ▶ Play Preview
-          </button>
+          <div class="buttonGroup">
 
-          <button onclick="addToCart('${b.id}')">
-            Add to Cart
-          </button>
+            <button onclick="playPreview('${b.previewFile || ''}')">
+              ▶ Play Preview
+            </button>
+
+            <button onclick="addToCart('${b.id}')">
+              Add to Cart
+            </button>
+
+          </div>
 
         </div>
 
@@ -268,48 +262,39 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO PLAYER */
+/* AUDIO */
 function playPreview(url){
-  const player = document.getElementById("audioPlayer");
-  if(!url) return;
-
-  player.src = url;
+  const player = new Audio(url);
   player.play();
 }
 
 /* SEARCH */
 function searchBeats(){
-
   const value = searchInput.value.toLowerCase().trim();
 
-  if(value === ""){
+  if(!value){
     renderBeats(allBeats);
     return;
   }
 
   const filtered = allBeats.filter(b=>{
-
     return (
-      (b.title || "").toLowerCase().includes(value) ||
-      (b.producer || "").toLowerCase().includes(value) ||
-      (b.tempo || "").toString().includes(value) ||
-      (b.genres || []).join(" ").toLowerCase().includes(value)
+      (b.title||"").toLowerCase().includes(value) ||
+      (b.producer||"").toLowerCase().includes(value) ||
+      (b.tempo||"").toString().includes(value) ||
+      (b.genres||[]).join(" ").toLowerCase().includes(value)
     );
   });
 
   renderBeats(filtered);
 }
 
-/* ENTER KEY */
-function handleEnter(e){
-  if(e.key === "Enter"){
-    searchBeats();
-  }
-}
-
-/* CART */
+/* CART (NO DUPLICATES) */
 function addToCart(id){
-  const beat = allBeats.find(b => b.id === id);
+
+  if(cart.find(c=>c.id===id)) return; // prevents duplicates
+
+  const beat = allBeats.find(b=>b.id===id);
   if(!beat) return;
 
   cart.push(beat);
@@ -326,13 +311,12 @@ function renderCart(){
   let total = 0;
 
   cart.forEach((item,i)=>{
-
-    total += parseFloat(item.price || 0);
+    total += Number(item.price||0);
 
     cartItems.innerHTML += `
       <div>
         ${item.title} - $${item.price}
-        <button onclick="removeFromCart(${i})">X</button>
+        <button onclick="removeFromCart(${i})">x</button>
       </div>
     `;
   });
@@ -346,7 +330,7 @@ function removeFromCart(i){
 }
 
 function checkoutCart(){
-  alert("Checkout ready (connect payment later)");
+  alert("Checkout ready (payment system stays unchanged)");
 }
 </script>
 
