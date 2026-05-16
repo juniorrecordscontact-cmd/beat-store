@@ -2,163 +2,186 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <title>Junior Beats</title>
+<meta charset="UTF-8">
+<title>Junior Beats</title>
 
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    body{
-      margin:0;
-      transition: all 0.3s ease;
-    }
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f0f12;
+  color:white;
+}
 
-    header{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:15px;
-    }
+/* HEADER */
+header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:15px;
+}
 
-    #logo{
-      width:80px;
-      height:80px;
-      object-fit:cover;
-      border-radius:12px;
-      background:#222;
-    }
+#logo{
+  width:65px;
+  height:65px;
+  object-fit:cover;
+  border-radius:10px;
+  background:#222;
+}
 
-    .titleBlock{
-      display:flex;
-      flex-direction:column;
-    }
+.titleBlock{
+  display:flex;
+  flex-direction:column;
+}
 
-    #storeTitle{
-      margin:0;
-      font-size:22px;
-    }
+#storeTitle{
+  margin:0;
+  font-size:20px;
+}
 
-    #slogan{
-      margin:0;
-      opacity:0.7;
-      font-size:14px;
-    }
+#slogan{
+  margin:0;
+  opacity:0.7;
+  font-size:13px;
+}
 
-    /* GENRE BAR */
-    #genreBar{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      padding:10px 15px;
-    }
+/* SEARCH (SMALL) */
+#searchWrap{
+  display:flex;
+  gap:8px;
+  padding:10px 15px;
+}
 
-    #genreBar button{
-      background:#2a2a2a;
-      color:white;
-      border:none;
-      padding:6px 10px;
-      border-radius:6px;
-      cursor:pointer;
-    }
+#searchInput{
+  flex:1;
+  max-width:320px;
+  padding:8px 10px;
+  border:none;
+  border-radius:8px;
+  background:#1e1e25;
+  color:white;
+  font-size:13px;
+  outline:none;
+}
 
-    #genreBar button.active{
-      background:#555;
-    }
+#searchBtn{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:#6d3cff;
+  color:white;
+  font-size:13px;
+  cursor:pointer;
+}
 
-    /* SEARCH */
-    #searchWrap{
-      padding:10px 15px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+/* CART (SMALL) */
+#cartBox{
+  max-width:750px;
+  margin:15px auto;
+  padding:12px;
+  background:#181820;
+  border-radius:10px;
+}
 
-    #searchInput{
-      flex:1;
-      max-width:400px;
-      padding:10px;
-      border:none;
-      border-radius:8px;
-      background:#222;
-      color:white;
-      outline:none;
-    }
+#cartBox h2{
+  margin:0 0 10px 0;
+  font-size:18px;
+}
 
-    #searchBtn{
-      padding:10px 16px;
-      border:none;
-      border-radius:8px;
-      background:#6d3cff;
-      color:white;
-      cursor:pointer;
-    }
+/* STORE */
+#store{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:15px;
+  padding:20px;
+}
 
-    /* STORE */
-    #store{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-      gap:20px;
-      padding:20px;
-    }
+/* BEAT CARD */
+.beat{
+  background:#1a1a22;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(0,0,0,0.4);
+  transition:0.2s;
+}
 
-    .beat{
-      background:#1b1b22;
-      padding:15px;
-      border-radius:12px;
-      color:white;
-    }
+.beat:hover{
+  transform:translateY(-4px);
+}
 
-    button{
-      width:100%;
-      padding:10px;
-      border:none;
-      border-radius:8px;
-      background:#6d3cff;
-      color:white;
-      cursor:pointer;
-    }
-  </style>
+.beat img{
+  width:100%;
+  height:140px;
+  object-fit:cover;
+}
+
+.beatContent{
+  padding:10px;
+}
+
+.beat h3{
+  margin:5px 0;
+  font-size:15px;
+}
+
+.meta{
+  font-size:12px;
+  opacity:0.8;
+  margin:3px 0;
+}
+
+.genres{
+  margin-top:5px;
+  font-size:11px;
+  opacity:0.9;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#6d3cff;
+  color:white;
+  cursor:pointer;
+  margin-top:10px;
+}
+</style>
+
 </head>
 
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <img id="logo" src="" alt="logo">
-
-    <div class="titleBlock">
-      <h1 id="storeTitle">Junior Beats</h1>
-      <p id="slogan">By Jayan Reid</p>
-    </div>
-  </header>
-
-  <!-- GENRE BAR -->
-  <div id="genreBar"></div>
-
-  <!-- SEARCH -->
-  <div id="searchWrap">
-    <input id="searchInput" placeholder="Search beats..." onkeypress="handleEnter(event)">
-    <button id="searchBtn" onclick="searchBeats()">Search</button>
+<!-- HEADER -->
+<header>
+  <img id="logo">
+  <div class="titleBlock">
+    <h1 id="storeTitle">Junior Beats</h1>
+    <p id="slogan">By Jayan Reid</p>
   </div>
+</header>
 
-  <!-- CART -->
-  <div id="cartBox">
-    <h2>🛒 Cart</h2>
-    <div id="cartItems"></div>
-    <h3 id="cartTotal">Total: $0</h3>
-    <button onclick="checkoutCart()">Checkout</button>
-  </div>
+<!-- SEARCH -->
+<div id="searchWrap">
+  <input id="searchInput" placeholder="Search beats..." onkeypress="handleEnter(event)">
+  <button id="searchBtn" onclick="searchBeats()">Search</button>
+</div>
 
-  <!-- STORE -->
-  <div id="store"></div>
+<!-- CART -->
+<div id="cartBox">
+  <h2>🛒 Cart</h2>
+  <div id="cartItems"></div>
+  <h3 id="cartTotal">Total: $0</h3>
+  <button onclick="checkoutCart()">Checkout</button>
+</div>
 
-  <!-- PLAYER -->
-  <div id="playerBar">
-    <div id="nowPlaying"></div>
-  </div>
+<!-- STORE -->
+<div id="store"></div>
 
 <script>
 firebase.initializeApp({
@@ -178,10 +201,7 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
 
   storeTitle.innerText = s.storeName || "";
   slogan.innerText = s.slogan || "";
-
-  if(s.logo){
-    logo.src = s.logo;
-  }
+  if(s.logo) logo.src = s.logo;
 });
 
 /* LOAD BEATS */
@@ -206,40 +226,46 @@ function renderBeats(beats){
     store.innerHTML += `
       <div class="beat">
 
-        <h3>${b.title || ''}</h3>
+        <img src="${b.image || ''}">
 
-        <p>${b.producer || ''}</p>
+        <div class="beatContent">
 
-        <p>$${b.price || 0}</p>
+          <h3>${b.title || ''}</h3>
 
-        <button onclick="addToCart('${b.id}')">Add to Cart</button>
+          <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
+          <div class="meta">BPM: ${b.tempo || 'N/A'}</div>
+          <div class="meta">Price: $${b.price || 0}</div>
+
+          <div class="genres">
+            ${(b.genres || []).join(" • ")}
+          </div>
+
+          <button onclick="addToCart('${b.id}')">Add to Cart</button>
+
+        </div>
 
       </div>
     `;
   });
 }
 
-/* ✅ FIXED SEARCH (REAL DATA SEARCH) */
+/* SEARCH */
 function searchBeats(){
 
-  const value = document.getElementById("searchInput")
-    .value.toLowerCase().trim();
+  const value = searchInput.value.toLowerCase().trim();
 
   if(value === ""){
     renderBeats(allBeats);
     return;
   }
 
-  const filtered = allBeats.filter(b => {
-
-    const title = (b.title || "").toLowerCase();
-    const producer = (b.producer || "").toLowerCase();
-    const genres = (b.genres || []).join(" ").toLowerCase();
+  const filtered = allBeats.filter(b=>{
 
     return (
-      title.includes(value) ||
-      producer.includes(value) ||
-      genres.includes(value)
+      (b.title || "").toLowerCase().includes(value) ||
+      (b.producer || "").toLowerCase().includes(value) ||
+      (b.tempo || "").toString().includes(value) ||
+      (b.genres || []).join(" ").toLowerCase().includes(value)
     );
   });
 
