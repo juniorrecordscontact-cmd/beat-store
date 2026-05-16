@@ -71,10 +71,13 @@
     /* SEARCH */
     #searchWrap{
       padding:10px 15px;
+      display:flex;
+      gap:10px;
+      align-items:center;
     }
 
     #searchInput{
-      width:100%;
+      flex:1;
       max-width:400px;
       padding:10px;
       border:none;
@@ -82,6 +85,16 @@
       background:#222;
       color:white;
       outline:none;
+    }
+
+    #searchBtn{
+      width:auto;
+      padding:10px 16px;
+      border:none;
+      border-radius:8px;
+      background:#6d3cff;
+      color:white;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -105,12 +118,18 @@
 
   <!-- SEARCH -->
   <div id="searchWrap">
+
     <input
       type="text"
       id="searchInput"
       placeholder="Search beats..."
-      onkeyup="searchBeats()"
+      onkeypress="handleSearchEnter(event)"
     >
+
+    <button id="searchBtn" onclick="searchBeats()">
+      🔍 Search
+    </button>
+
   </div>
 
   <!-- CART -->
@@ -161,10 +180,12 @@
 
     // RENDER BEATS
     function renderBeats(beats){
+
       const store = document.getElementById("store");
       store.innerHTML = "";
 
       beats.forEach(b => {
+
         store.innerHTML += `
           <div class="beat" data-genres="${(b.genres||[]).join(',')}">
 
@@ -176,7 +197,9 @@
 
             <p>$${b.price}</p>
 
-            <button onclick="addToCart('${b.id}')">Add to Cart</button>
+            <button onclick="addToCart('${b.id}')">
+              Add to Cart
+            </button>
 
           </div>
         `;
@@ -185,6 +208,7 @@
 
     // BUILD GENRE BUTTONS
     function buildGenreBar(beats){
+
       const genreSet = new Set();
 
       beats.forEach(b => {
@@ -194,9 +218,14 @@
       const bar = document.getElementById("genreBar");
 
       bar.innerHTML = `
-        <button onclick="filterGenre('ALL')" class="active">All Beats</button>
+        <button onclick="filterGenre('ALL')" class="active">
+          All Beats
+        </button>
+
         ${[...genreSet].map(g => `
-          <button onclick="filterGenre('${g}')">${g}</button>
+          <button onclick="filterGenre('${g}')">
+            ${g}
+          </button>
         `).join("")}
       `;
     }
@@ -219,7 +248,10 @@
         if(genre === "ALL"){
           card.style.display = "block";
         } else {
-          card.style.display = genres.includes(genre) ? "block" : "none";
+          card.style.display =
+            genres.includes(genre)
+            ? "block"
+            : "none";
         }
 
       });
@@ -231,7 +263,8 @@
       const value = document
         .getElementById("searchInput")
         .value
-        .toLowerCase();
+        .toLowerCase()
+        .trim();
 
       const cards = document.querySelectorAll(".beat");
 
@@ -246,6 +279,13 @@
         }
 
       });
+    }
+
+    // ENTER KEY SUPPORT
+    function handleSearchEnter(e){
+      if(e.key === "Enter"){
+        searchBeats();
+      }
     }
 
   </script>
