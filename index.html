@@ -11,7 +11,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-/* HEADER */
 header{
   display:flex;
   align-items:center;
@@ -19,7 +18,6 @@ header{
   padding:15px;
 }
 
-/* LOGO SLOT (FIXED) */
 #logo{
   width:70px;
   height:70px;
@@ -28,7 +26,6 @@ header{
   background:#222;
 }
 
-/* TITLE BLOCK */
 .titleBlock{
   display:flex;
   flex-direction:column;
@@ -44,35 +41,58 @@ header{
   font-size:14px;
 }
 
-/* GENRE BAR */
-#genreBar{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  padding:10px 15px;
+/* SEARCH */
+#searchInput{
+  width:90%;
+  max-width:500px;
+  margin:15px auto;
+  display:block;
+  padding:10px;
+  border-radius:8px;
+  border:none;
 }
 
-#genreBar button{
-  background:#222;
-  border:none;
+/* STORE */
+#store{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+  padding:20px;
+}
+
+/* CARD */
+.beat-card{
+  background:#1b1b22;
+  padding:15px;
+  border-radius:12px;
   color:white;
-  padding:6px 10px;
-  border-radius:6px;
+}
+
+.beat-card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+button{
+  margin-top:10px;
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  background:#6d3cff;
+  color:white;
   cursor:pointer;
 }
 
-#genreBar button.active{
-  background:#555;
-}
-
-/* GENRE TAGS */
-.genre{
-  display:inline-block;
-  background:#2a2a2a;
-  padding:4px 8px;
-  border-radius:6px;
-  margin:3px;
-  font-size:12px;
+/* CART */
+#cartBox{
+  max-width:900px;
+  margin:20px auto;
+  padding:15px;
+  background:#181820;
+  border-radius:12px;
 }
 </style>
 
@@ -80,22 +100,19 @@ header{
 
 <body>
 
-<!-- HEADER (LOGO FIXED BACK HERE) -->
+<!-- HEADER -->
 <header>
-
-  <img id="logo" src="" alt="logo">
-
+  <img id="logo">
   <div class="titleBlock">
     <h1 id="storeTitle">Junior Beats</h1>
     <p id="slogan">By Jayan Reid</p>
   </div>
-
 </header>
 
-<!-- GENRE BAR -->
-<div id="genreBar"></div>
+<!-- SEARCH BAR -->
+<input id="searchInput" placeholder="Search beats..." onkeyup="searchBeats()">
 
-<!-- CART (RESTORED) -->
+<!-- CART -->
 <div id="cartBox">
   <h2>🛒 Cart</h2>
   <div id="cartItems"></div>
@@ -106,12 +123,10 @@ header{
 <!-- STORE -->
 <div id="store"></div>
 
-<!-- PLAYER -->
+<!-- PLAYER (TEXT REMOVED HERE) -->
 <div id="playerBar">
-  <div id="nowPlaying">No beat playing</div>
+  <div id="nowPlaying"></div>
 </div>
-
-<script src="app.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -123,53 +138,16 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
-let currentGenre = "ALL";
 
-/* SETTINGS (LOGO FIXED) */
+/* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
   if(!s) return;
 
   storeTitle.innerText = s.storeName || "";
   slogan.innerText = s.slogan || "";
-
-  if(s.logo){
-    logo.src = s.logo;
-  }
+  if(s.logo) logo.src = s.logo;
 });
-
-/* GENRE LIST (STABLE) */
-const GENRES = [
-  "Pop","Trap","HipHop","R&B","Acoustic","Electro",
-  "LoFi","Drill","Dance","Jazz","Rock","Ambient",
-  "Soul","Funk","Experimental"
-];
-
-/* BUILD GENRES */
-function buildGenreBar(){
-
-  const bar = document.getElementById("genreBar");
-
-  bar.innerHTML = `
-    <button onclick="filterGenre('ALL',event)" class="active">All</button>
-    ${GENRES.map(g=>`
-      <button onclick="filterGenre('${g}',event)">${g}</button>
-    `).join("")}
-  `;
-}
-buildGenreBar();
-
-/* FILTER */
-function filterGenre(genre,e){
-  currentGenre = genre;
-
-  document.querySelectorAll("#genreBar button")
-    .forEach(b=>b.classList.remove("active"));
-
-  e.target.classList.add("active");
-
-  renderBeats(allBeats);
-}
 
 /* LOAD BEATS */
 db.collection("beats").onSnapshot(snapshot=>{
@@ -182,7 +160,21 @@ db.collection("beats").onSnapshot(snapshot=>{
   renderBeats(allBeats);
 });
 
-/* RENDER (FULL FIX RESTORED) */
+/* SEARCH */
+function searchBeats(){
+  const value = searchInput.value.toLowerCase();
+
+  const filtered = allBeats.filter(b=>{
+    return (
+      (b.title || "").toLowerCase().includes(value) ||
+      (b.producer || "").toLowerCase().includes(value)
+    );
+  });
+
+  renderBeats(filtered);
+}
+
+/* RENDER */
 function renderBeats(beats){
 
   const store = document.getElementById("store");
@@ -190,26 +182,16 @@ function renderBeats(beats){
 
   beats.forEach(b=>{
 
-    const genres = Array.isArray(b.genres) ? b.genres : [];
-
-    if(currentGenre !== "ALL"){
-      if(!genres.includes(currentGenre)) return;
-    }
-
     store.innerHTML += `
       <div class="beat-card">
 
-        <img src="${b.image || ''}" />
+        <img src="${b.image || ''}">
 
         <h3>${b.title || ''}</h3>
 
         <p>${b.producer || ''}</p>
 
-        <p>$${b.price || 0} • ${b.tempo || ''} BPM</p>
-
-        <div>
-          ${genres.map(g=>`<span class="genre">${g}</span>`).join("")}
-        </div>
+        <p>$${b.price || 0}</p>
 
         <button onclick="addToCart('${b.id}')">Add to Cart</button>
 
