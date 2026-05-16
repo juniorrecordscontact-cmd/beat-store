@@ -33,8 +33,8 @@ header{
 #logo{
   width:60px;
   height:60px;
-  object-fit:cover;
   border-radius:10px;
+  object-fit:cover;
 }
 
 .titleBlock{
@@ -53,7 +53,7 @@ header{
   opacity:0.7;
 }
 
-/* SEARCH (LIVE) */
+/* SEARCH */
 #searchWrap{
   display:flex;
   align-items:center;
@@ -103,7 +103,6 @@ header{
 .meta{
   font-size:11px;
   opacity:0.8;
-  margin:2px 0;
 }
 
 .genres{
@@ -131,7 +130,7 @@ button{
   font-size:12px;
 }
 
-/* CART (SMALL FIXED) */
+/* CART */
 #cartBox{
   max-width:520px;
   margin:8px auto;
@@ -184,7 +183,6 @@ audio{
     </div>
   </div>
 
-  <!-- LIVE SEARCH -->
   <div id="searchWrap">
     <input id="searchInput" placeholder="Search..." oninput="searchBeats()">
   </div>
@@ -217,7 +215,9 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
-let cart = [];
+
+/* CART (PERSISTENT) */
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
@@ -259,7 +259,7 @@ function renderBeats(beats){
 
           <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
           <div class="meta">BPM: ${b.tempo || 'N/A'}</div>
-          <div class="meta">$${b.price || 0}</div>
+          <div class="meta">Price: $${b.price || 0}</div>
 
           <div class="genres">
             ${(b.genres || []).join(" • ")}
@@ -267,7 +267,7 @@ function renderBeats(beats){
 
           <div class="buttonGroup">
 
-            <button onclick="playPreview('${b.previewFile || ''}')">
+            <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
               ▶ Play Preview
             </button>
 
@@ -284,15 +284,20 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO */
-function playPreview(url){
+/* AUDIO + PLAY TRACKING */
+function playPreview(url,id){
   if(!url) return;
+
   const player = document.getElementById("audioPlayer");
   player.src = url;
   player.play();
+
+  db.collection("beats").doc(id).update({
+    plays: firebase.firestore.FieldValue.increment(1)
+  });
 }
 
-/* LIVE SEARCH */
+/* SEARCH */
 function searchBeats(){
 
   const value = searchInput.value.toLowerCase().trim();
@@ -314,7 +319,7 @@ function searchBeats(){
   renderBeats(filtered);
 }
 
-/* CART (NO DUPLICATES) */
+/* CART */
 function addToCart(id){
 
   if(cart.find(c=>c.id===id)) return;
@@ -350,15 +355,18 @@ function renderCart(){
   });
 
   cartTotal.innerText = "Total: $" + total.toFixed(2);
+
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 function removeFromCart(i){
   cart.splice(i,1);
   renderCart();
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 function checkoutCart(){
-  alert("Checkout ready — payment system unchanged");
+  alert("Checkout ready — system unchanged");
 }
 </script>
 
