@@ -94,6 +94,13 @@ button{
   background:#181820;
   border-radius:12px;
 }
+
+.cartItem{
+  display:flex;
+  justify-content:space-between;
+  padding:8px;
+  border-bottom:1px solid #333;
+}
 </style>
 
 </head>
@@ -109,7 +116,7 @@ button{
   </div>
 </header>
 
-<!-- SEARCH BAR -->
+<!-- SEARCH -->
 <input id="searchInput" placeholder="Search beats..." onkeyup="searchBeats()">
 
 <!-- CART -->
@@ -123,11 +130,6 @@ button{
 <!-- STORE -->
 <div id="store"></div>
 
-<!-- PLAYER (TEXT REMOVED HERE) -->
-<div id="playerBar">
-  <div id="nowPlaying"></div>
-</div>
-
 <script>
 firebase.initializeApp({
 apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
@@ -138,6 +140,7 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
+let cart = [];
 
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
@@ -146,7 +149,10 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
 
   storeTitle.innerText = s.storeName || "";
   slogan.innerText = s.slogan || "";
-  if(s.logo) logo.src = s.logo;
+
+  if(s.logo){
+    logo.src = s.logo;
+  }
 });
 
 /* LOAD BEATS */
@@ -162,6 +168,7 @@ db.collection("beats").onSnapshot(snapshot=>{
 
 /* SEARCH */
 function searchBeats(){
+
   const value = searchInput.value.toLowerCase();
 
   const filtered = allBeats.filter(b=>{
@@ -198,6 +205,53 @@ function renderBeats(beats){
       </div>
     `;
   });
+}
+
+/* ADD TO CART */
+function addToCart(id){
+
+  const beat = allBeats.find(b => b.id === id);
+  if(!beat) return;
+
+  cart.push(beat);
+  renderCart();
+}
+
+/* CART RENDER */
+function renderCart(){
+
+  const cartItems = document.getElementById("cartItems");
+  const cartTotal = document.getElementById("cartTotal");
+
+  cartItems.innerHTML = "";
+
+  let total = 0;
+
+  cart.forEach((item, i)=>{
+
+    total += parseFloat(item.price || 0);
+
+    cartItems.innerHTML += `
+      <div class="cartItem">
+        <span>${item.title}</span>
+        <span>$${item.price}</span>
+        <button onclick="removeFromCart(${i})">X</button>
+      </div>
+    `;
+  });
+
+  cartTotal.innerText = "Total: $" + total.toFixed(2);
+}
+
+/* REMOVE */
+function removeFromCart(i){
+  cart.splice(i,1);
+  renderCart();
+}
+
+/* CHECKOUT */
+function checkoutCart(){
+  alert("Checkout ready (connect PayPal here)");
 }
 </script>
 
