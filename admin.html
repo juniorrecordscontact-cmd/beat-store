@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Junior Beats Control Center</title>
+<title>Junior Beats Admin</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -23,7 +23,6 @@ h1{
   font-size:20px;
 }
 
-/* LOGIN */
 .center{
   height:100vh;
   display:flex;
@@ -46,12 +45,57 @@ button{
   cursor:pointer;
 }
 
-/* LAYOUT */
+/* PANEL */
 #panel{
   display:none;
   padding:20px;
 }
 
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+/* SECTIONS */
+.section{
+  background:#12121a;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid #222;
+  margin-bottom:12px;
+}
+
+.section h2{
+  margin-top:0;
+  font-size:14px;
+}
+
+/* ROWS */
+.beatRow,.saleRow,.noteRow{
+  background:#1a1a22;
+  padding:8px;
+  margin:6px 0;
+  border-radius:8px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+.noteRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.deleteBtn{
+  background:#ff3b3b;
+  width:auto;
+  padding:5px 8px;
+  font-size:10px;
+}
+
+/* KPI */
 .kpiGrid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -76,67 +120,27 @@ button{
   font-size:18px;
   margin-top:8px;
 }
-
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-/* SECTIONS */
-.section{
-  background:#12121a;
-  padding:14px;
-  border-radius:10px;
-  border:1px solid #222;
-}
-
-.section h2{
-  margin-top:0;
-  font-size:14px;
-}
-
-/* ROWS */
-.beatRow,.saleRow,.noteRow{
-  background:#1a1a22;
-  padding:8px;
-  margin:6px 0;
-  border-radius:8px;
-  font-size:12px;
-}
-
-.small{font-size:11px;opacity:0.7}
-
-/* BUTTON SMALL */
-.deleteBtn{
-  background:#ff3b3b;
-  width:auto;
-  padding:5px 8px;
-  font-size:10px;
-}
-
-/* CANVAS CHART */
-canvas{
-  width:100%;
-  background:#0f0f16;
-  border-radius:8px;
-}
 </style>
 
 </head>
 
 <body>
 
-<h1>🎛 Junior Beats — Boss Control Center</h1>
+<h1>🎛 Junior Beats — Admin Control Center</h1>
 
+<!-- LOGIN -->
 <div id="loginBox" class="center">
   <input id="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
+<!-- PANEL -->
 <div id="panel">
+
+<button onclick="logout()" style="background:#ff3b3b;width:120px;">
+Logout
+</button>
 
 <!-- KPI -->
 <div class="kpiGrid">
@@ -165,7 +169,7 @@ canvas{
 
 <!-- SALES -->
 <div class="section">
-<h2>📊 Sales Feed</h2>
+<h2>📊 Sales</h2>
 <div id="salesList"></div>
 </div>
 
@@ -175,15 +179,15 @@ canvas{
 <div id="topBeats"></div>
 </div>
 
-<!-- CHART -->
+<!-- BEATS -->
 <div class="section">
-<h2>📈 Earnings Trend</h2>
-<canvas id="chart" height="120"></canvas>
+<h2>🎵 Beats (click to edit)</h2>
+<div id="beatList"></div>
 </div>
 
-<!-- UPLOAD (RESTORED FULLY) -->
+<!-- UPLOAD / EDIT -->
 <div class="section">
-<h2>🎵 Upload Beat</h2>
+<h2>🎛 Upload / Edit Beat</h2>
 
 <input id="title" placeholder="Title">
 <input id="producer" placeholder="Producer">
@@ -197,18 +201,12 @@ canvas{
 <input id="genres" placeholder="Genres">
 
 <input id="stripeLink" placeholder="Stripe Link">
-<input id="youtubeLink" placeholder="YouTube">
+<input id="youtubeLink" placeholder="YouTube Link">
 <input id="coupon" placeholder="Coupon">
 
 <button onclick="addBeat()">Upload Beat</button>
-<button onclick="updateBeat()">Update</button>
-<button onclick="deleteBeat()">Delete</button>
-</div>
-
-<!-- BEATS -->
-<div class="section">
-<h2>🎧 Beats</h2>
-<div id="beatList"></div>
+<button onclick="updateBeat()">Update Beat</button>
+<button onclick="deleteBeat()">Delete Beat</button>
 </div>
 
 <!-- NOTES -->
@@ -219,14 +217,6 @@ canvas{
 <button onclick="addNote()">Add Note</button>
 
 <div id="notesList"></div>
-</div>
-
-<!-- MARKETING AI PANEL -->
-<div class="section">
-<h2>🔥 Marketing Suggestions</h2>
-<div id="marketing"></div>
-</div>
-
 </div>
 
 </div>
@@ -241,26 +231,33 @@ projectId:"junior-beats-store"
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let salesData = [];
+let selectedBeatId = null;
 
-/* LOGIN */
+/* LOGIN FIXED */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    loginBox.style.display="none";
+    panel.style.display="block";
+
+    loadBeats();
+    loadSales();
+    loadNotes();
+  } else {
+    panel.style.display="none";
+    loginBox.style.display="flex";
+  }
+});
+
 function login(){
   auth.signInWithEmailAndPassword(email.value,password.value)
   .catch(e=>alert(e.message));
 }
 
-auth.onAuthStateChanged(user=>{
-  if(!user) return;
+function logout(){
+  auth.signOut();
+}
 
-  loginBox.style.display="none";
-  panel.style.display="block";
-
-  loadBeats();
-  loadSales();
-  loadNotes();
-});
-
-/* FIXED BEAT UPLOAD (RESTORED) */
+/* ADD BEAT */
 function addBeat(){
 
   const genresArray = genres.value
@@ -285,6 +282,65 @@ function addBeat(){
   alert("Uploaded");
 }
 
+/* SELECT BEAT */
+function selectBeat(id){
+  selectedBeatId = id;
+
+  db.collection("beats").doc(id).get().then(doc=>{
+    const b = doc.data();
+
+    title.value=b.title||"";
+    producer.value=b.producer||"";
+    price.value=b.price||"";
+    tempo.value=b.tempo||"";
+    image.value=b.image||"";
+    preview.value=b.previewFile||"";
+    wav.value=b.wavFile||"";
+    genres.value=(b.genres||[]).join(", ");
+
+    stripeLink.value=b.stripeLink||"";
+    youtubeLink.value=b.youtubeLink||"";
+    coupon.value=b.coupon||"";
+  });
+}
+
+/* UPDATE */
+function updateBeat(){
+
+  if(!selectedBeatId) return alert("Select a beat first");
+
+  const genresArray = genres.value
+    ? genres.value.split(",").map(g=>g.trim())
+    : [];
+
+  db.collection("beats").doc(selectedBeatId).update({
+    title:title.value,
+    producer:producer.value,
+    price:parseFloat(price.value||0),
+    tempo:tempo.value,
+    image:image.value,
+    previewFile:preview.value,
+    wavFile:wav.value,
+    genres:genresArray,
+    stripeLink:stripeLink.value||"",
+    youtubeLink:youtubeLink.value||"",
+    coupon:coupon.value||""
+  });
+
+  alert("Updated");
+}
+
+/* DELETE */
+function deleteBeat(){
+
+  if(!selectedBeatId) return alert("Select beat first");
+
+  db.collection("beats").doc(selectedBeatId).delete();
+  selectedBeatId=null;
+
+  alert("Deleted");
+}
+
 /* LOAD BEATS */
 function loadBeats(){
   db.collection("beats").onSnapshot(snap=>{
@@ -296,8 +352,8 @@ function loadBeats(){
       const b=doc.data();
 
       beatList.innerHTML+=`
-        <div class="beatRow">
-          ${b.title} <span class="small">$${b.price}</span>
+        <div class="beatRow" onclick="selectBeat('${doc.id}')">
+          <b>${b.title}</b> — $${b.price}
         </div>
       `;
     });
@@ -306,15 +362,13 @@ function loadBeats(){
   });
 }
 
-/* SALES + ANALYTICS */
+/* SALES */
 function loadSales(){
-
   db.collection("sales").onSnapshot(snap=>{
 
     let total=0;
     let count=0;
-    let beatCountMap={};
-    salesData=[];
+    let map={};
 
     salesList.innerHTML="";
     topBeats.innerHTML="";
@@ -325,13 +379,11 @@ function loadSales(){
       total+=Number(s.price||0);
       count++;
 
-      beatCountMap[s.title]=(beatCountMap[s.title]||0)+1;
-      salesData.push(s);
+      map[s.title]=(map[s.title]||0)+1;
 
       salesList.innerHTML+=`
         <div class="saleRow">
-          🎵 ${s.title}<br>
-          💰 $${s.price}
+          🎵 ${s.title} — $${s.price}
         </div>
       `;
     });
@@ -339,41 +391,21 @@ function loadSales(){
     earnings.innerText="$"+total.toFixed(2);
     salesCount.innerText=count;
 
-    let sorted=Object.entries(beatCountMap)
+    let sorted=Object.entries(map)
       .sort((a,b)=>b[1]-a[1]);
 
-    if(sorted[0]) topBeat.innerText=sorted[0][0];
+    if(sorted[0]){
+      topBeat.innerText=sorted[0][0];
+    }
 
-    sorted.slice(0,5).forEach((b,i)=>{
+    sorted.forEach((b,i)=>{
       topBeats.innerHTML+=`
         <div class="beatRow">
-          #${i+1} ${b[0]} — ${b[1]} sales
+          #${i+1} ${b[0]} — ${b[1]}
         </div>
       `;
     });
 
-    drawChart();
-    marketingIdeas(sorted);
-  });
-}
-
-/* SIMPLE CHART */
-function drawChart(){
-  const c=document.getElementById("chart");
-  const ctx=c.getContext("2d");
-
-  ctx.clearRect(0,0,c.width,c.height);
-
-  let step=20;
-  let x=10;
-
-  salesData.slice(-10).forEach((s,i)=>{
-    let h=(s.price||0)*5;
-
-    ctx.fillStyle="#6d3cff";
-    ctx.fillRect(x,100-h,15,h);
-
-    x+=step;
   });
 }
 
@@ -381,7 +413,6 @@ function drawChart(){
 function addNote(){
   db.collection("notes").add({
     text:noteInput.value,
-    pinned:false,
     createdAt:Date.now()
   });
   noteInput.value="";
@@ -397,27 +428,14 @@ function loadNotes(){
       notesList.innerHTML+=`
         <div class="noteRow">
           ${n.text}
-          <button class="deleteBtn" onclick="db.collection('notes').doc('${doc.id}').delete()">X</button>
+          <button class="deleteBtn"
+            onclick="db.collection('notes').doc('${doc.id}').delete()">
+            X
+          </button>
         </div>
       `;
     });
   });
-}
-
-/* MARKETING AI (RULE BASED) */
-function marketingIdeas(sorted){
-
-  let box=document.getElementById("marketing");
-  box.innerHTML="";
-
-  if(!sorted[0]) return;
-
-  box.innerHTML=`
-    🔥 Push "${sorted[0][0]}" on TikTok  
-    🎯 Create 3 reels using your top beat  
-    📈 Bundle similar vibe beats  
-    💰 Increase price on best seller slightly  
-  `;
 }
 </script>
 
