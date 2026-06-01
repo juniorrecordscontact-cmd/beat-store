@@ -177,7 +177,7 @@ const db = firebase.firestore();
 let allBeats = [];
 let currentBeatId = null;
 
-/* GLOBAL AUDIO PLAYER (FIXED) */
+/* GLOBAL AUDIO PLAYER */
 let audioPlayer = new Audio();
 let isPlaying = false;
 
@@ -234,7 +234,6 @@ function renderBeats(beats){
 
         <div class="beatContent">
 
-          <!-- PLAY BUTTON MOVED TO TOP -->
           <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
             ▶ Play / Pause
           </button>
@@ -260,7 +259,8 @@ function renderBeats(beats){
 
           <div class="buttonGroup">
 
-            <button onclick="buyNow('${b.stripeLink || ''}')">
+            <!-- FIXED LINE IS HERE -->
+            <button onclick="buyNow('${b.stripeLink || ''}', '${b.id}')">
               💰 Buy Now
             </button>
 
@@ -273,24 +273,20 @@ function renderBeats(beats){
   });
 }
 
-/* PLAY / PAUSE FIXED */
+/* PLAY / PAUSE */
 function playPreview(url,id){
 
   if(!url) return;
 
-  // same beat → toggle
   if(currentBeatId === id){
-
     if(audioPlayer.paused){
       audioPlayer.play();
     } else {
       audioPlayer.pause();
     }
-
     return;
   }
 
-  // new beat
   audioPlayer.src = url;
   audioPlayer.play();
   currentBeatId = id;
