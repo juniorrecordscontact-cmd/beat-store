@@ -45,20 +45,17 @@ button{
   cursor:pointer;
 }
 
-/* PANEL */
 #panel{
   display:none;
   padding:20px;
 }
 
-/* GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
 
-/* SECTIONS */
 .section{
   background:#12121a;
   padding:14px;
@@ -72,7 +69,6 @@ button{
   font-size:14px;
 }
 
-/* ROWS */
 .beatRow,.saleRow,.noteRow{
   background:#1a1a22;
   padding:8px;
@@ -80,12 +76,6 @@ button{
   border-radius:8px;
   font-size:12px;
   cursor:pointer;
-}
-
-.noteRow{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
 }
 
 .deleteBtn{
@@ -195,7 +185,11 @@ Logout
 <input id="tempo" placeholder="BPM">
 
 <input id="image" placeholder="Image URL">
-<input id="preview" placeholder="MP3 URL">
+
+<!-- PREVIEW + NEW BUTTON -->
+<input id="preview" placeholder="MP3 Preview URL">
+<button onclick="previewAdminBeat()">▶ Preview Beat</button>
+
 <input id="wav" placeholder="WAV URL">
 
 <input id="genres" placeholder="Genres">
@@ -233,7 +227,10 @@ const db = firebase.firestore();
 
 let selectedBeatId = null;
 
-/* LOGIN FIXED */
+/* ADMIN PREVIEW PLAYER */
+let adminAudio = new Audio();
+
+/* LOGIN */
 auth.onAuthStateChanged(user=>{
   if(user){
     loginBox.style.display="none";
@@ -255,6 +252,25 @@ function login(){
 
 function logout(){
   auth.signOut();
+}
+
+/* ADMIN PREVIEW BEAT */
+function previewAdminBeat(){
+
+  const url = preview.value;
+
+  if(!url){
+    alert("No preview URL");
+    return;
+  }
+
+  if(adminAudio.src === url){
+    adminAudio.paused ? adminAudio.play() : adminAudio.pause();
+    return;
+  }
+
+  adminAudio.src = url;
+  adminAudio.play();
 }
 
 /* ADD BEAT */
@@ -284,6 +300,7 @@ function addBeat(){
 
 /* SELECT BEAT */
 function selectBeat(id){
+
   selectedBeatId = id;
 
   db.collection("beats").doc(id).get().then(doc=>{
@@ -307,7 +324,10 @@ function selectBeat(id){
 /* UPDATE */
 function updateBeat(){
 
-  if(!selectedBeatId) return alert("Select a beat first");
+  if(!selectedBeatId){
+    alert("Select beat first");
+    return;
+  }
 
   const genresArray = genres.value
     ? genres.value.split(",").map(g=>g.trim())
@@ -333,7 +353,10 @@ function updateBeat(){
 /* DELETE */
 function deleteBeat(){
 
-  if(!selectedBeatId) return alert("Select beat first");
+  if(!selectedBeatId){
+    alert("Select beat first");
+    return;
+  }
 
   db.collection("beats").doc(selectedBeatId).delete();
   selectedBeatId=null;
@@ -415,6 +438,7 @@ function addNote(){
     text:noteInput.value,
     createdAt:Date.now()
   });
+
   noteInput.value="";
 }
 
