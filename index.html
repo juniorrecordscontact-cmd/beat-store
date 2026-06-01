@@ -21,9 +21,9 @@ header{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:14px 18px;
-  backdrop-filter: blur(10px);
+  padding:12px 16px;
   background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(10px);
   position:sticky;
   top:0;
   z-index:10;
@@ -32,126 +32,116 @@ header{
 .leftHeader{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
 }
 
 #logo{
-  width:55px;
-  height:55px;
-  border-radius:12px;
+  width:48px;
+  height:48px;
+  border-radius:10px;
   object-fit:cover;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
 }
 
 .titleBlock h1{
   margin:0;
-  font-size:18px;
+  font-size:16px;
 }
 
 #slogan{
   margin:0;
-  font-size:12px;
+  font-size:11px;
   opacity:0.6;
 }
 
 /* SEARCH */
 #searchWrap input{
-  width:180px;
-  padding:7px 10px;
+  width:170px;
+  padding:6px 9px;
   font-size:12px;
   border:none;
   border-radius:8px;
   background: rgba(255,255,255,0.08);
   color:white;
   outline:none;
-  backdrop-filter: blur(8px);
 }
 
-/* STORE GRID */
+/* STORE GRID (SMALLER CARDS FIX) */
 #store{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:16px;
-  padding:18px;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px;
+  padding:14px;
 }
 
-/* PREMIUM CARD */
+/* CARD (SMALLER + CLEANER) */
 .beat{
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
   overflow:hidden;
   transition: all 0.25s ease;
   backdrop-filter: blur(10px);
 }
 
 .beat:hover{
-  transform: translateY(-8px);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.45);
+  border:1px solid rgba(255,255,255,0.15);
 }
 
 .beat img{
   width:100%;
-  height:140px;
+  height:110px;
   object-fit:cover;
-  transition: transform 0.35s ease;
+  transition: transform 0.3s ease;
 }
 
 .beat:hover img{
-  transform: scale(1.07);
+  transform: scale(1.06);
 }
 
-/* CONTENT */
 .beatContent{
-  padding:12px;
+  padding:10px;
 }
 
 .beat h3{
-  margin:6px 0;
-  font-size:15px;
+  margin:5px 0;
+  font-size:13px;
 }
 
-/* META */
+/* META SMALLER */
 .meta{
-  font-size:11px;
+  font-size:10px;
   opacity:0.75;
   margin:2px 0;
 }
 
-/* GENRES (BADGES) */
-.genres{
-  margin-top:8px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:5px;
-}
-
+/* GENRES */
 .genres span{
-  font-size:10px;
-  padding:3px 7px;
+  font-size:9px;
+  padding:2px 6px;
   border-radius:999px;
   background: rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.08);
+  margin-right:4px;
 }
 
 /* BUTTONS */
 .buttonGroup{
   display:flex;
   flex-direction:column;
-  gap:8px;
-  margin-top:10px;
+  gap:6px;
+  margin-top:8px;
 }
 
 button{
   width:100%;
-  padding:9px;
+  padding:8px;
   border:none;
-  border-radius:10px;
+  border-radius:9px;
   background: linear-gradient(135deg,#6d3cff,#8457ff);
   color:white;
   cursor:pointer;
-  font-size:12px;
+  font-size:11px;
   transition: all 0.2s ease;
 }
 
@@ -160,22 +150,21 @@ button:hover{
   filter: brightness(1.1);
 }
 
-/* CART (PREMIUM MINI PANEL) */
+/* CART */
 #cartBox{
-  max-width:560px;
+  max-width:520px;
   margin:10px auto;
-  padding:10px 12px;
+  padding:10px;
   background: rgba(255,255,255,0.05);
-  border-radius:12px;
   border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
   backdrop-filter: blur(10px);
-  font-size:12px;
 }
 
 /* PLAYER */
 audio{
   width:100%;
-  margin-top:8px;
+  margin:10px 0;
 }
 </style>
 
@@ -222,7 +211,21 @@ let allBeats = [];
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let currentBeatId = null;
 
-/* LOAD */
+/* FIXED SETTINGS (LOGO FIX) */
+const logoEl = document.getElementById("logo");
+const titleEl = document.getElementById("storeTitle");
+const sloganEl = document.getElementById("slogan");
+
+db.collection("settings").doc("site").onSnapshot(doc=>{
+  const s = doc.data();
+  if(!s) return;
+
+  if(titleEl) titleEl.innerText = s.storeName || "";
+  if(sloganEl) sloganEl.innerText = s.slogan || "";
+  if(logoEl && s.logo) logoEl.src = s.logo;
+});
+
+/* LOAD BEATS */
 db.collection("beats").onSnapshot(snapshot=>{
   allBeats = [];
   snapshot.forEach(doc=>{
@@ -272,11 +275,10 @@ function renderBeats(beats){
           </div>
 
           ${embed ? `
-            <div style="margin-top:10px;">
-              <iframe width="100%" height="140"
+            <div style="margin-top:8px;">
+              <iframe width="100%" height="120"
               src="${embed}"
               frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen></iframe>
             </div>
           ` : ""}
