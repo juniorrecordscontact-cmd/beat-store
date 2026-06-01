@@ -2,7 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Thank You - Junior Beats</title>
+<title>Thank You</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
 body{
@@ -14,24 +17,14 @@ body{
   justify-content:center;
   align-items:center;
   height:100vh;
-  text-align:center;
 }
 
 .box{
   background:#1a1a22;
-  padding:30px;
+  padding:25px;
   border-radius:12px;
   width:320px;
-}
-
-h1{
-  margin:0 0 10px 0;
-  font-size:20px;
-}
-
-p{
-  opacity:0.8;
-  font-size:12px;
+  text-align:center;
 }
 
 a{
@@ -42,20 +35,58 @@ a{
   color:white;
   text-decoration:none;
   border-radius:8px;
-  font-size:13px;
 }
 </style>
+
 </head>
 
 <body>
 
 <div class="box">
-  <h1>🎉 Thank You for Your Purchase</h1>
-  <p>Your exclusive beat is ready for download.</p>
+  <h2>🎉 Thank You</h2>
+  <p id="title">Loading...</p>
 
-  <a href="#" id="mp3">Download MP3</a>
-  <a href="#" id="wav">Download WAV</a>
+  <div id="downloads" style="display:none;">
+    <a id="mp3" href="#" download>Download MP3</a>
+    <a id="wav" href="#" download>Download WAV</a>
+  </div>
 </div>
+
+<script>
+firebase.initializeApp({
+apiKey:"AIzaSyD2y_gXSvYFe4OIXkns2Euwcgk73DV83fw",
+authDomain:"junior-beats-store.firebaseapp.com",
+projectId:"junior-beats-store"
+});
+
+const db = firebase.firestore();
+
+const params = new URLSearchParams(window.location.search);
+const beatId = params.get("beat");
+
+if(beatId){
+
+  db.collection("beats").doc(beatId).get().then(doc=>{
+
+    if(!doc.exists){
+      title.innerText = "Beat not found";
+      return;
+    }
+
+    const b = doc.data();
+
+    title.innerText = b.title;
+
+    mp3.href = b.previewFile || "#";
+    wav.href = b.wavFile || "#";
+
+    downloads.style.display = "block";
+  });
+
+}else{
+  title.innerText = "No purchase detected";
+}
+</script>
 
 </body>
 </html>
