@@ -78,35 +78,27 @@ header{
   padding:15px;
 }
 
-/* BEAT CARD + HOVER (NEW) */
+/* BEAT CARD */
 .beat{
   background:#1a1a22;
   border-radius:12px;
   overflow:hidden;
-  transition: all 0.25s ease;
+  transition:0.25s;
 }
 
 .beat:hover{
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.15);
+  transform:translateY(-6px);
+  box-shadow:0 12px 25px rgba(0,0,0,0.5);
 }
 
-/* IMAGE */
 .beat img{
   width:100%;
   height:120px;
   object-fit:cover;
 }
 
-/* CONTENT */
 .beatContent{
   padding:10px;
-}
-
-.beat h3{
-  margin:5px 0;
-  font-size:14px;
 }
 
 .meta{
@@ -142,44 +134,7 @@ button{
 
 button:hover{
   filter:brightness(1.1);
-  transform: scale(1.02);
-}
-
-/* CART */
-#cartBox{
-  max-width:520px;
-  margin:8px auto;
-  padding:8px 10px;
-  background:#181820;
-  border-radius:10px;
-  font-size:12px;
-}
-
-#cartBox h2{
-  font-size:15px;
-  margin:0 0 6px 0;
-}
-
-#cartItems div{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:4px 0;
-  border-bottom:1px solid #222;
-}
-
-#cartItems button{
-  padding:3px 6px;
-  font-size:10px;
-}
-
-/* PLAYER */
-#playerBar{
-  padding:10px;
-}
-
-audio{
-  width:100%;
+  transform:scale(1.02);
 }
 </style>
 
@@ -201,21 +156,8 @@ audio{
   </div>
 </header>
 
-<!-- CART -->
-<div id="cartBox">
-  <h2>🛒 Cart</h2>
-  <div id="cartItems"></div>
-  <h3 id="cartTotal">Total: $0</h3>
-  <button onclick="checkoutCart()">Checkout</button>
-</div>
-
 <!-- STORE -->
 <div id="store"></div>
-
-<!-- PLAYER -->
-<div id="playerBar">
-  <audio id="audioPlayer" controls></audio>
-</div>
 
 <script>
 firebase.initializeApp({
@@ -227,7 +169,6 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let currentBeatId = null;
 
 /* SETTINGS */
@@ -249,10 +190,9 @@ db.collection("beats").onSnapshot(snapshot=>{
   });
 
   renderBeats(allBeats);
-  renderCart();
 });
 
-/* RENDER (YOUTUBE ADDED) */
+/* RENDER */
 function renderBeats(beats){
 
   const store = document.getElementById("store");
@@ -260,7 +200,7 @@ function renderBeats(beats){
 
   beats.forEach(b=>{
 
-    // YOUTUBE EMBED FIX
+    // YouTube embed
     let embed = "";
     if(b.youtubeLink){
       let id = "";
@@ -306,11 +246,11 @@ function renderBeats(beats){
           <div class="buttonGroup">
 
             <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
-              ▶ Play / Pause
+              ▶ Play Preview
             </button>
 
-            <button onclick="addToCart('${b.id}')">
-              Add to Cart
+            <button onclick="buyNow('${b.stripeLink || ''}')">
+              💰 Buy Now
             </button>
 
           </div>
@@ -327,7 +267,7 @@ function playPreview(url,id){
 
   if(!url) return;
 
-  const player = document.getElementById("audioPlayer");
+  const player = new Audio();
 
   if(currentBeatId === id){
     player.paused ? player.play() : player.pause();
@@ -337,6 +277,16 @@ function playPreview(url,id){
   player.src = url;
   player.play();
   currentBeatId = id;
+}
+
+/* BUY NOW (STRIPE) */
+function buyNow(link){
+  if(!link){
+    alert("No Stripe link added for this beat");
+    return;
+  }
+
+  window.open(link, "_blank");
 }
 
 /* SEARCH */
@@ -359,53 +309,6 @@ function searchBeats(){
   });
 
   renderBeats(filtered);
-}
-
-/* CART */
-function addToCart(id){
-
-  if(cart.find(c=>c.id===id)) return;
-
-  const beat = allBeats.find(b=>b.id===id);
-  if(!beat) return;
-
-  cart.push(beat);
-  renderCart();
-}
-
-function removeFromCart(i){
-  cart.splice(i,1);
-  renderCart();
-}
-
-function renderCart(){
-
-  const cartItems = document.getElementById("cartItems");
-  const cartTotal = document.getElementById("cartTotal");
-
-  cartItems.innerHTML = "";
-
-  let total = 0;
-
-  cart.forEach((item,i)=>{
-    total += Number(item.price||0);
-
-    cartItems.innerHTML += `
-      <div>
-        ${item.title}
-        <span>
-          $${item.price}
-          <button onclick="removeFromCart(${i})">x</button>
-        </span>
-      </div>
-    `;
-  });
-
-  cartTotal.innerText = "Total: $" + total.toFixed(2);
-}
-
-function checkoutCart(){
-  alert("Checkout ready — system unchanged");
 }
 </script>
 
