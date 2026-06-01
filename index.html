@@ -74,10 +74,9 @@ header{
   box-shadow:0 12px 25px rgba(0,0,0,0.5);
 }
 
+/* REMOVE IMAGE STYLE (kept safe fallback) */
 .beat img{
-  width:100%;
-  height:120px;
-  object-fit:cover;
+  display:none;
 }
 
 .beatContent{
@@ -116,6 +115,11 @@ button{
 button:hover{
   filter:brightness(1.1);
   transform:scale(1.02);
+}
+
+iframe{
+  border-radius:10px;
+  margin-top:6px;
 }
 </style>
 
@@ -196,7 +200,13 @@ function renderBeats(beats){
     store.innerHTML += `
       <div class="beat">
 
-        <img src="${b.image || ''}">
+        <!-- YOUTUBE NOW = COVER -->
+        ${embed ? `
+          <iframe width="100%" height="180"
+          src="${embed}"
+          frameborder="0"
+          allowfullscreen></iframe>
+        ` : ""}
 
         <div class="beatContent">
 
@@ -213,13 +223,6 @@ function renderBeats(beats){
           <div class="genres">
             ${(b.genres || []).join(" • ")}
           </div>
-
-          ${embed ? `
-            <iframe width="100%" height="120"
-            src="${embed}"
-            frameborder="0"
-            allowfullscreen></iframe>
-          ` : ""}
 
           <button onclick="buyNow('${b.stripeLink || ''}', '${b.id}')">
             💰 Buy Now
