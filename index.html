@@ -54,13 +54,8 @@ header{
 }
 
 /* SEARCH */
-#searchWrap{
-  display:flex;
-  align-items:center;
-}
-
-#searchInput{
-  width:150px;
+#searchWrap input{
+  width:160px;
   padding:6px 8px;
   font-size:12px;
   border:none;
@@ -140,29 +135,7 @@ button{
   font-size:12px;
 }
 
-#cartBox h2{
-  font-size:15px;
-  margin:0 0 6px 0;
-}
-
-#cartItems div{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:4px 0;
-  border-bottom:1px solid #222;
-}
-
-#cartItems button{
-  padding:3px 6px;
-  font-size:10px;
-}
-
 /* PLAYER */
-#playerBar{
-  padding:10px;
-}
-
 audio{
   width:100%;
 }
@@ -172,6 +145,7 @@ audio{
 
 <body>
 
+<!-- HEADER -->
 <header>
 
   <div class="leftHeader">
@@ -193,14 +167,13 @@ audio{
   <h2>🛒 Cart</h2>
   <div id="cartItems"></div>
   <h3 id="cartTotal">Total: $0</h3>
-  <button onclick="checkoutCart()">Checkout</button>
 </div>
 
 <!-- STORE -->
 <div id="store"></div>
 
 <!-- PLAYER -->
-<div id="playerBar">
+<div>
   <audio id="audioPlayer" controls></audio>
 </div>
 
@@ -239,13 +212,29 @@ db.collection("beats").onSnapshot(snapshot=>{
   renderCart();
 });
 
-/* RENDER */
+/* RENDER BEATS (WITH YOUTUBE EMBED) */
 function renderBeats(beats){
-
   const store = document.getElementById("store");
   store.innerHTML = "";
 
   beats.forEach(b=>{
+
+    // convert youtube link to embed
+    let embed = "";
+    if(b.youtubeLink){
+      let id = "";
+
+      if(b.youtubeLink.includes("youtu.be/")){
+        id = b.youtubeLink.split("youtu.be/")[1];
+      } else if(b.youtubeLink.includes("watch?v=")){
+        id = b.youtubeLink.split("watch?v=")[1];
+        id = id.split("&")[0];
+      }
+
+      if(id){
+        embed = `https://www.youtube.com/embed/${id}`;
+      }
+    }
 
     store.innerHTML += `
       <div class="beat">
@@ -264,6 +253,19 @@ function renderBeats(beats){
             ${(b.genres || []).join(" • ")}
           </div>
 
+          ${embed ? `
+            <div style="margin-top:8px;">
+              <iframe
+                width="100%"
+                height="140"
+                src="${embed}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+              </iframe>
+            </div>
+          ` : ""}
+
           <div class="buttonGroup">
 
             <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
@@ -277,78 +279,56 @@ function renderBeats(beats){
           </div>
 
         </div>
-
       </div>
     `;
   });
 }
 
-/* AUDIO FIXED SAFETY */
+/* AUDIO */
 function playPreview(url,id){
-
-  if(!url) return;
-
   const player = document.getElementById("audioPlayer");
 
   if(currentBeatId === id){
-    if(player.paused) player.play();
-    else player.pause();
+    player.paused ? player.play() : player.pause();
     return;
   }
 
   player.src = url;
   player.play();
   currentBeatId = id;
-
-  db.collection("beats").doc(id).update({
-    plays: firebase.firestore.FieldValue.increment(1)
-  }).catch(()=>{});
 }
 
-/* SEARCH IMPROVED SAFETY */
+/* SEARCH */
 function searchBeats(){
+  const v = searchInput.value.toLowerCase();
 
-  const value = searchInput.value.toLowerCase().trim();
-
-  if(!value){
-    renderBeats(allBeats);
-    return;
-  }
-
-  const filtered = allBeats.filter(b=>{
-    return (
-      (b.title||"").toLowerCase().includes(value) ||
-      (b.producer||"").toLowerCase().includes(value) ||
-      String(b.tempo||"").includes(value) ||
-      (b.genres||[]).join(" ").toLowerCase().includes(value)
-    );
-  });
+  const filtered = allBeats.filter(b =>
+    (b.title||"").toLowerCase().includes(v) ||
+    (b.producer||"").toLowerCase().includes(v) ||
+    (b.genres||[]).join(" ").toLowerCase().includes(v)
+  );
 
   renderBeats(filtered);
 }
 
-/* CART SAFE */
+/* CART */
 function addToCart(id){
-
   if(cart.find(c=>c.id===id)) return;
 
   const beat = allBeats.find(b=>b.id===id);
   if(!beat) return;
 
   cart.push(beat);
-  renderCart();
   localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
 }
 
-/* CART RENDER */
 function renderCart(){
-
   const cartItems = document.getElementById("cartItems");
   const cartTotal = document.getElementById("cartTotal");
 
-  cartItems.innerHTML = "";
-
   let total = 0;
+  cartItems.innerHTML = "";
 
   cart.forEach((item,i)=>{
     total += Number(item.price||0);
@@ -356,27 +336,18 @@ function renderCart(){
     cartItems.innerHTML += `
       <div>
         ${item.title}
-        <span>
-          $${item.price}
-          <button onclick="removeFromCart(${i})">x</button>
-        </span>
+        <button onclick="removeFromCart(${i})">x</button>
       </div>
     `;
   });
 
   cartTotal.innerText = "Total: $" + total.toFixed(2);
-
-  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 function removeFromCart(i){
   cart.splice(i,1);
-  renderCart();
   localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-function checkoutCart(){
-  alert("Checkout ready — system unchanged");
+  renderCart();
 }
 </script>
 
