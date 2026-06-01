@@ -53,23 +53,6 @@ header{
   opacity:0.7;
 }
 
-/* SEARCH */
-#searchWrap{
-  display:flex;
-  align-items:center;
-}
-
-#searchInput{
-  width:150px;
-  padding:6px 8px;
-  font-size:12px;
-  border:none;
-  border-radius:6px;
-  background:#1e1e25;
-  color:white;
-  outline:none;
-}
-
 /* STORE */
 #store{
   display:grid;
@@ -119,16 +102,10 @@ header{
 }
 
 /* BUTTONS */
-.buttonGroup{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  margin-top:8px;
-}
-
 button{
   width:100%;
   padding:8px;
+  margin-top:6px;
   border:none;
   border-radius:8px;
   background:#6d3cff;
@@ -156,10 +133,6 @@ button:hover{
       <p id="slogan">By Jayan Reid</p>
     </div>
   </div>
-
-  <div id="searchWrap">
-    <input id="searchInput" placeholder="Search..." oninput="searchBeats()">
-  </div>
 </header>
 
 <!-- STORE -->
@@ -175,13 +148,10 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
+let audioPlayer = new Audio();
 let currentBeatId = null;
 
-/* GLOBAL AUDIO PLAYER */
-let audioPlayer = new Audio();
-let isPlaying = false;
-
-/* SETTINGS */
+/* LOAD SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
   if(!s) return;
@@ -210,7 +180,6 @@ function renderBeats(beats){
 
   beats.forEach(b=>{
 
-    // YouTube embed
     let embed = "";
     if(b.youtubeLink){
       let id = "";
@@ -249,22 +218,15 @@ function renderBeats(beats){
           </div>
 
           ${embed ? `
-            <div style="margin-top:8px;">
-              <iframe width="100%" height="120"
-              src="${embed}"
-              frameborder="0"
-              allowfullscreen></iframe>
-            </div>
+            <iframe width="100%" height="120"
+            src="${embed}"
+            frameborder="0"
+            allowfullscreen></iframe>
           ` : ""}
 
-          <div class="buttonGroup">
-
-            <!-- FIXED LINE IS HERE -->
-            <button onclick="buyNow('${b.stripeLink || ''}', '${b.id}')">
-              💰 Buy Now
-            </button>
-
-          </div>
+          <button onclick="buyNow('${b.stripeLink || ''}', '${b.id}')">
+            💰 Buy Now
+          </button>
 
         </div>
 
@@ -273,17 +235,13 @@ function renderBeats(beats){
   });
 }
 
-/* PLAY / PAUSE */
+/* PLAY */
 function playPreview(url,id){
 
   if(!url) return;
 
   if(currentBeatId === id){
-    if(audioPlayer.paused){
-      audioPlayer.play();
-    } else {
-      audioPlayer.pause();
-    }
+    audioPlayer.paused ? audioPlayer.play() : audioPlayer.pause();
     return;
   }
 
@@ -292,36 +250,22 @@ function playPreview(url,id){
   currentBeatId = id;
 }
 
-/* BUY NOW */
-function buyNow(link){
+/* BUY NOW (IMPORTANT FIX) */
+function buyNow(link, beatId){
+
   if(!link){
-    alert("No Stripe link added for this beat");
+    alert("No Stripe link");
     return;
   }
 
-  window.open(link, "_blank");
-}
+  const successURL =
+    "https://juniorrecordscontact-cmd.github.io/beat-store/thank-you.html?beat="
+    + beatId;
 
-/* SEARCH */
-function searchBeats(){
+  const finalLink =
+    link + "?success_url=" + encodeURIComponent(successURL);
 
-  const value = searchInput.value.toLowerCase().trim();
-
-  if(!value){
-    renderBeats(allBeats);
-    return;
-  }
-
-  const filtered = allBeats.filter(b=>{
-    return (
-      (b.title||"").toLowerCase().includes(value) ||
-      (b.producer||"").toLowerCase().includes(value) ||
-      (b.tempo||"").toString().includes(value) ||
-      (b.genres||[]).join(" ").toLowerCase().includes(value)
-    );
-  });
-
-  renderBeats(filtered);
+  window.open(finalLink, "_blank");
 }
 </script>
 
