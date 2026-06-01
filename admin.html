@@ -30,7 +30,7 @@ h1{
   align-items:center;
 }
 
-input,button,textarea{
+input,button{
   width:300px;
   padding:10px;
   margin:6px;
@@ -69,36 +69,32 @@ button{
 
 <h1>🎛 Junior Beats Admin</h1>
 
-<!-- LOGIN -->
 <div id="loginBox" class="center">
   <input id="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
-<!-- PANEL -->
 <div id="panel">
 
 <div class="section">
   <button onclick="logout()" style="background:#ff3b3b;">Logout</button>
 </div>
 
-<!-- SETTINGS -->
+<!-- SITE SETTINGS -->
 <div class="section">
-<h2>⚙️ Site Settings</h2>
+<h2>Site Settings</h2>
 
 <input id="storeName" placeholder="Store Name">
 <input id="slogan" placeholder="Slogan">
-<input id="bg" placeholder="Background Image URL">
-<input id="logo" placeholder="Logo Image URL">
-<input id="font" placeholder="Font">
+<input id="logo" placeholder="Logo URL">
 
 <button onclick="saveSettings()">Save Settings</button>
 </div>
 
-<!-- BEATS -->
+<!-- UPLOAD BEAT -->
 <div class="section">
-<h2>🎧 Beats</h2>
+<h2>Upload Beat</h2>
 
 <input id="title" placeholder="Title">
 <input id="producer" placeholder="Producer">
@@ -108,44 +104,21 @@ button{
 <input id="image" placeholder="Image URL">
 <input id="preview" placeholder="MP3 URL">
 <input id="wav" placeholder="WAV URL">
+
 <input id="genres" placeholder="Genres (comma separated)">
 
-<label>
-  <input type="checkbox" id="featured"> Featured Beat
-</label>
+<!-- 🔥 NEW STRIPE FIELD -->
+<input id="stripeLink" placeholder="Stripe Payment Link">
 
-<button onclick="addBeat()">Upload Beat</button>
+<button onclick="addBeat()">Upload</button>
 <button onclick="updateBeat()">Update Selected</button>
 <button onclick="deleteBeat()">Delete Selected</button>
+</div>
 
+<!-- BEAT LIST -->
+<div class="section">
+<h2>Beats</h2>
 <div id="beatList"></div>
-</div>
-
-<!-- 📊 DASHBOARD -->
-<div class="section">
-<h2>📊 Dashboard Stats</h2>
-<button onclick="loadStats()">Refresh Stats</button>
-<div id="statsBox"></div>
-</div>
-
-<!-- 🎥 VIDEOS -->
-<div class="section">
-<h2>🎥 YouTube Videos</h2>
-
-<input id="videoTitle" placeholder="Video Title">
-<input id="videoURL" placeholder="YouTube Embed URL">
-
-<button onclick="addVideo()">Add Video</button>
-</div>
-
-<!-- 💸 COUPONS -->
-<div class="section">
-<h2>💸 Coupons</h2>
-
-<input id="couponCode" placeholder="Coupon Code">
-<input id="discount" placeholder="Discount %">
-
-<button onclick="createCoupon()">Create Coupon</button>
 </div>
 
 </div>
@@ -168,7 +141,6 @@ function login(){
   .catch(err=>alert(err.message));
 }
 
-/* AUTH */
 auth.onAuthStateChanged(user=>{
   if(!user) return;
   loginBox.style.display="none";
@@ -176,7 +148,6 @@ auth.onAuthStateChanged(user=>{
   loadBeats();
 });
 
-/* LOGOUT */
 function logout(){
   auth.signOut().then(()=>location.reload());
 }
@@ -184,17 +155,13 @@ function logout(){
 /* SETTINGS */
 function saveSettings(){
   db.collection("settings").doc("site").set({
-    storeName:storeName.value || "",
-    slogan:slogan.value || "",
-    bg:bg.value || "",
-    logo:logo.value || "",
-    font:font.value || ""
+    storeName:storeName.value,
+    slogan:slogan.value,
+    logo:logo.value
   }, { merge:true });
-
-  alert("Saved");
 }
 
-/* BEATS */
+/* ADD BEAT */
 function addBeat(){
 
   const genresArray = genres.value
@@ -202,25 +169,28 @@ function addBeat(){
     : [];
 
   db.collection("beats").add({
-    title:title.value || "",
-    producer:producer.value || "",
-    price:Number(price.value || 0),
-    tempo:tempo.value || "",
-    image:image.value || "",
-    previewFile:preview.value || "",
-    wavFile:wav.value || "",
+    title:title.value,
+    producer:producer.value,
+    price:parseFloat(price.value || 0),
+    tempo:tempo.value,
+    image:image.value,
+    previewFile:preview.value,
+    wavFile:wav.value,
     genres:genresArray,
-    featured:featured.checked || false,
-    plays:0,
+
+    // 🔥 NEW FIELD
+    stripeLink: stripeLink.value || "",
+
     createdAt:Date.now()
   });
 
   alert("Uploaded");
 }
 
+/* UPDATE */
 function updateBeat(){
 
-  if(!selectedBeatId) return alert("Select beat");
+  if(!selectedBeatId) return alert("Select beat first");
 
   const genresArray = genres.value
     ? genres.value.split(",").map(g=>g.trim())
@@ -229,37 +199,39 @@ function updateBeat(){
   db.collection("beats").doc(selectedBeatId).update({
     title:title.value,
     producer:producer.value,
-    price:Number(price.value),
+    price:parseFloat(price.value || 0),
     tempo:tempo.value,
     image:image.value,
     previewFile:preview.value,
     wavFile:wav.value,
     genres:genresArray,
-    featured:featured.checked || false
+
+    // 🔥 NEW FIELD
+    stripeLink: stripeLink.value || ""
   });
 
   alert("Updated");
 }
 
+/* DELETE */
 function deleteBeat(){
   if(!selectedBeatId) return;
   db.collection("beats").doc(selectedBeatId).delete();
+  selectedBeatId=null;
 }
 
-/* LOAD BEATS */
+/* LOAD */
 function loadBeats(){
   db.collection("beats").onSnapshot(snap=>{
     beatList.innerHTML="";
-
     snap.forEach(doc=>{
-      const b = doc.data();
+      let b = doc.data();
 
       beatList.innerHTML += `
         <div class="beatRow" onclick="selectBeat('${doc.id}')">
           <b>${b.title}</b><br>
-          ${b.producer} • $${b.price}<br>
-          Plays: ${b.plays || 0}
-          ${b.featured ? "🔥 Featured" : ""}
+          ${b.producer}<br>
+          $${b.price}
         </div>
       `;
     });
@@ -268,10 +240,10 @@ function loadBeats(){
 
 /* SELECT */
 function selectBeat(id){
-  selectedBeatId = id;
+  selectedBeatId=id;
 
   db.collection("beats").doc(id).get().then(doc=>{
-    const b = doc.data();
+    let b = doc.data();
 
     title.value=b.title || "";
     producer.value=b.producer || "";
@@ -281,50 +253,10 @@ function selectBeat(id){
     preview.value=b.previewFile || "";
     wav.value=b.wavFile || "";
     genres.value=(b.genres || []).join(", ");
-    featured.checked=b.featured || false;
+    
+    // 🔥 NEW FIELD LOAD
+    stripeLink.value = b.stripeLink || "";
   });
-}
-
-/* 📊 STATS */
-function loadStats(){
-
-  let totalPlays = 0;
-  let beatCount = 0;
-
-  db.collection("beats").get().then(snap=>{
-    beatCount = snap.size;
-
-    snap.forEach(doc=>{
-      totalPlays += doc.data().plays || 0;
-    });
-
-    statsBox.innerHTML = `
-      <p>🎧 Beats: ${beatCount}</p>
-      <p>▶ Total Plays: ${totalPlays}</p>
-    `;
-  });
-}
-
-/* 🎥 VIDEO */
-function addVideo(){
-  db.collection("videos").add({
-    title:videoTitle.value,
-    url:videoURL.value,
-    createdAt:Date.now()
-  });
-
-  alert("Video added");
-}
-
-/* 💸 COUPON */
-function createCoupon(){
-  db.collection("coupons").doc(couponCode.value).set({
-    code:couponCode.value,
-    discount:Number(discount.value),
-    active:true
-  });
-
-  alert("Coupon created");
 }
 </script>
 
