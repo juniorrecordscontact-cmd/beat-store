@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="UTF-8">
 <title>Thank You</title>
@@ -63,8 +64,9 @@ const db = firebase.firestore();
 
 const params = new URLSearchParams(window.location.search);
 const beatId = params.get("beat");
+const paid = params.get("paid");
 
-if(beatId){
+if(beatId && paid === "true"){
 
   db.collection("beats").doc(beatId).get().then(doc=>{
 
@@ -89,4 +91,5 @@ if(beatId){
 </script>
 
 </body>
+
 </html>
