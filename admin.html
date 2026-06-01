@@ -107,7 +107,6 @@ button{
 
 <input id="genres" placeholder="Genres (comma separated)">
 
-<!-- 🔥 RESTORED FEATURES -->
 <input id="stripeLink" placeholder="Stripe Payment Link">
 <input id="youtubeLink" placeholder="YouTube Video Link">
 <input id="coupon" placeholder="Coupon Code (optional)">
@@ -121,6 +120,18 @@ button{
 <div class="section">
 <h2>Beats</h2>
 <div id="beatList"></div>
+</div>
+
+<!-- 🔥 SALES DASHBOARD (NEW) -->
+<div class="section">
+<h2>Sales Dashboard</h2>
+
+<div id="salesList"></div>
+
+<h3 id="totalEarnings">Total Earnings: $0</h3>
+
+<h3>Top Selling Beats</h3>
+<div id="topBeats"></div>
 </div>
 
 </div>
@@ -148,6 +159,7 @@ auth.onAuthStateChanged(user=>{
   loginBox.style.display="none";
   panel.style.display="block";
   loadBeats();
+  loadSales(); // 🔥 NEW
 });
 
 function logout(){
@@ -180,7 +192,6 @@ function addBeat(){
     wavFile:wav.value,
     genres:genresArray,
 
-    // RESTORED FIELDS
     stripeLink: stripeLink.value || "",
     youtubeLink: youtubeLink.value || "",
     coupon: coupon.value || "",
@@ -210,7 +221,6 @@ function updateBeat(){
     wavFile:wav.value,
     genres:genresArray,
 
-    // RESTORED FIELDS
     stripeLink: stripeLink.value || "",
     youtubeLink: youtubeLink.value || "",
     coupon: coupon.value || ""
@@ -226,7 +236,7 @@ function deleteBeat(){
   selectedBeatId=null;
 }
 
-/* LOAD */
+/* LOAD BEATS */
 function loadBeats(){
   db.collection("beats").onSnapshot(snap=>{
     beatList.innerHTML="";
@@ -260,10 +270,57 @@ function selectBeat(id){
     wav.value=b.wavFile || "";
     genres.value=(b.genres || []).join(", ");
 
-    // RESTORED LOAD
     stripeLink.value=b.stripeLink || "";
     youtubeLink.value=b.youtubeLink || "";
     coupon.value=b.coupon || "";
+  });
+}
+
+/* 🔥 SALES SYSTEM */
+function loadSales(){
+
+  db.collection("sales").onSnapshot(snap=>{
+
+    let salesList = document.getElementById("salesList");
+    let totalEarnings = document.getElementById("totalEarnings");
+    let topBeats = document.getElementById("topBeats");
+
+    salesList.innerHTML = "";
+    topBeats.innerHTML = "";
+
+    let total = 0;
+    let beatCount = {};
+
+    snap.forEach(doc=>{
+      let s = doc.data();
+
+      total += Number(s.price || 0);
+
+      beatCount[s.title] = (beatCount[s.title] || 0) + 1;
+
+      salesList.innerHTML += `
+        <div class="beatRow">
+          <b>${s.title}</b><br>
+          $${s.price}
+        </div>
+      `;
+    });
+
+    totalEarnings.innerText = "Total Earnings: $" + total.toFixed(2);
+
+    // TOP BEATS
+    let sorted = Object.entries(beatCount)
+      .sort((a,b)=>b[1]-a[1])
+      .slice(0,5);
+
+    sorted.forEach(b=>{
+      topBeats.innerHTML += `
+        <div class="beatRow">
+          ${b[0]} - ${b[1]} sales
+        </div>
+      `;
+    });
+
   });
 }
 </script>
