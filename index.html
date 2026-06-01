@@ -74,7 +74,6 @@ header{
   box-shadow:0 12px 25px rgba(0,0,0,0.5);
 }
 
-/* IMAGE */
 .beat img{
   width:100%;
   height:120px;
@@ -101,7 +100,6 @@ header{
   margin-top:5px;
 }
 
-/* BUTTONS */
 button{
   width:100%;
   padding:8px;
@@ -135,7 +133,6 @@ button:hover{
   </div>
 </header>
 
-<!-- STORE -->
 <div id="store"></div>
 
 <script>
@@ -151,7 +148,7 @@ let allBeats = [];
 let audioPlayer = new Audio();
 let currentBeatId = null;
 
-/* LOAD SETTINGS */
+/* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
   if(!s) return;
@@ -250,7 +247,7 @@ function playPreview(url,id){
   currentBeatId = id;
 }
 
-/* BUY NOW (IMPORTANT FIX) */
+/* BUY NOW */
 function buyNow(link, beatId){
 
   if(!link){
@@ -260,7 +257,7 @@ function buyNow(link, beatId){
 
   const successURL =
     "https://juniorrecordscontact-cmd.github.io/beat-store/thank-you.html?beat="
-    + beatId;
+    + beatId + "&paid=true";
 
   const finalLink =
     link + "?success_url=" + encodeURIComponent(successURL);
