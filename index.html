@@ -8,124 +8,96 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-<script src="https://unpkg.com/wavesurfer.js"></script>
-
 <style>
-
-/* ================= DESIGN SYSTEM ================= */
-:root{
-  --space-1:4px;
-  --space-2:8px;
-  --space-3:12px;
-  --space-4:16px;
-  --space-5:20px;
-  --space-6:24px;
-  --radius:12px;
-}
-
-/* ================= BASE ================= */
 body{
   margin:0;
   font-family:Arial;
-  background: radial-gradient(circle at top, #171725, #0b0b10);
+  background:#0f0f12;
   color:white;
 }
 
-/* ================= HEADER ================= */
+/* HEADER */
 header{
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  padding:var(--space-4);
-  background:rgba(0,0,0,0.35);
-  backdrop-filter: blur(12px);
-  position:sticky;
-  top:0;
-  z-index:10;
+  justify-content:space-between;
+  padding:12px 15px;
 }
 
 .leftHeader{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:10px;
 }
 
 #logo{
   width:60px;
   height:60px;
-  border-radius:12px;
+  border-radius:10px;
   object-fit:cover;
 }
 
+.titleBlock{
+  display:flex;
+  flex-direction:column;
+}
+
 #storeTitle{
-  font-size:20px;
   margin:0;
+  font-size:18px;
 }
 
 #slogan{
+  margin:0;
   font-size:12px;
   opacity:0.7;
-  margin:0;
 }
 
-/* ================= FILTER BAR ================= */
-#filters{
+/* SEARCH */
+#searchWrap{
   display:flex;
-  gap:10px;
-  padding:12px;
-  overflow-x:auto;
+  align-items:center;
 }
 
-.filterBtn{
-  padding:6px 10px;
-  border-radius:999px;
-  border:none;
-  cursor:pointer;
-  background:rgba(255,255,255,0.08);
-  color:white;
+#searchInput{
+  width:150px;
+  padding:6px 8px;
   font-size:12px;
+  border:none;
+  border-radius:6px;
+  background:#1e1e25;
+  color:white;
+  outline:none;
 }
 
-.filterBtn.active{
-  background:#6d3cff;
-}
-
-/* ================= FEATURED ================= */
-#featured{
-  padding:12px;
-  font-size:14px;
-  opacity:0.8;
-}
-
-/* ================= STORE ================= */
+/* STORE */
 #store{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:12px;
-  padding:16px;
+  padding:15px;
 }
 
-/* ================= CARD ================= */
+/* BEAT CARD */
 .beat{
-  background:rgba(255,255,255,0.05);
+  background:#1a1a22;
   border-radius:12px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,0.08);
-  transition:0.2s;
-}
-
-.beat:hover{
-  transform:translateY(-5px);
 }
 
 .beat img{
   width:100%;
-  height:110px;
+  height:120px;
   object-fit:cover;
 }
 
 .beatContent{
-  padding:12px;
+  padding:10px;
+}
+
+.beat h3{
+  margin:5px 0;
+  font-size:14px;
 }
 
 .meta{
@@ -133,114 +105,104 @@ header{
   opacity:0.8;
 }
 
-/* WAVEFORM */
-.wave{
-  height:40px;
+.genres{
+  font-size:10px;
+  opacity:0.8;
+  margin-top:5px;
+}
+
+/* BUTTONS */
+.buttonGroup{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
   margin-top:8px;
 }
 
-/* ================= BUTTONS ================= */
 button{
   width:100%;
   padding:8px;
   border:none;
-  border-radius:10px;
-  background:linear-gradient(135deg,#6d3cff,#8457ff);
+  border-radius:8px;
+  background:#6d3cff;
   color:white;
   cursor:pointer;
   font-size:12px;
 }
 
-.buttonGroup{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  margin-top:10px;
-}
-
-/* ================= CART ================= */
+/* CART */
 #cartBox{
-  max-width:480px;
-  margin:12px auto;
-  padding:12px;
-  background:rgba(255,255,255,0.05);
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,0.08);
+  max-width:520px;
+  margin:8px auto;
+  padding:8px 10px;
+  background:#181820;
+  border-radius:10px;
+  font-size:12px;
 }
 
-.cartItem{
+#cartBox h2{
+  font-size:15px;
+  margin:0 0 6px 0;
+}
+
+#cartItems div{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:6px 0;
-  font-size:13px;
+  padding:4px 0;
+  border-bottom:1px solid #222;
 }
 
-.removeBtn{
-  background:red;
-  border:none;
-  border-radius:6px;
-  padding:2px 6px;
+#cartItems button{
+  padding:3px 6px;
   font-size:10px;
-  cursor:pointer;
 }
 
-/* ================= STICKY PLAYER ================= */
+/* PLAYER */
 #playerBar{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:rgba(0,0,0,0.8);
-  backdrop-filter: blur(10px);
   padding:10px;
-  display:flex;
-  align-items:center;
-  gap:10px;
 }
 
-#waveform{
-  flex:1;
-  height:50px;
+audio{
+  width:100%;
 }
-
 </style>
 
 </head>
 
 <body>
 
+<!-- HEADER -->
 <header>
+
   <div class="leftHeader">
     <img id="logo">
-    <div>
+    <div class="titleBlock">
       <h1 id="storeTitle">Junior Beats</h1>
       <p id="slogan">By Jayan Reid</p>
     </div>
   </div>
+
+  <div id="searchWrap">
+    <input id="searchInput" placeholder="Search..." oninput="searchBeats()">
+  </div>
+
 </header>
 
-<!-- FILTERS -->
-<div id="filters">
-  <button class="filterBtn active" onclick="filter('all')">All</button>
-  <button class="filterBtn" onclick="filter('trap')">Trap</button>
-  <button class="filterBtn" onclick="filter('pop')">Pop</button>
-  <button class="filterBtn" onclick="filter('lofi')">Lofi</button>
-</div>
-
-<div id="featured">🔥 Featured Beats</div>
-
+<!-- CART -->
 <div id="cartBox">
-  <h3>Cart</h3>
+  <h2>🛒 Cart</h2>
   <div id="cartItems"></div>
-  <h4 id="total"></h4>
+  <h3 id="cartTotal">Total: $0</h3>
+  <button onclick="checkoutCart()">Checkout</button>
 </div>
 
+<!-- STORE -->
 <div id="store"></div>
 
-<!-- STICKY PLAYER -->
+<!-- PLAYER -->
 <div id="playerBar">
-  <div id="waveform"></div>
+  <audio id="audioPlayer" controls></audio>
 </div>
 
 <script>
@@ -252,48 +214,69 @@ projectId:"junior-beats-store"
 
 const db = firebase.firestore();
 
-let allBeats=[];
-let cart=[];
-let wavesurfer=null;
-let currentAudio=null;
+let allBeats = [];
+let currentBeatId = null;
+
+/* CART PERSISTENCE */
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 /* SETTINGS */
-db.collection("settings").doc("site").onSnapshot(d=>{
-  const s=d.data();
+db.collection("settings").doc("site").onSnapshot(doc=>{
+  const s = doc.data();
   if(!s) return;
 
-  document.getElementById("logo").src=s.logo||"";
-  document.getElementById("storeTitle").innerText=s.storeName||"Junior Beats";
-  document.getElementById("slogan").innerText=s.slogan||"By Jayan Reid";
+  storeTitle.innerText = s.storeName || "Junior Beats";
+  slogan.innerText = s.slogan || "By Jayan Reid";
+  if(s.logo) logo.src = s.logo;
 });
 
-/* LOAD */
-db.collection("beats").onSnapshot(s=>{
-  allBeats=[];
-  s.forEach(d=>allBeats.push({id:d.id,...d.data()}));
-  render(allBeats);
+/* LOAD BEATS */
+db.collection("beats").onSnapshot(snapshot=>{
+  allBeats = [];
+
+  snapshot.forEach(doc=>{
+    allBeats.push({id:doc.id,...doc.data()});
+  });
+
+  renderBeats(allBeats);
+  renderCart();
 });
 
 /* RENDER */
-function render(list){
-  const store=document.getElementById("store");
-  store.innerHTML="";
+function renderBeats(beats){
 
-  list.forEach(b=>{
-    store.innerHTML+=`
+  const store = document.getElementById("store");
+  store.innerHTML = "";
+
+  beats.forEach(b=>{
+
+    store.innerHTML += `
       <div class="beat">
 
-        <img src="${b.image||''}">
+        <img src="${b.image || ''}">
 
         <div class="beatContent">
 
-          <div class="meta">${b.title}</div>
-          <div class="meta">${b.producer}</div>
-          <div class="meta">$${b.price}</div>
+          <h3>${b.title || ''}</h3>
+
+          <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
+          <div class="meta">BPM: ${b.tempo || 'N/A'}</div>
+          <div class="meta">$${b.price || 0}</div>
+
+          <div class="genres">
+            ${(b.genres || []).join(" • ")}
+          </div>
 
           <div class="buttonGroup">
-            <button onclick="play('${b.previewFile}')">▶ Play</button>
-            <button onclick="add('${b.id}')">Add</button>
+
+            <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
+              ▶ Play / Pause
+            </button>
+
+            <button onclick="addToCart('${b.id}')">
+              Add to Cart
+            </button>
+
           </div>
 
         </div>
@@ -303,69 +286,100 @@ function render(list){
   });
 }
 
-/* WAVE PLAYER */
-function initWave(url){
-  if(wavesurfer) wavesurfer.destroy();
+/* AUDIO TOGGLE + TRACKING */
+function playPreview(url,id){
 
-  wavesurfer = WaveSurfer.create({
-    container:"#waveform",
-    waveColor:"#888",
-    progressColor:"#6d3cff",
-    height:50
+  if(!url) return;
+
+  const player = document.getElementById("audioPlayer");
+
+  if(currentBeatId === id){
+    if(player.paused){
+      player.play();
+    } else {
+      player.pause();
+    }
+    return;
+  }
+
+  player.src = url;
+  player.play();
+  currentBeatId = id;
+
+  db.collection("beats").doc(id).update({
+    plays: firebase.firestore.FieldValue.increment(1)
   });
-
-  wavesurfer.load(url);
 }
 
-/* PLAY */
-function play(url){
-  currentAudio=url;
-  initWave(url);
+/* SEARCH */
+function searchBeats(){
+
+  const value = searchInput.value.toLowerCase().trim();
+
+  if(!value){
+    renderBeats(allBeats);
+    return;
+  }
+
+  const filtered = allBeats.filter(b=>{
+    return (
+      (b.title||"").toLowerCase().includes(value) ||
+      (b.producer||"").toLowerCase().includes(value) ||
+      (b.tempo||"").toString().includes(value) ||
+      (b.genres||[]).join(" ").toLowerCase().includes(value)
+    );
+  });
+
+  renderBeats(filtered);
 }
 
 /* CART */
-function add(id){
-  const b=allBeats.find(x=>x.id===id);
-  if(!b) return;
+function addToCart(id){
 
-  cart.push(b);
+  if(cart.find(c=>c.id===id)) return;
+
+  const beat = allBeats.find(b=>b.id===id);
+  if(!beat) return;
+
+  cart.push(beat);
   renderCart();
 }
 
-function remove(i){
-  cart.splice(i,1);
+function removeFromCart(index){
+  cart.splice(index,1);
   renderCart();
 }
 
 function renderCart(){
-  let total=0;
-  const box=document.getElementById("cartItems");
-  box.innerHTML="";
 
-  cart.forEach((c,i)=>{
-    total+=Number(c.price||0);
+  const cartItems = document.getElementById("cartItems");
+  const cartTotal = document.getElementById("cartTotal");
 
-    box.innerHTML+=`
-      <div class="cartItem">
-        ${c.title}
-        <button class="removeBtn" onclick="remove(${i})">X</button>
+  cartItems.innerHTML = "";
+
+  let total = 0;
+
+  cart.forEach((item,i)=>{
+    total += Number(item.price||0);
+
+    cartItems.innerHTML += `
+      <div>
+        ${item.title}
+        <span>
+          $${item.price}
+          <button onclick="removeFromCart(${i})">x</button>
+        </span>
       </div>
     `;
   });
 
-  document.getElementById("total").innerText="Total: $"+total;
+  cartTotal.innerText = "Total: $" + total.toFixed(2);
+
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-/* FILTER */
-function filter(type){
-  document.querySelectorAll(".filterBtn").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
-
-  if(type==="all") return render(allBeats);
-
-  render(allBeats.filter(b=>
-    (b.genres||[]).includes(type)
-  ));
+function checkoutCart(){
+  alert("Checkout ready — system unchanged");
 }
 </script>
 
