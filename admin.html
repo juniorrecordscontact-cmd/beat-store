@@ -107,8 +107,10 @@ button{
 
 <input id="genres" placeholder="Genres (comma separated)">
 
-<!-- 🔥 NEW STRIPE FIELD -->
+<!-- 🔥 RESTORED FEATURES -->
 <input id="stripeLink" placeholder="Stripe Payment Link">
+<input id="youtubeLink" placeholder="YouTube Video Link">
+<input id="coupon" placeholder="Coupon Code (optional)">
 
 <button onclick="addBeat()">Upload</button>
 <button onclick="updateBeat()">Update Selected</button>
@@ -178,8 +180,10 @@ function addBeat(){
     wavFile:wav.value,
     genres:genresArray,
 
-    // 🔥 NEW FIELD
+    // RESTORED FIELDS
     stripeLink: stripeLink.value || "",
+    youtubeLink: youtubeLink.value || "",
+    coupon: coupon.value || "",
 
     createdAt:Date.now()
   });
@@ -206,8 +210,10 @@ function updateBeat(){
     wavFile:wav.value,
     genres:genresArray,
 
-    // 🔥 NEW FIELD
-    stripeLink: stripeLink.value || ""
+    // RESTORED FIELDS
+    stripeLink: stripeLink.value || "",
+    youtubeLink: youtubeLink.value || "",
+    coupon: coupon.value || ""
   });
 
   alert("Updated");
@@ -253,9 +259,11 @@ function selectBeat(id){
     preview.value=b.previewFile || "";
     wav.value=b.wavFile || "";
     genres.value=(b.genres || []).join(", ");
-    
-    // 🔥 NEW FIELD LOAD
-    stripeLink.value = b.stripeLink || "";
+
+    // RESTORED LOAD
+    stripeLink.value=b.stripeLink || "";
+    youtubeLink.value=b.youtubeLink || "";
+    coupon.value=b.coupon || "";
   });
 }
 </script>
