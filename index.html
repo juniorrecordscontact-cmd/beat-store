@@ -78,19 +78,28 @@ header{
   padding:15px;
 }
 
-/* BEAT CARD */
+/* BEAT CARD + HOVER (NEW) */
 .beat{
   background:#1a1a22;
   border-radius:12px;
   overflow:hidden;
+  transition: all 0.25s ease;
 }
 
+.beat:hover{
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.15);
+}
+
+/* IMAGE */
 .beat img{
   width:100%;
   height:120px;
   object-fit:cover;
 }
 
+/* CONTENT */
 .beatContent{
   padding:10px;
 }
@@ -128,6 +137,12 @@ button{
   color:white;
   cursor:pointer;
   font-size:12px;
+  transition:0.2s;
+}
+
+button:hover{
+  filter:brightness(1.1);
+  transform: scale(1.02);
 }
 
 /* CART */
@@ -172,9 +187,7 @@ audio{
 
 <body>
 
-<!-- HEADER -->
 <header>
-
   <div class="leftHeader">
     <img id="logo">
     <div class="titleBlock">
@@ -186,7 +199,6 @@ audio{
   <div id="searchWrap">
     <input id="searchInput" placeholder="Search..." oninput="searchBeats()">
   </div>
-
 </header>
 
 <!-- CART -->
@@ -215,10 +227,8 @@ projectId:"junior-beats-store"
 const db = firebase.firestore();
 
 let allBeats = [];
-let currentBeatId = null;
-
-/* CART PERSISTENCE */
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let currentBeatId = null;
 
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
@@ -242,13 +252,30 @@ db.collection("beats").onSnapshot(snapshot=>{
   renderCart();
 });
 
-/* RENDER */
+/* RENDER (YOUTUBE ADDED) */
 function renderBeats(beats){
 
   const store = document.getElementById("store");
   store.innerHTML = "";
 
   beats.forEach(b=>{
+
+    // YOUTUBE EMBED FIX
+    let embed = "";
+    if(b.youtubeLink){
+      let id = "";
+
+      if(b.youtubeLink.includes("youtu.be/")){
+        id = b.youtubeLink.split("youtu.be/")[1];
+      }
+      else if(b.youtubeLink.includes("watch?v=")){
+        id = b.youtubeLink.split("watch?v=")[1].split("&")[0];
+      }
+
+      if(id){
+        embed = `https://www.youtube.com/embed/${id}`;
+      }
+    }
 
     store.innerHTML += `
       <div class="beat">
@@ -266,6 +293,15 @@ function renderBeats(beats){
           <div class="genres">
             ${(b.genres || []).join(" • ")}
           </div>
+
+          ${embed ? `
+            <div style="margin-top:8px;">
+              <iframe width="100%" height="120"
+              src="${embed}"
+              frameborder="0"
+              allowfullscreen></iframe>
+            </div>
+          ` : ""}
 
           <div class="buttonGroup">
 
@@ -286,7 +322,7 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO TOGGLE + TRACKING */
+/* AUDIO */
 function playPreview(url,id){
 
   if(!url) return;
@@ -294,21 +330,13 @@ function playPreview(url,id){
   const player = document.getElementById("audioPlayer");
 
   if(currentBeatId === id){
-    if(player.paused){
-      player.play();
-    } else {
-      player.pause();
-    }
+    player.paused ? player.play() : player.pause();
     return;
   }
 
   player.src = url;
   player.play();
   currentBeatId = id;
-
-  db.collection("beats").doc(id).update({
-    plays: firebase.firestore.FieldValue.increment(1)
-  });
 }
 
 /* SEARCH */
@@ -345,8 +373,8 @@ function addToCart(id){
   renderCart();
 }
 
-function removeFromCart(index){
-  cart.splice(index,1);
+function removeFromCart(i){
+  cart.splice(i,1);
   renderCart();
 }
 
@@ -374,8 +402,6 @@ function renderCart(){
   });
 
   cartTotal.innerText = "Total: $" + total.toFixed(2);
-
-  localStorage.setItem("cart", JSON.stringify(cart));
 }
 
 function checkoutCart(){
