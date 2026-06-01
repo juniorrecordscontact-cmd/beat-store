@@ -91,6 +91,7 @@ header{
   box-shadow:0 12px 25px rgba(0,0,0,0.5);
 }
 
+/* IMAGE */
 .beat img{
   width:100%;
   height:120px;
@@ -99,6 +100,11 @@ header{
 
 .beatContent{
   padding:10px;
+}
+
+.beat h3{
+  margin:5px 0;
+  font-size:14px;
 }
 
 .meta{
@@ -171,6 +177,10 @@ const db = firebase.firestore();
 let allBeats = [];
 let currentBeatId = null;
 
+/* GLOBAL AUDIO PLAYER (FIXED) */
+let audioPlayer = new Audio();
+let isPlaying = false;
+
 /* SETTINGS */
 db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
@@ -224,6 +234,11 @@ function renderBeats(beats){
 
         <div class="beatContent">
 
+          <!-- PLAY BUTTON MOVED TO TOP -->
+          <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
+            ▶ Play / Pause
+          </button>
+
           <h3>${b.title || ''}</h3>
 
           <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
@@ -245,10 +260,6 @@ function renderBeats(beats){
 
           <div class="buttonGroup">
 
-            <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
-              ▶ Play Preview
-            </button>
-
             <button onclick="buyNow('${b.stripeLink || ''}')">
               💰 Buy Now
             </button>
@@ -262,24 +273,30 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO */
+/* PLAY / PAUSE FIXED */
 function playPreview(url,id){
 
   if(!url) return;
 
-  const player = new Audio();
-
+  // same beat → toggle
   if(currentBeatId === id){
-    player.paused ? player.play() : player.pause();
+
+    if(audioPlayer.paused){
+      audioPlayer.play();
+    } else {
+      audioPlayer.pause();
+    }
+
     return;
   }
 
-  player.src = url;
-  player.play();
+  // new beat
+  audioPlayer.src = url;
+  audioPlayer.play();
   currentBeatId = id;
 }
 
-/* BUY NOW (STRIPE) */
+/* BUY NOW */
 function buyNow(link){
   if(!link){
     alert("No Stripe link added for this beat");
