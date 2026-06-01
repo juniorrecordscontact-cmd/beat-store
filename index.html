@@ -8,7 +8,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
+<script src="https://unpkg.com/wavesurfer.js"></script>
+
 <style>
+
 body{
   margin:0;
   font-family:Arial;
@@ -78,46 +81,31 @@ header{
   padding:15px;
 }
 
-/* BEAT CARD + HOVER (NEW) */
+/* BEAT CARD */
 .beat{
   background:#1a1a22;
   border-radius:12px;
   overflow:hidden;
-  transition: all 0.25s ease;
+  transition:0.25s;
 }
 
 .beat:hover{
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.15);
+  transform:translateY(-6px);
 }
 
-/* IMAGE */
 .beat img{
   width:100%;
   height:120px;
   object-fit:cover;
 }
 
-/* CONTENT */
 .beatContent{
   padding:10px;
-}
-
-.beat h3{
-  margin:5px 0;
-  font-size:14px;
 }
 
 .meta{
   font-size:11px;
   opacity:0.8;
-}
-
-.genres{
-  font-size:10px;
-  opacity:0.8;
-  margin-top:5px;
 }
 
 /* BUTTONS */
@@ -137,12 +125,6 @@ button{
   color:white;
   cursor:pointer;
   font-size:12px;
-  transition:0.2s;
-}
-
-button:hover{
-  filter:brightness(1.1);
-  transform: scale(1.02);
 }
 
 /* CART */
@@ -155,32 +137,40 @@ button:hover{
   font-size:12px;
 }
 
-#cartBox h2{
-  font-size:15px;
-  margin:0 0 6px 0;
-}
-
-#cartItems div{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:4px 0;
-  border-bottom:1px solid #222;
-}
-
-#cartItems button{
-  padding:3px 6px;
-  font-size:10px;
-}
-
-/* PLAYER */
+/* =========================
+   STICKY PLAYER BAR (NEW)
+========================= */
 #playerBar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  height:80px;
+  background:rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  display:flex;
+  align-items:center;
+  gap:10px;
   padding:10px;
+  z-index:999;
 }
 
-audio{
-  width:100%;
+/* waveform container */
+#waveform{
+  flex:1;
+  height:60px;
 }
+
+/* play button inside bar */
+#playBtn{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#6d3cff;
+  border:none;
+  cursor:pointer;
+}
+
 </style>
 
 </head>
@@ -206,15 +196,15 @@ audio{
   <h2>🛒 Cart</h2>
   <div id="cartItems"></div>
   <h3 id="cartTotal">Total: $0</h3>
-  <button onclick="checkoutCart()">Checkout</button>
 </div>
 
 <!-- STORE -->
 <div id="store"></div>
 
-<!-- PLAYER -->
+<!-- STICKY PLAYER -->
 <div id="playerBar">
-  <audio id="audioPlayer" controls></audio>
+  <button id="playBtn" onclick="togglePlay()">▶</button>
+  <div id="waveform"></div>
 </div>
 
 <script>
@@ -226,93 +216,50 @@ projectId:"junior-beats-store"
 
 const db = firebase.firestore();
 
-let allBeats = [];
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let currentBeatId = null;
+let allBeats=[];
+let cart=[];
+let wavesurfer=null;
+let currentTrack=null;
+let isPlaying=false;
 
 /* SETTINGS */
-db.collection("settings").doc("site").onSnapshot(doc=>{
-  const s = doc.data();
+db.collection("settings").doc("site").onSnapshot(d=>{
+  const s=d.data();
   if(!s) return;
 
-  storeTitle.innerText = s.storeName || "Junior Beats";
-  slogan.innerText = s.slogan || "By Jayan Reid";
-  if(s.logo) logo.src = s.logo;
+  logo.src=s.logo||"";
+  storeTitle.innerText=s.storeName||"Junior Beats";
+  slogan.innerText=s.slogan||"By Jayan Reid";
 });
 
 /* LOAD BEATS */
-db.collection("beats").onSnapshot(snapshot=>{
-  allBeats = [];
-
-  snapshot.forEach(doc=>{
-    allBeats.push({id:doc.id,...doc.data()});
-  });
-
-  renderBeats(allBeats);
-  renderCart();
+db.collection("beats").onSnapshot(s=>{
+  allBeats=[];
+  s.forEach(d=>allBeats.push({id:d.id,...d.data()}));
+  render(allBeats);
 });
 
-/* RENDER (YOUTUBE ADDED) */
-function renderBeats(beats){
+/* RENDER */
+function render(list){
+  const store=document.getElementById("store");
+  store.innerHTML="";
 
-  const store = document.getElementById("store");
-  store.innerHTML = "";
+  list.forEach(b=>{
 
-  beats.forEach(b=>{
-
-    // YOUTUBE EMBED FIX
-    let embed = "";
-    if(b.youtubeLink){
-      let id = "";
-
-      if(b.youtubeLink.includes("youtu.be/")){
-        id = b.youtubeLink.split("youtu.be/")[1];
-      }
-      else if(b.youtubeLink.includes("watch?v=")){
-        id = b.youtubeLink.split("watch?v=")[1].split("&")[0];
-      }
-
-      if(id){
-        embed = `https://www.youtube.com/embed/${id}`;
-      }
-    }
-
-    store.innerHTML += `
+    store.innerHTML+=`
       <div class="beat">
 
-        <img src="${b.image || ''}">
+        <img src="${b.image||''}">
 
         <div class="beatContent">
 
-          <h3>${b.title || ''}</h3>
-
-          <div class="meta">Producer: ${b.producer || 'Unknown'}</div>
-          <div class="meta">BPM: ${b.tempo || 'N/A'}</div>
-          <div class="meta">$${b.price || 0}</div>
-
-          <div class="genres">
-            ${(b.genres || []).join(" • ")}
-          </div>
-
-          ${embed ? `
-            <div style="margin-top:8px;">
-              <iframe width="100%" height="120"
-              src="${embed}"
-              frameborder="0"
-              allowfullscreen></iframe>
-            </div>
-          ` : ""}
+          <div class="meta">${b.title}</div>
+          <div class="meta">${b.producer}</div>
+          <div class="meta">$${b.price}</div>
 
           <div class="buttonGroup">
-
-            <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
-              ▶ Play / Pause
-            </button>
-
-            <button onclick="addToCart('${b.id}')">
-              Add to Cart
-            </button>
-
+            <button onclick="play('${b.previewFile}')">▶ Preview</button>
+            <button onclick="add('${b.id}')">Add</button>
           </div>
 
         </div>
@@ -322,91 +269,82 @@ function renderBeats(beats){
   });
 }
 
-/* AUDIO */
-function playPreview(url,id){
+/* =========================
+   WAVEFORM PLAYER (SYNCED)
+========================= */
+function initWave(url){
 
-  if(!url) return;
-
-  const player = document.getElementById("audioPlayer");
-
-  if(currentBeatId === id){
-    player.paused ? player.play() : player.pause();
-    return;
+  if(wavesurfer){
+    wavesurfer.destroy();
   }
 
-  player.src = url;
-  player.play();
-  currentBeatId = id;
-}
-
-/* SEARCH */
-function searchBeats(){
-
-  const value = searchInput.value.toLowerCase().trim();
-
-  if(!value){
-    renderBeats(allBeats);
-    return;
-  }
-
-  const filtered = allBeats.filter(b=>{
-    return (
-      (b.title||"").toLowerCase().includes(value) ||
-      (b.producer||"").toLowerCase().includes(value) ||
-      (b.tempo||"").toString().includes(value) ||
-      (b.genres||[]).join(" ").toLowerCase().includes(value)
-    );
+  wavesurfer = WaveSurfer.create({
+    container:"#waveform",
+    waveColor:"#555",
+    progressColor:"#6d3cff",
+    height:60,
+    barWidth:2,
+    responsive:true
   });
 
-  renderBeats(filtered);
+  wavesurfer.load(url);
+
+  wavesurfer.on("ready", ()=>{
+    wavesurfer.play();
+    isPlaying=true;
+    playBtn.innerText="⏸";
+  });
+
+  wavesurfer.on("finish", ()=>{
+    isPlaying=false;
+    playBtn.innerText="▶";
+  });
+}
+
+/* PLAY */
+function play(url){
+  currentTrack=url;
+  initWave(url);
+}
+
+/* TOGGLE */
+function togglePlay(){
+  if(!wavesurfer) return;
+
+  if(isPlaying){
+    wavesurfer.pause();
+    playBtn.innerText="▶";
+  }else{
+    wavesurfer.play();
+    playBtn.innerText="⏸";
+  }
+
+  isPlaying=!isPlaying;
 }
 
 /* CART */
-function addToCart(id){
+function add(id){
+  const b=allBeats.find(x=>x.id===id);
+  if(!b) return;
 
-  if(cart.find(c=>c.id===id)) return;
-
-  const beat = allBeats.find(b=>b.id===id);
-  if(!beat) return;
-
-  cart.push(beat);
-  renderCart();
-}
-
-function removeFromCart(i){
-  cart.splice(i,1);
+  cart.push(b);
   renderCart();
 }
 
 function renderCart(){
+  const box=document.getElementById("cartItems");
+  box.innerHTML="";
 
-  const cartItems = document.getElementById("cartItems");
-  const cartTotal = document.getElementById("cartTotal");
+  let total=0;
 
-  cartItems.innerHTML = "";
-
-  let total = 0;
-
-  cart.forEach((item,i)=>{
-    total += Number(item.price||0);
-
-    cartItems.innerHTML += `
-      <div>
-        ${item.title}
-        <span>
-          $${item.price}
-          <button onclick="removeFromCart(${i})">x</button>
-        </span>
-      </div>
-    `;
+  cart.forEach(c=>{
+    total+=Number(c.price||0);
+    box.innerHTML+=`<div>${c.title}</div>`;
   });
 
-  cartTotal.innerText = "Total: $" + total.toFixed(2);
+  document.getElementById("cartTotal").innerText="Total: $"+total;
 }
 
-function checkoutCart(){
-  alert("Checkout ready — system unchanged");
-}
 </script>
 
 </body>
