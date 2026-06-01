@@ -21,9 +21,9 @@ header{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:12px 16px;
-  background: rgba(0,0,0,0.25);
-  backdrop-filter: blur(10px);
+  padding:14px 18px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
   position:sticky;
   top:0;
   z-index:10;
@@ -32,31 +32,32 @@ header{
 .leftHeader{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:14px;
 }
 
 #logo{
-  width:48px;
-  height:48px;
-  border-radius:10px;
+  width:65px;
+  height:65px;
+  border-radius:14px;
   object-fit:cover;
 }
 
 .titleBlock h1{
   margin:0;
-  font-size:16px;
+  font-size:22px;
+  font-weight:600;
 }
 
 #slogan{
   margin:0;
-  font-size:11px;
-  opacity:0.6;
+  font-size:12px;
+  opacity:0.7;
 }
 
 /* SEARCH */
 #searchWrap input{
-  width:170px;
-  padding:6px 9px;
+  width:180px;
+  padding:7px 10px;
   font-size:12px;
   border:none;
   border-radius:8px;
@@ -65,15 +66,15 @@ header{
   outline:none;
 }
 
-/* STORE GRID (SMALLER CARDS FIX) */
+/* STORE GRID */
 #store{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
   gap:12px;
   padding:14px;
 }
 
-/* CARD (SMALLER + CLEANER) */
+/* BEAT CARD */
 .beat{
   background: rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.08);
@@ -93,11 +94,6 @@ header{
   width:100%;
   height:110px;
   object-fit:cover;
-  transition: transform 0.3s ease;
-}
-
-.beat:hover img{
-  transform: scale(1.06);
 }
 
 .beatContent{
@@ -106,20 +102,20 @@ header{
 
 .beat h3{
   margin:5px 0;
-  font-size:13px;
+  font-size:14px;
 }
 
-/* META SMALLER */
+/* TEXT FIX */
 .meta{
-  font-size:10px;
-  opacity:0.75;
+  font-size:12px;
+  opacity:0.8;
   margin:2px 0;
 }
 
 /* GENRES */
 .genres span{
-  font-size:9px;
-  padding:2px 6px;
+  font-size:10px;
+  padding:3px 6px;
   border-radius:999px;
   background: rgba(255,255,255,0.08);
   margin-right:4px;
@@ -141,7 +137,7 @@ button{
   background: linear-gradient(135deg,#6d3cff,#8457ff);
   color:white;
   cursor:pointer;
-  font-size:11px;
+  font-size:12px;
   transition: all 0.2s ease;
 }
 
@@ -150,21 +146,36 @@ button:hover{
   filter: brightness(1.1);
 }
 
-/* CART */
+/* CART FIXED */
 #cartBox{
-  max-width:520px;
-  margin:10px auto;
-  padding:10px;
+  max-width:460px;
+  margin:12px auto;
+  padding:12px;
   background: rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.08);
   border-radius:12px;
   backdrop-filter: blur(10px);
+  font-size:13px;
+}
+
+#cartBox h2{
+  font-size:16px;
+  margin-bottom:6px;
+}
+
+#cartBox h3{
+  font-size:14px;
+}
+
+#cartItems div{
+  font-size:13px;
+  padding:4px 0;
 }
 
 /* PLAYER */
 audio{
   width:100%;
-  margin:10px 0;
+  margin-top:10px;
 }
 </style>
 
@@ -188,14 +199,17 @@ audio{
 
 </header>
 
+<!-- CART -->
 <div id="cartBox">
   <h2>🛒 Cart</h2>
   <div id="cartItems"></div>
   <h3 id="cartTotal">Total: $0</h3>
 </div>
 
+<!-- STORE -->
 <div id="store"></div>
 
+<!-- PLAYER -->
 <audio id="audioPlayer" controls></audio>
 
 <script>
@@ -211,7 +225,7 @@ let allBeats = [];
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let currentBeatId = null;
 
-/* FIXED SETTINGS (LOGO FIX) */
+/* SETTINGS FIX (STABLE) */
 const logoEl = document.getElementById("logo");
 const titleEl = document.getElementById("storeTitle");
 const sloganEl = document.getElementById("slogan");
@@ -220,8 +234,8 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
   const s = doc.data();
   if(!s) return;
 
-  if(titleEl) titleEl.innerText = s.storeName || "";
-  if(sloganEl) sloganEl.innerText = s.slogan || "";
+  if(titleEl) titleEl.innerText = s.storeName || "Junior Beats";
+  if(sloganEl) sloganEl.innerText = s.slogan || "By Jayan Reid";
   if(logoEl && s.logo) logoEl.src = s.logo;
 });
 
