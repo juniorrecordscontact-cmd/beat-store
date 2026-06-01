@@ -12,7 +12,7 @@
 body{
   margin:0;
   font-family:Arial;
-  background:#0f0f12;
+  background: radial-gradient(circle at top, #171725, #0b0b10);
   color:white;
 }
 
@@ -21,28 +21,29 @@ header{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:12px 15px;
+  padding:14px 18px;
+  backdrop-filter: blur(10px);
+  background: rgba(0,0,0,0.25);
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
 .leftHeader{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
 }
 
 #logo{
-  width:60px;
-  height:60px;
-  border-radius:10px;
+  width:55px;
+  height:55px;
+  border-radius:12px;
   object-fit:cover;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
 }
 
-.titleBlock{
-  display:flex;
-  flex-direction:column;
-}
-
-#storeTitle{
+.titleBlock h1{
   margin:0;
   font-size:18px;
 }
@@ -50,87 +51,104 @@ header{
 #slogan{
   margin:0;
   font-size:12px;
-  opacity:0.7;
+  opacity:0.6;
 }
 
 /* SEARCH */
 #searchWrap input{
-  width:160px;
-  padding:6px 8px;
+  width:180px;
+  padding:7px 10px;
   font-size:12px;
   border:none;
-  border-radius:6px;
-  background:#1e1e25;
+  border-radius:8px;
+  background: rgba(255,255,255,0.08);
   color:white;
   outline:none;
+  backdrop-filter: blur(8px);
 }
 
-/* STORE */
+/* STORE GRID */
 #store{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:12px;
-  padding:15px;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:16px;
+  padding:18px;
 }
 
-/* BEAT CARD */
+/* PREMIUM CARD */
 .beat{
-  background:#1a1a22;
-  border-radius:12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
   overflow:hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
 }
 
 .beat:hover{
-  transform: translateY(-6px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  transform: translateY(-8px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
 }
 
 .beat img{
   width:100%;
-  height:120px;
+  height:140px;
   object-fit:cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s ease;
 }
 
 .beat:hover img{
-  transform: scale(1.05);
+  transform: scale(1.07);
 }
 
+/* CONTENT */
 .beatContent{
-  padding:10px;
+  padding:12px;
 }
 
 .beat h3{
-  margin:5px 0;
-  font-size:14px;
+  margin:6px 0;
+  font-size:15px;
 }
 
+/* META */
 .meta{
   font-size:11px;
-  opacity:0.8;
+  opacity:0.75;
+  margin:2px 0;
 }
 
+/* GENRES (BADGES) */
 .genres{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+
+.genres span{
   font-size:10px;
-  opacity:0.8;
-  margin-top:5px;
+  padding:3px 7px;
+  border-radius:999px;
+  background: rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.08);
 }
 
 /* BUTTONS */
 .buttonGroup{
   display:flex;
   flex-direction:column;
-  gap:6px;
-  margin-top:8px;
+  gap:8px;
+  margin-top:10px;
 }
 
 button{
   width:100%;
-  padding:8px;
+  padding:9px;
   border:none;
-  border-radius:8px;
-  background:#6d3cff;
+  border-radius:10px;
+  background: linear-gradient(135deg,#6d3cff,#8457ff);
   color:white;
   cursor:pointer;
   font-size:12px;
@@ -138,23 +156,26 @@ button{
 }
 
 button:hover{
-  background:#8457ff;
-  transform: scale(1.02);
+  transform: scale(1.03);
+  filter: brightness(1.1);
 }
 
-/* CART */
+/* CART (PREMIUM MINI PANEL) */
 #cartBox{
-  max-width:520px;
-  margin:8px auto;
-  padding:8px 10px;
-  background:#181820;
-  border-radius:10px;
+  max-width:560px;
+  margin:10px auto;
+  padding:10px 12px;
+  background: rgba(255,255,255,0.05);
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
   font-size:12px;
 }
 
 /* PLAYER */
 audio{
   width:100%;
+  margin-top:8px;
 }
 </style>
 
@@ -162,7 +183,6 @@ audio{
 
 <body>
 
-<!-- HEADER -->
 <header>
 
   <div class="leftHeader">
@@ -179,20 +199,15 @@ audio{
 
 </header>
 
-<!-- CART -->
 <div id="cartBox">
   <h2>🛒 Cart</h2>
   <div id="cartItems"></div>
   <h3 id="cartTotal">Total: $0</h3>
 </div>
 
-<!-- STORE -->
 <div id="store"></div>
 
-<!-- PLAYER -->
-<div>
-  <audio id="audioPlayer" controls></audio>
-</div>
+<audio id="audioPlayer" controls></audio>
 
 <script>
 firebase.initializeApp({
@@ -207,36 +222,23 @@ let allBeats = [];
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let currentBeatId = null;
 
-/* SETTINGS */
-db.collection("settings").doc("site").onSnapshot(doc=>{
-  const s = doc.data();
-  if(!s) return;
-
-  storeTitle.innerText = s.storeName || "";
-  slogan.innerText = s.slogan || "";
-  if(s.logo) logo.src = s.logo;
-});
-
-/* LOAD BEATS */
+/* LOAD */
 db.collection("beats").onSnapshot(snapshot=>{
   allBeats = [];
-
   snapshot.forEach(doc=>{
     allBeats.push({id:doc.id,...doc.data()});
   });
-
   renderBeats(allBeats);
   renderCart();
 });
 
-/* RENDER BEATS */
+/* RENDER */
 function renderBeats(beats){
   const store = document.getElementById("store");
   store.innerHTML = "";
 
   beats.forEach(b=>{
 
-    // youtube embed
     let embed = "";
     if(b.youtubeLink){
       let id = "";
@@ -266,30 +268,22 @@ function renderBeats(beats){
           <div class="meta">$${b.price || 0}</div>
 
           <div class="genres">
-            ${(b.genres || []).join(" • ")}
+            ${(b.genres || []).map(g=>`<span>${g}</span>`).join("")}
           </div>
 
           ${embed ? `
-            <div style="margin-top:8px;">
-              <iframe
-                width="100%"
-                height="140"
-                src="${embed}"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-              </iframe>
+            <div style="margin-top:10px;">
+              <iframe width="100%" height="140"
+              src="${embed}"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen></iframe>
             </div>
           ` : ""}
 
           <div class="buttonGroup">
-            <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
-              ▶ Play / Pause
-            </button>
-
-            <button onclick="addToCart('${b.id}')">
-              Add to Cart
-            </button>
+            <button onclick="playPreview('${b.previewFile}','${b.id}')">▶ Play</button>
+            <button onclick="addToCart('${b.id}')">Add to Cart</button>
           </div>
 
         </div>
@@ -300,15 +294,15 @@ function renderBeats(beats){
 
 /* AUDIO */
 function playPreview(url,id){
-  const player = document.getElementById("audioPlayer");
+  const p = document.getElementById("audioPlayer");
 
   if(currentBeatId === id){
-    player.paused ? player.play() : player.pause();
+    p.paused ? p.play() : p.pause();
     return;
   }
 
-  player.src = url;
-  player.play();
+  p.src = url;
+  p.play();
   currentBeatId = id;
 }
 
@@ -338,30 +332,18 @@ function addToCart(id){
 }
 
 function renderCart(){
-  const cartItems = document.getElementById("cartItems");
-  const cartTotal = document.getElementById("cartTotal");
+  const items = document.getElementById("cartItems");
+  const totalBox = document.getElementById("cartTotal");
 
   let total = 0;
-  cartItems.innerHTML = "";
+  items.innerHTML = "";
 
-  cart.forEach((item,i)=>{
-    total += Number(item.price||0);
-
-    cartItems.innerHTML += `
-      <div>
-        ${item.title}
-        <button onclick="removeFromCart(${i})">x</button>
-      </div>
-    `;
+  cart.forEach(i=>{
+    total += Number(i.price||0);
+    items.innerHTML += `<div>${i.title}</div>`;
   });
 
-  cartTotal.innerText = "Total: $" + total.toFixed(2);
-}
-
-function removeFromCart(i){
-  cart.splice(i,1);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  renderCart();
+  totalBox.innerText = "Total: $" + total.toFixed(2);
 }
 </script>
 
