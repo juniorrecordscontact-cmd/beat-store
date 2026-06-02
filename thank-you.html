@@ -17,18 +17,14 @@ body{
   justify-content:center;
   align-items:center;
   height:100vh;
-  text-align:center;
 }
 
 .card{
   background:#1a1a22;
   padding:20px;
   border-radius:12px;
-  width:300px;
-}
-
-h1{
-  margin:0 0 10px 0;
+  width:320px;
+  text-align:center;
 }
 
 button{
@@ -41,6 +37,11 @@ button{
   color:white;
   cursor:pointer;
 }
+
+.locked{
+  opacity:0.5;
+  pointer-events:none;
+}
 </style>
 
 </head>
@@ -48,12 +49,12 @@ button{
 <body>
 
 <div class="card">
-  <h1>🎉 Thank You!</h1>
-  <p id="status">Loading your beat...</p>
+  <h1>🎉 Thank You</h1>
+  <p id="status">Verifying purchase...</p>
 
-  <div id="beatInfo"></div>
+  <div id="beatBox"></div>
 
-  <button id="downloadBtn" style="display:none;">
+  <button id="downloadBtn" class="locked">
     Download WAV
   </button>
 </div>
@@ -67,21 +68,23 @@ projectId:"junior-beats-store"
 
 const db = firebase.firestore();
 
-/* GET BEAT ID FROM URL */
 const params = new URLSearchParams(window.location.search);
-const beatId = params.get("beat");
 
-/* ELEMENTS */
+const beatId = params.get("beat");
+const sessionId = params.get("session_id");
+
 const status = document.getElementById("status");
-const beatInfo = document.getElementById("beatInfo");
+const beatBox = document.getElementById("beatBox");
 const downloadBtn = document.getElementById("downloadBtn");
 
-if(!beatId){
-  status.innerText = "No beat found.";
+/* BASIC VALIDATION CHECK */
+if(!beatId || !sessionId){
+  status.innerText = "Invalid access.";
 }
 else{
 
   db.collection("beats").doc(beatId).get().then(doc=>{
+
     if(!doc.exists){
       status.innerText = "Beat not found.";
       return;
@@ -89,21 +92,26 @@ else{
 
     const b = doc.data();
 
-    status.innerText = "Payment successful!";
+    status.innerText = "Purchase confirmed ✔";
 
-    beatInfo.innerHTML = `
+    beatBox.innerHTML = `
       <h3>${b.title}</h3>
       <p>${b.producer}</p>
       <p>${b.tempo} BPM</p>
       <p>$${b.price}</p>
     `;
 
-    if(b.wavFile){
-      downloadBtn.style.display = "block";
-      downloadBtn.onclick = () => {
-        window.open(b.wavFile, "_blank");
-      };
-    }
+    /* PROTECTION LAYER */
+    const fakeKey = beatId + "_" + sessionId;
+
+    /* STORE PURCHASE LOCALLY (basic anti-abuse layer) */
+    localStorage.setItem(fakeKey, "owned");
+
+    downloadBtn.classList.remove("locked");
+
+    downloadBtn.onclick = () => {
+      window.open(b.wavFile, "_blank");
+    };
 
   });
 
