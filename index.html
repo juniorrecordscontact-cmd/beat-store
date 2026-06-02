@@ -113,7 +113,7 @@ iframe{
   margin-top:4px;
 }
 
-/* BUTTON ROW (NEW LAYOUT) */
+/* BUTTON ROW */
 .buttonRow{
   display:flex;
   gap:6px;
@@ -151,7 +151,6 @@ button:hover{
     </div>
   </div>
 
-  <!-- SEARCH BACK -->
   <input id="searchInput" placeholder="Search beats..." oninput="searchBeats()">
 </header>
 
@@ -288,9 +287,9 @@ function searchBeats(){
   });
 
   renderBeats(filtered);
-}
+});
 
-/* BUY */
+/* BUY (UPDATED STEP 1 ONLY) */
 function buyNow(link, beatId){
 
   if(!link){
@@ -300,7 +299,9 @@ function buyNow(link, beatId){
 
   const successURL =
     "https://juniorrecordscontact-cmd.github.io/beat-store/thank-you.html?beat="
-    + beatId + "&paid=true";
+    + beatId
+    + "&paid=true"
+    + "&session_id={CHECKOUT_SESSION_ID}";
 
   const finalLink =
     link + "?success_url=" + encodeURIComponent(successURL);
