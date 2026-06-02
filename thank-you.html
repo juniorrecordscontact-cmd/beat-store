@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="UTF-8">
 <title>Thank You - Junior Beats</title>
@@ -27,6 +28,10 @@ body{
   text-align:center;
 }
 
+h1{
+  margin:0 0 10px 0;
+}
+
 button{
   width:100%;
   padding:10px;
@@ -39,7 +44,7 @@ button{
 }
 
 .locked{
-  opacity:0.5;
+  opacity:0.4;
   pointer-events:none;
 }
 </style>
@@ -50,9 +55,10 @@ button{
 
 <div class="card">
   <h1>🎉 Thank You</h1>
+
   <p id="status">Verifying purchase...</p>
 
-  <div id="beatBox"></div>
+  <div id="beatInfo"></div>
 
   <button id="downloadBtn" class="locked">
     Download WAV
@@ -68,16 +74,17 @@ projectId:"junior-beats-store"
 
 const db = firebase.firestore();
 
+/* URL DATA */
 const params = new URLSearchParams(window.location.search);
-
 const beatId = params.get("beat");
 const sessionId = params.get("session_id");
 
+/* ELEMENTS */
 const status = document.getElementById("status");
-const beatBox = document.getElementById("beatBox");
+const beatInfo = document.getElementById("beatInfo");
 const downloadBtn = document.getElementById("downloadBtn");
 
-/* BASIC VALIDATION CHECK */
+/* BASIC SECURITY CHECK */
 if(!beatId || !sessionId){
   status.innerText = "Invalid access.";
 }
@@ -92,20 +99,19 @@ else{
 
     const b = doc.data();
 
-    status.innerText = "Purchase confirmed ✔";
+    status.innerText = "Payment Confirmed ✔";
 
-    beatBox.innerHTML = `
+    beatInfo.innerHTML = `
       <h3>${b.title}</h3>
       <p>${b.producer}</p>
       <p>${b.tempo} BPM</p>
       <p>$${b.price}</p>
     `;
 
-    /* PROTECTION LAYER */
-    const fakeKey = beatId + "_" + sessionId;
+    /* SIMPLE PRO GATE */
+    const accessKey = beatId + "_" + sessionId;
 
-    /* STORE PURCHASE LOCALLY (basic anti-abuse layer) */
-    localStorage.setItem(fakeKey, "owned");
+    localStorage.setItem(accessKey, "paid");
 
     downloadBtn.classList.remove("locked");
 
