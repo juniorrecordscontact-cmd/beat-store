@@ -31,8 +31,8 @@ header{
 }
 
 #logo{
-  width:55px;
-  height:55px;
+  width:60px;
+  height:60px;
   border-radius:10px;
   object-fit:cover;
 }
@@ -53,82 +53,63 @@ header{
   opacity:0.7;
 }
 
-/* SEARCH */
-#searchInput{
-  padding:7px 10px;
-  border:none;
-  border-radius:6px;
-  outline:none;
-  background:#1e1e25;
-  color:white;
-  font-size:12px;
-}
-
-/* STORE GRID (SMALLER CARDS) */
+/* STORE */
 #store{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:10px;
-  padding:12px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+  padding:15px;
 }
 
-/* CARD */
+/* BEAT CARD */
 .beat{
   background:#1a1a22;
-  border-radius:10px;
+  border-radius:12px;
   overflow:hidden;
   transition:0.25s;
 }
 
 .beat:hover{
-  transform:translateY(-4px);
-  box-shadow:0 10px 20px rgba(0,0,0,0.4);
+  transform:translateY(-6px);
+  box-shadow:0 12px 25px rgba(0,0,0,0.5);
 }
 
-/* YOUTUBE COVER */
-iframe{
+.beat img{
   width:100%;
-  height:110px;
-  border:0;
+  height:120px;
+  object-fit:cover;
 }
 
-/* CONTENT */
 .beatContent{
-  padding:8px;
+  padding:10px;
 }
 
 .beat h3{
-  margin:4px 0;
-  font-size:13px;
+  margin:5px 0;
+  font-size:14px;
 }
 
 .meta{
-  font-size:10px;
+  font-size:11px;
   opacity:0.8;
 }
 
 .genres{
-  font-size:9px;
+  font-size:10px;
   opacity:0.8;
-  margin-top:4px;
-}
-
-/* BUTTON ROW (NEW LAYOUT) */
-.buttonRow{
-  display:flex;
-  gap:6px;
-  margin-top:6px;
+  margin-top:5px;
 }
 
 button{
-  flex:1;
-  padding:7px;
+  width:100%;
+  padding:8px;
+  margin-top:6px;
   border:none;
-  border-radius:6px;
+  border-radius:8px;
   background:#6d3cff;
   color:white;
   cursor:pointer;
-  font-size:11px;
+  font-size:12px;
   transition:0.2s;
 }
 
@@ -150,9 +131,6 @@ button:hover{
       <p id="slogan">By Jayan Reid</p>
     </div>
   </div>
-
-  <!-- SEARCH BACK -->
-  <input id="searchInput" placeholder="Search beats..." oninput="searchBeats()">
 </header>
 
 <div id="store"></div>
@@ -180,7 +158,7 @@ db.collection("settings").doc("site").onSnapshot(doc=>{
   if(s.logo) logo.src = s.logo;
 });
 
-/* LOAD */
+/* LOAD BEATS */
 db.collection("beats").onSnapshot(snapshot=>{
   allBeats = [];
 
@@ -219,10 +197,17 @@ function renderBeats(beats){
       <div class="beat">
 
         ${embed ? `
-          <iframe src="${embed}" allowfullscreen></iframe>
+          <iframe width="100%" height="120"
+          src="${embed}"
+          frameborder="0"
+          allowfullscreen></iframe>
         ` : ""}
 
         <div class="beatContent">
+
+          <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
+            ▶ Play / Pause
+          </button>
 
           <h3>${b.title || ''}</h3>
 
@@ -234,17 +219,9 @@ function renderBeats(beats){
             ${(b.genres || []).join(" • ")}
           </div>
 
-          <div class="buttonRow">
-
-            <button onclick="playPreview('${b.previewFile || ''}', '${b.id}')">
-              ▶ Play
-            </button>
-
-            <button onclick="buyNow('${b.stripeLink || ''}', '${b.id}')">
-              💰 Buy
-            </button>
-
-          </div>
+          <button onclick="buyNow('${b.stripeLink || ''}', '${b.id}')">
+            💰 Buy Now
+          </button>
 
         </div>
 
@@ -268,29 +245,7 @@ function playPreview(url,id){
   currentBeatId = id;
 }
 
-/* SEARCH */
-function searchBeats(){
-
-  const value = searchInput.value.toLowerCase().trim();
-
-  if(!value){
-    renderBeats(allBeats);
-    return;
-  }
-
-  const filtered = allBeats.filter(b=>{
-    return (
-      (b.title||"").toLowerCase().includes(value) ||
-      (b.producer||"").toLowerCase().includes(value) ||
-      (b.tempo||"").toString().includes(value) ||
-      (b.genres||[]).join(" ").toLowerCase().includes(value)
-    );
-  });
-
-  renderBeats(filtered);
-}
-
-/* BUY */
+/* BUY NOW - UPDATED STEP 1 */
 function buyNow(link, beatId){
 
   if(!link){
@@ -300,7 +255,9 @@ function buyNow(link, beatId){
 
   const successURL =
     "https://juniorrecordscontact-cmd.github.io/beat-store/thank-you.html?beat="
-    + beatId + "&paid=true";
+    + beatId
+    + "&paid=true"
+    + "&session_id={CHECKOUT_SESSION_ID}";
 
   const finalLink =
     link + "?success_url=" + encodeURIComponent(successURL);
