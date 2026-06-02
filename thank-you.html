@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8">
-<title>Thank You</title>
+<title>Thank You - Junior Beats</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -18,24 +17,29 @@ body{
   justify-content:center;
   align-items:center;
   height:100vh;
-}
-
-.box{
-  background:#1a1a22;
-  padding:25px;
-  border-radius:12px;
-  width:320px;
   text-align:center;
 }
 
-a{
-  display:block;
-  margin-top:10px;
+.card{
+  background:#1a1a22;
+  padding:20px;
+  border-radius:12px;
+  width:300px;
+}
+
+h1{
+  margin:0 0 10px 0;
+}
+
+button{
+  width:100%;
   padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
   background:#6d3cff;
   color:white;
-  text-decoration:none;
-  border-radius:8px;
+  cursor:pointer;
 }
 </style>
 
@@ -43,14 +47,15 @@ a{
 
 <body>
 
-<div class="box">
-  <h2>🎉 Thank You</h2>
-  <p id="title">Loading...</p>
+<div class="card">
+  <h1>🎉 Thank You!</h1>
+  <p id="status">Loading your beat...</p>
 
-  <div id="downloads" style="display:none;">
-    <a id="mp3" href="#" download>Download MP3</a>
-    <a id="wav" href="#" download>Download WAV</a>
-  </div>
+  <div id="beatInfo"></div>
+
+  <button id="downloadBtn" style="display:none;">
+    Download WAV
+  </button>
 </div>
 
 <script>
@@ -62,34 +67,48 @@ projectId:"junior-beats-store"
 
 const db = firebase.firestore();
 
+/* GET BEAT ID FROM URL */
 const params = new URLSearchParams(window.location.search);
 const beatId = params.get("beat");
-const paid = params.get("paid");
 
-if(beatId && paid === "true"){
+/* ELEMENTS */
+const status = document.getElementById("status");
+const beatInfo = document.getElementById("beatInfo");
+const downloadBtn = document.getElementById("downloadBtn");
+
+if(!beatId){
+  status.innerText = "No beat found.";
+}
+else{
 
   db.collection("beats").doc(beatId).get().then(doc=>{
-
     if(!doc.exists){
-      title.innerText = "Beat not found";
+      status.innerText = "Beat not found.";
       return;
     }
 
     const b = doc.data();
 
-    title.innerText = b.title;
+    status.innerText = "Payment successful!";
 
-    mp3.href = b.previewFile || "#";
-    wav.href = b.wavFile || "#";
+    beatInfo.innerHTML = `
+      <h3>${b.title}</h3>
+      <p>${b.producer}</p>
+      <p>${b.tempo} BPM</p>
+      <p>$${b.price}</p>
+    `;
 
-    downloads.style.display = "block";
+    if(b.wavFile){
+      downloadBtn.style.display = "block";
+      downloadBtn.onclick = () => {
+        window.open(b.wavFile, "_blank");
+      };
+    }
+
   });
 
-}else{
-  title.innerText = "No purchase detected";
 }
 </script>
 
 </body>
-
 </html>
